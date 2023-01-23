@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r}
-setwd("~/Git/NDSU/RMARK")                                                       # set the working directory
+setwd("~/Git/MTORG-Nesting")                                                       # set the working directory
 
 library(vegan)
 library(tidyverse)
@@ -14,7 +14,7 @@ library(lubridate)
 library(plotrix)
 library(RMark)
 
-nest <- read.csv("~/Git/NDSU/RMARK/Working Data/RMarknesting.csv",
+nest <- read.csv("working/RMarknesting.csv",
                  row.names = 1)
 
 ```
