@@ -1,16 +1,14 @@
----
-title: "Nest Survival"
-author: "Justin Clarke"
-date: "1/19/2022"
-output: html_document
----
-
-```{r}
-setwd("~/Git/NDSU/RMARK")                                                       # set the working directory
+######################################## WEME Veg Wrangling #########################################################
 
 library(lubridate)
 library(vegan)
 library(tidyverse)
+
+######################################### Data import ###############################################################
+
+raw <- read.csv("~/Git/NDSU/RMARK/Raw Data/Nesting.csv")
+
+########################################### Data Wrangling ##########################################################
 
 #This will separate species out into separate dataframes and remove the nest dataframe from the environment
 #for(i in nest$Spec) {
@@ -21,14 +19,12 @@ library(tidyverse)
 
 #rm(nest)
 
-raw <- read.csv("~/Git/NDSU/RMARK/Raw Data/Nesting.csv")                                                  # read in the data set
-
 raw$Date <- as.Date(raw$Date,                                                   # read the Date column as a date
-                      "%m/%d/%y") |>                                            # show the format of the existing dates
+                    "%m/%d/%y") |>                                              # show the format of the existing dates
   yday()                                                                        # convert dates checked to julian days
 
 raw$FirstFound <- as.Date(raw$FirstFound,                                       # read the date found column as a date
-                      "%m/%d/%y") |>                                            # show the format of the existing dates
+                          "%m/%d/%y") |>                                            # show the format of the existing dates
   yday()                                                                        # convert dates a nest was found to julian days
 
 raw$Survive <- as.factor(raw$Survive)                                           # coerce survival (0-success, 1-fail) to a factor
@@ -62,9 +58,9 @@ LastChecked <- raw |>                                                           
   summarize(id, Date)                                                           # select only the two relevant columns
 
 raw <- left_join(raw,                                                           # select data frame 1
-                  LastChecked,                                                  # select data frame 2
-                  by="id",                                                      # join the two data frames by the shared "Nest.ID" column
-                  keep=FALSE)                                                   # remove duplicate "Nest.ID" column
+                 LastChecked,                                                   # select data frame 2
+                 by="id",                                                       # join the two data frames by the shared "Nest.ID" column
+                 keep=FALSE)                                                    # remove duplicate "Nest.ID" column
 
 raw <- raw[c(1:37,39:40)]                                                       # getting ride of the notes columns
 
@@ -80,15 +76,17 @@ LastPresent <- raw |>                                                           
             Expos,                                                              # Exposure days
             DateChecked)                                                        # and date 
 
-LastPresent$LastPresent <- LastPresent$DateChecked - LastPresent$Expos          # Calculate the actual date that a nest was last active
-                                                                                # by subtracting the last check from the last Exposure day
+# Calculate the actual date that a nest was last active
+# by subtracting the last check from the last Exposure day
 # I needed to join the two lists together so that 
 # the new list includes the new LastPresent column
 
+LastPresent$LastPresent <- LastPresent$DateChecked - LastPresent$Expos          
+
 raw <- left_join(raw,                                                           # select data frame 1
-                  LastPresent,                                                  # select data frame 2
-                  by="id",                                                      # join by the shared Nest.ID column
-                  keep=FALSE)                                                   # remove duplicate "Nest.ID" column
+                 LastPresent,                                                   # select data frame 2
+                 by="id",                                                       # join by the shared Nest.ID column
+                 keep=FALSE)                                                    # remove duplicate "Nest.ID" column
 
 names(raw)[6] <- "DateChecked"                                                  # rename the Date a nest was checked column
 names(raw)[8] <- "Expos"                                                        # rename the Exposure column
@@ -98,9 +96,8 @@ names(raw)[8] <- "Expos"                                                        
 raw <- raw[c(1:39, 42)]                                                         # remove extra columns
 
 str(raw)                                                                        # show the structure of the raw data
-```
 
-```{r}
+
 # I needed to create a table to use in order to select only
 # successful nests because it was counting the last Exposure day
 # as a separate nest for the failed nests since it went from 1 to 0
@@ -169,20 +166,20 @@ check <- nest |>                                                                
 # and date last checked to be equal
 
 nest$LastChecked <- ifelse(nest$Fate==0,                                        # if fate=0 (i.e. successful)                       
-                                  nest$LastPresent,                             # set the day last checked equal to last day present
-                                  nest$LastChecked)                             # if fate < 1 don't change the day last checked
+                           nest$LastPresent,                                    # set the day last checked equal to last day present
+                           nest$LastChecked)                                    # if fate < 1 don't change the day last checked
 
 data <- raw[c(1:2, 12, 14:17, 19:27, 33:34, 36:38)] |>                                     # select the veg data columns from the altered raw data
   distinct(id, .keep_all=TRUE)                                                  # select only unique nest ID and keep all other columns
 
 nest <- left_join(nest,                                                         # select data frame 1
-                      data,                                                     # select data frame 2
-                      by="id",                                                  # combine the data frames by the shared Nest.ID column
-                      keep=FALSE)                                               # remove duplicate "Nest.ID" column
+                  data,                                                         # select data frame 2
+                  by="id",                                                      # combine the data frames by the shared Nest.ID column
+                  keep=FALSE)                                                   # remove duplicate "Nest.ID" column
 
 nest <- relocate(nest,                                                          # select the data frame
-                     FirstFound,                                                # select the column to move
-                     .before = LastPresent)                                     # select where to move the column to
+                 FirstFound,                                                    # select the column to move
+                 .before = LastPresent)                                         # select where to move the column to
 
 nest <- nest |> 
   na.omit(nest$cTreat) |> 
@@ -195,30 +192,28 @@ nest$Spec <- as.factor(nest$Spec)
 
 str(nest)                                                                       # check the structure of the data
 
-library(vegan)
-library(tidyverse)
-library(lubridate)
-
 rm(list = ls()[!ls() %in%  "nest"])
-```
 
-```{r}
+# this loop with pull out each species and calculate relative vegetation cover, 
+# frequencies for each encounter history, and 
+# recreate the data frame.
+
 spec.nest <- data.frame()
 
 for (i in unique(nest$Spec)) {
   spec.surv <- filter(nest, Spec==i)
-
+  
   spec.surv$TotalVegCover <- rowSums(spec.surv[16:22], na.rm=TRUE)
   spec.surv[16:22] <- spec.surv[16:22]/spec.surv$TotalVegCover *100
-
+  
   spec.surv$Litter.Depth <- as.integer(spec.surv$Litter.Depth)
-
+  
   spec.surv$Veg.Height <- as.integer(spec.surv$Veg.Height)
   spec.surv$AgeFound <- as.numeric(spec.surv$AgeFound)
-
+  
   spec.surv <- spec.surv[c(1:29)]
-# I wanted to group nests into unique encounter histories
-# to create a frequency for each of those histories
+  # I wanted to group nests into unique encounter histories
+  # to create a frequency for each of those histories
   spec.unq <- spec.surv |> 
     group_by(FirstFound,
              LastPresent,
@@ -226,7 +221,7 @@ for (i in unique(nest$Spec)) {
     summarize(Freq=n()) |> 
     ungroup()
   
-# joining the two data frames to create a frequency column for the data frame
+  # joining the two data frames to create a frequency column for the data frame
   spec.surv <- full_join(spec.surv,
                          spec.unq,
                          by = c("FirstFound",
@@ -245,7 +240,7 @@ for (i in unique(nest$Spec)) {
   spec.surv$FirstFound <- spec.surv$FirstFound - min(spec.surv$FirstFound) + 1
   spec.surv$AgeDay1 <- spec.surv$AgeFound - spec.surv$FirstFound + 1
   
-
+  
   spec.surv <- rename(spec.surv, LitterD=Litter.Depth)
   spec.surv <- rename(spec.surv, SmoothB=Smooth.Brome)
   
@@ -257,11 +252,11 @@ for (i in unique(nest$Spec)) {
                                     "Full" = "49",
                                     "Moderate" = "39",
                                     "Rest" = "0") |> 
-  as.factor()
+    as.factor()
   
   spec.surv$start <- ifelse(spec.surv$Year =="2021",
-                             "5/1/2021",
-                             "5/1/2022") |> 
+                            "5/1/2021",
+                            "5/1/2022") |> 
     as.Date("%m/%d/%y") |> 
     yday()
   
@@ -285,4 +280,3 @@ for (i in unique(nest$Spec)) {
 rm(list = ls()[!ls() %in%  c("spec.nest", "nest")])
 
 write.csv(spec.nest, "~/Git/NDSU/RMARK/Working Data/RMarknesting.csv")
-```
