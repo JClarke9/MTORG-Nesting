@@ -12,24 +12,48 @@ sched <- read_csv("raw/MTORGschedule.csv")
 
 # Data Wrangling ----------------------------------------------------------
 
-sched$start <- as.Date(sched$start,
-                       "d-m-y") |> 
+sched$start <- as.POSIXct(sched$start,
+                    format = "%m/%d/%Y") |> 
   yday()
 
-raw$Date <- as.Date(raw$Date,                                                   # read the Date column as a date
-                    "%m/%d/%y") |>                                              # show the format of the existing dates
+sched$end <- as.POSIXct(sched$end,
+                        format = "%m/%d/%Y") |>
+  yday()
+
+raw$Date <- as.POSIXct(raw$Date,                                                # read the Date column as a dat
+                       format = "%m/%d/%Y") |>                                  # show the format of the existing dates
   yday()                                                                        # convert dates checked to julian days
 
-raw$FirstFound <- as.Date(raw$FirstFound,                                       # read the date found column as a date
-                          "%m/%d/%y") |>                                            # show the format of the existing dates
+raw$FirstFound <- as.POSIXct(raw$FirstFound,                                    # read the date found column as a date
+                             format = "%m/%d/%Y") |>                            # show the format of the existing dates
   yday()                                                                        # convert dates a nest was found to julian days
+
+raw <- full_join(raw, sched, by = c("Year", "cTreat"="Intensity"))
+
+raw$graze <- ifelse(raw$cTreat == "Moderate" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, 1,
+                    ifelse(raw$cTreat == "Full" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, 1,
+                           ifelse(raw$cTreat == "Heavy" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, 1,
+                                  ifelse(raw$cTreat == "Moderate" & raw$Year == "2022" & raw$Date > raw$start & raw$Date < raw$end, 1,
+                                         ifelse(raw$cTreat == "Full" & raw$Year == "2022" & raw$Date > raw$start & raw$Date < raw$end, 1,
+                                                ifelse(raw$cTreat == "Heavy" & raw$Year == "2022" & raw$Date > raw$start & raw$Date < raw$end, 1, 
+                                                       0))))))
+
+raw$DaysG <- ifelse(raw$cTreat == "Moderate" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, raw$Date - raw$start,
+                    ifelse(raw$cTreat == "Full" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, raw$Date - raw$start,
+                           ifelse(raw$cTreat == "Heavy" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, raw$Date - raw$start,
+                                  ifelse(raw$cTreat == "Moderate" & raw$Year == "2022" & raw$Date > raw$start & raw$Date < raw$end, raw$Date - raw$start,
+                                         ifelse(raw$cTreat == "Full" & raw$Year == "2022" & raw$Date > raw$start & raw$Date < raw$end, raw$Date - raw$start,
+                                                ifelse(raw$cTreat == "Heavy" & raw$Year == "2022" & raw$Date > raw$start & raw$Date < raw$end, raw$Date - raw$start, 
+                                                       0))))))
 
 raw$Survive <- as.factor(raw$Survive)                                           # coerce survival (0-success, 1-fail) to a factor
 
 head(raw$Date)                                                                  # show the first few data frames
 tail(raw$Date)                                                                  # show the last few data frames
 
-raw$VOR <- rowMeans(raw[,28:31])                                                # create a new column with the robel readings averaged
+raw$VOR <- raw |> 
+  select(R1:R4) |> 
+  rowMeans()                                                # create a new column with the robel readings averaged
 
 unknown <- filter(raw, Survive=="Unknown") |>                                   # sort out nests with an unknown Survive
   group_by(id, Spec) |>                                                         # group by Nest.ID and Species
@@ -56,13 +80,13 @@ LastChecked <- raw |>                                                           
 
 raw <- left_join(raw,                                                           # select data frame 1
                  LastChecked,                                                   # select data frame 2
-                 by="id",                                                       # join the two data frames by the shared "Nest.ID" column
+                 by= "id",                                                       # join the two data frames by the shared "Nest.ID" column
                  keep=FALSE)                                                    # remove duplicate "Nest.ID" column
 
-raw <- raw[c(1:37,39:40)]                                                       # getting ride of the notes columns
+raw <- rename(raw, "DateChecked" = "Date.x")
+raw <- rename(raw, "LastChecked" = "Date.y")
 
-names(raw)[6] <- "DateChecked"                                                  # rename the Date a nest was checked column
-names(raw)[39] <- "LastChecked"                                                 # rename the Last Checked column
+raw <- select(raw, Year:Veg.Height, Pasture:Patch, pTreat:cTreat, graze:LastChecked)
 
 # This is just used to calculate the date a nest was last occupied
 
@@ -85,15 +109,15 @@ raw <- left_join(raw,                                                           
                  by="id",                                                       # join by the shared Nest.ID column
                  keep=FALSE)                                                    # remove duplicate "Nest.ID" column
 
-names(raw)[6] <- "DateChecked"                                                  # rename the Date a nest was checked column
-names(raw)[8] <- "Expos"                                                        # rename the Exposure column
 
 # I needed to rename the columns to match the input values for RMark
 
-raw <- raw[c(1:39, 42)]                                                         # remove extra columns
+raw <- rename(raw, "DateChecked" = "DateChecked.x")                             # rename the Date a nest was checked column
+raw <- rename(raw, "Expos" = "Expos.x")
+
+raw <- select(raw, Year:LastChecked, LastPresent)
 
 str(raw)                                                                        # show the structure of the raw data
-
 
 # I needed to create a table to use in order to select only
 # successful nests because it was counting the last Exposure day
@@ -148,7 +172,7 @@ failed <- anti_join(raw,                                                        
             BHCONum = max(BHCONum)) |>
   as.data.frame()                                                               # coerce table into a data frame
 
-nest <- rbind(success, failed)                                                  # combine the list of unique successful and failed nests
+nest <- bind_rows(success, failed)                                                  # combine the list of unique successful and failed nests
 
 # this is just to verify that I have the correct number
 # of nests and there aren't any duplicates. Don't forget
@@ -166,7 +190,7 @@ nest$LastChecked <- ifelse(nest$Fate==0,                                        
                            nest$LastPresent,                                    # set the day last checked equal to last day present
                            nest$LastChecked)                                    # if fate < 1 don't change the day last checked
 
-data <- raw[c(1:2, 12, 14:17, 19:27, 33:34, 36:38)] |>                                     # select the veg data columns from the altered raw data
+data <- select(raw, Year:id, Stage, BHCOpres:InitBHCO, KBG:VOR) |>              # select the veg data columns from the altered raw data 
   distinct(id, .keep_all=TRUE)                                                  # select only unique nest ID and keep all other columns
 
 nest <- left_join(nest,                                                         # select data frame 1
@@ -200,15 +224,20 @@ spec.nest <- data.frame()
 for (i in unique(nest$Spec)) {
   spec.surv <- filter(nest, Spec==i)
   
-  spec.surv$TotalVegCover <- rowSums(spec.surv[16:22], na.rm=TRUE)
-  spec.surv[16:22] <- spec.surv[16:22]/spec.surv$TotalVegCover *100
+  spec.surv$TotalVegCover <- spec.surv |> 
+    select(KBG:Woody) |> 
+    rowSums(na.rm=TRUE)
+  
+  spec.surv <- spec.surv |> 
+    mutate(across(KBG:Woody, ~ .x/TotalVegCover * 100))
   
   spec.surv$Litter.Depth <- as.integer(spec.surv$Litter.Depth)
   
   spec.surv$Veg.Height <- as.integer(spec.surv$Veg.Height)
   spec.surv$AgeFound <- as.numeric(spec.surv$AgeFound)
   
-  spec.surv <- spec.surv[c(1:29)]
+  spec.surv <- select(spec.surv, id:VOR)
+
   # I wanted to group nests into unique encounter histories
   # to create a frequency for each of those histories
   spec.unq <- spec.surv |> 
@@ -229,14 +258,11 @@ for (i in unique(nest$Spec)) {
                         Freq,
                         .after = Fate)
   
-  spec.surv$Found <- spec.surv$FirstFound
-  
   #standardizing dates so each column starts at the first day a nest was found
   spec.surv$LastPresent <- spec.surv$LastPresent - min(spec.surv$FirstFound) + 1
   spec.surv$LastChecked <- spec.surv$LastChecked - min(spec.surv$FirstFound) + 1
   spec.surv$FirstFound <- spec.surv$FirstFound - min(spec.surv$FirstFound) + 1
   spec.surv$AgeDay1 <- spec.surv$AgeFound - spec.surv$FirstFound + 1
-  
   
   spec.surv <- rename(spec.surv, LitterD=Litter.Depth)
   spec.surv <- rename(spec.surv, SmoothB=Smooth.Brome)
@@ -254,21 +280,15 @@ for (i in unique(nest$Spec)) {
   spec.surv$start <- ifelse(spec.surv$Year =="2021",
                             "5/1/2021",
                             "5/1/2022") |> 
-    as.Date("%m/%d/%y") |> 
+    as.POSIXct(format="%m/%d/%Y") |> 
     yday()
-  
+
   #standardizing the julian dates
-  spec.surv$Julian <- spec.surv$Found - spec.surv$AgeFound - spec.surv$start
+  spec.surv$Julian <- spec.surv$FirstFound - spec.surv$AgeFound - spec.surv$start
   spec.surv$Julian <- spec.surv$Julian - min(spec.surv$Julian) + 1
   
-  spec.surv <- spec.surv[c(1:30,32,34)]
-  
-  #filter21 <- filter(spec.surv, Year == "2021")
-  #filter22 <- filter(spec.surv, Year == "2022")
-  
-  #filter21$Julian <- filter21$Julian - min(filter21$Julian) + 1
-  #filter22$Julian <- filter22$Julian - min(filter22$Julian) + 1
-  
+  spec.surv <- select(spec.surv, id:AgeDay1, Julian)
+
   #spec.nest <- rbind(spec.nest, filter21)
   spec.nest <- rbind(spec.nest, spec.surv)
 }
@@ -276,4 +296,4 @@ for (i in unique(nest$Spec)) {
 #remove everything but the final dataframe
 rm(list = ls()[!ls() %in%  c("spec.nest", "nest")])
 
-write.csv(spec.nest, "~/Git/NDSU/RMARK/Working Data/RMarknesting.csv")
+write.csv(spec.nest, "working/RMarknesting.csv")
