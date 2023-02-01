@@ -1,23 +1,20 @@
-######################################## WEME Veg Wrangling #########################################################
+
+# Load Libraries ----------------------------------------------------------
 
 library(lubridate)
 library(vegan)
 library(tidyverse)
 
-######################################### Data import ###############################################################
+# Data Import -------------------------------------------------------------
 
-raw <- read.csv("~/Git/NDSU/RMARK/Raw Data/Nesting.csv")
+raw <- read_csv("raw/Nesting.csv")
+sched <- read_csv("raw/MTORGschedule.csv")
 
-########################################### Data Wrangling ##########################################################
+# Data Wrangling ----------------------------------------------------------
 
-#This will separate species out into separate dataframes and remove the nest dataframe from the environment
-#for(i in nest$Spec) {
-#  assign(i, nest |> 
-#           filter(Spec == i),
-#         envir = .GlobalEnv)
-#}
-
-#rm(nest)
+sched$start <- as.Date(sched$start,
+                       "d-m-y") |> 
+  yday()
 
 raw$Date <- as.Date(raw$Date,                                                   # read the Date column as a date
                     "%m/%d/%y") |>                                              # show the format of the existing dates
