@@ -8,8 +8,6 @@ output: html_document
 This is the baseline code for each species. I can just either change the species name for this or copy and paste before changing the species for each species.
 
 ```{r}
-setwd("~/Git/NDSU/RMARK")                                                       # set the working directory
-
 library(ggplot2)
 library(vegan)
 library(tidyverse)
@@ -17,7 +15,7 @@ library(RMark)
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
-nest <- read.csv("~/Git/NDSU/RMARK/Working Data/RMarknesting.csv", 
+nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
 
 BRBL.surv <- filter(nest, 
@@ -49,6 +47,9 @@ x <- create.stage.var(BRBL.surv,
                          12)
 
 BRBL.surv <- cbind(BRBL.surv, x)
+
+#remove everything but the final dataframe
+rm(list = ls()[!ls() %in%  c("BRBL.surv")])
 ```
 
 ```{r}
@@ -119,11 +120,17 @@ BRBL2.results$S.time$results$beta
 BRBL2.results$S.year$results$beta
 BRBL2.results$S.quad$results$beta
 
-#candidate model set for parasitism and nest stage
+#candidate model set for parasitism and grazing
 BRBL3.run <- function()
 {
   # 1. DSR varies with BHCO number
   S.bhco = list(formula = ~1 + Year + Time + BHCONum)
+  
+  S.grazed = list(formula = ~1 + Year + Time + grazed)
+  
+  S.bhcop = list(formula = ~1 + Year + Time + BHCOpres)
+  
+  S.grazep = list(formula = ~1 + Year + Time + grazep)
   
   # 2. DSR varies with quadratic effect of date
   S.time = list(formula = ~1 + Year + Time)

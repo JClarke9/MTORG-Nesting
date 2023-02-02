@@ -8,8 +8,6 @@ output: html_document
 This is the baseline code for each species. I can just either change the species name for this or copy and paste before changing the species for each species.
 
 ```{r}
-setwd("~/Git/NDSU/RMARK")                                                       # set the working directory
-
 library(ggplot2)
 library(vegan)
 library(tidyverse)
@@ -17,7 +15,7 @@ library(RMark)
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
-nest <- read.csv("~/Git/NDSU/RMARK/Working Data/RMarknesting.csv", 
+nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
 
 WEME.surv <- filter(nest, 
@@ -45,6 +43,8 @@ x <- create.stage.var(WEME.surv,
                          14)
 
 WEME.surv <- cbind(WEME.surv, x)
+
+rm(list = ls()[!ls() %in% "WEME.surv"])
 ```
 
 ```{r}
@@ -88,7 +88,7 @@ WEME1.results$S.year$results$beta
 WEME2.run <- function()
 {
   # 1. DSR varies with time
-  S.time = list(formula = ~1 +  Time)
+  S.time = list(formula = ~1 + Time)
   
   # 3. DSR varies with quadratic effect of date
   S.quad = list(formula = ~1 + Time + I(Time^2))
@@ -115,14 +115,19 @@ WEME2.results$S.Dot$results$beta
 WEME2.results$S.time$results$beta
 WEME2.results$S.stage$results$beta
 
-#candidate model set for parasitism and nest stage
+#candidate model set for parasitism and grazing
 WEME3.run <- function()
 {
   # 1. DSR varies with BHCO number
-  S.bhco = list(formula = ~1 + cTreat + Time + BHCONum)
+  S.bhco = list(formula = ~1 + BHCONum)
   
-  # 1. a model for constant daily survival rate
-  S.Dot = list(formula =  ~1)
+  S.grazed = list(formula = ~1 + grazed)
+  
+  S.bhcop = list(formula = ~1 + BHCOpres)
+  
+  S.grazep = list(formula = ~1 + grazep)
+  
+  S.Dot = list(formula = ~1)
   
   WEME.model.list = create.model.list("Nest")
   WEME3.results = mark.wrapper(WEME.model.list,
@@ -136,59 +141,61 @@ WEME3.run <- function()
 WEME3.results <- WEME3.run()
 WEME3.results
 
+WEME3.results$S.grazed$results$beta
 WEME3.results$S.Dot$results$beta
-WEME3.results$S.bhco$results$beta
+WEME3.results$S.bhcop$results$beta
+WEME3.results$S.grazep$results$beta
 
 #candidate model set for parasitism and nest stage
 WEME4.run <- function()
 {
   # 1. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + KBG)
+  S.kbg = list(formula =  ~1 + grazed + KBG)
   
   # 2. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.smooth.brome = list(formula = ~1 + SmoothB)
+  S.smooth.brome = list(formula = ~1 + grazed + SmoothB)
   
   # 3. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + Litter)
+  S.lit = list(formula =  ~1 + grazed + Litter)
   
   # 4. DSR varies with Bare
-  S.bare = list(formula =  ~1 + Bare)
+  S.bare = list(formula =  ~1 + grazed + Bare)
   
   # 5. DSR varies with Forb
-  S.forb = list(formula =  ~1 + Forb)
+  S.forb = list(formula =  ~1 + grazed + Forb)
   
   # 6. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + Grasslike)
+  S.grass = list(formula =  ~1 + grazed + Grasslike)
   
   # 7. DSR varies with Woody
-  S.woody = list(formula =  ~1 + Woody)
+  S.woody = list(formula =  ~1 + grazed + Woody)
   
   # 8. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + LitterD)
+  S.litdep = list(formula =  ~1 + grazed + LitterD)
   
   # 9. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Veg.Height)
+  S.height = list(formula =  ~1 + grazed + Veg.Height)
   
-  # 10. DSR varies with VOR
-  S.vor = list(formula =  ~1 + VOR)
+  # 1 + grazed0. DSR varies with VOR
+  S.vor = list(formula =  ~1 + grazed + VOR)
   
-  # 11. DSR varies with litter and Veg Height
-  S.litheight = list(formula = ~1 + Litter + Veg.Height)
+  # 1 + grazed1 + grazed. DSR varies with litter and Veg Height
+  S.litheight = list(formula = ~1 + grazed + Litter + Veg.Height)
   
-  # 12. DSR varies with woody and litter depth
-  S.woodylitdep = list(formula = ~1 + Woody + LitterD)
+  # 1 + grazed2. DSR varies with woody and litter depth
+  S.woodylitdep = list(formula = ~1 + grazed + Woody + LitterD)
   
-  # 13. DSR varies with KBG and litter depth
-  S.kbglitdep = list(formula = ~1 + KBG + LitterD)
+  # 1 + grazed3. DSR varies with KBG and litter depth
+  S.kbglitdep = list(formula = ~1 + grazed + KBG + LitterD)
   
-  # 14. DSR varies with KBG and Veg.Height
-  S.kbgheight = list(formula = ~1 + KBG + Veg.Height)
+  # 1 + grazed4. DSR varies with KBG and Veg.Height
+  S.kbgheight = list(formula = ~1 + grazed + KBG + Veg.Height)
   
-  # 15. DSR varies with woody and Veg Height
-  S.woodyheight = list(formula = ~1 + Woody + Veg.Height)
+  # 1 + grazed5. DSR varies with woody and Veg Height
+  S.woodyheight = list(formula = ~1 + grazed + Woody + Veg.Height)
   
   # 1. a model for constant daily survival rate
-  S.Dot = list(formula =  ~1)
+  S.grazed = list(formula =  ~1 + grazed)
   
   WEME.model.list = create.model.list("Nest")
   WEME4.results = mark.wrapper(WEME.model.list,
@@ -202,10 +209,11 @@ WEME4.run <- function()
 WEME4.results <- WEME4.run()
 WEME4.results
 
-WEME4.results$S.bare$results$beta
 WEME4.results$S.kbgheight$results$beta
+WEME4.results$S.bare$results$beta
 WEME4.results$S.height$results$beta
-WEME4.results$S.litheight$results$beta
+WEME4.results$S.forb$results$beta
+WEME4.results$S.grazed$results$beta
 
 WEME4.results$S.bare$results$real
 ```

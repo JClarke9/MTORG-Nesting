@@ -30,7 +30,7 @@ raw$FirstFound <- as.POSIXct(raw$FirstFound,                                    
 
 raw <- full_join(raw, sched, by = c("Year", "cTreat"="Intensity"))
 
-raw$graze <- ifelse(raw$cTreat == "Moderate" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, 1,
+raw$grazep <- ifelse(raw$cTreat == "Moderate" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, 1,
                     ifelse(raw$cTreat == "Full" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, 1,
                            ifelse(raw$cTreat == "Heavy" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, 1,
                                   ifelse(raw$cTreat == "Moderate" & raw$Year == "2022" & raw$Date > raw$start & raw$Date < raw$end, 1,
@@ -38,7 +38,7 @@ raw$graze <- ifelse(raw$cTreat == "Moderate" & raw$Year == "2021" & raw$Date > r
                                                 ifelse(raw$cTreat == "Heavy" & raw$Year == "2022" & raw$Date > raw$start & raw$Date < raw$end, 1, 
                                                        0))))))
 
-raw$DaysG <- ifelse(raw$cTreat == "Moderate" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, raw$Date - raw$start,
+raw$grazed <- ifelse(raw$cTreat == "Moderate" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, raw$Date - raw$start,
                     ifelse(raw$cTreat == "Full" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, raw$Date - raw$start,
                            ifelse(raw$cTreat == "Heavy" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, raw$Date - raw$start,
                                   ifelse(raw$cTreat == "Moderate" & raw$Year == "2022" & raw$Date > raw$start & raw$Date < raw$end, raw$Date - raw$start,
@@ -86,7 +86,7 @@ raw <- left_join(raw,                                                           
 raw <- rename(raw, "DateChecked" = "Date.x")
 raw <- rename(raw, "LastChecked" = "Date.y")
 
-raw <- select(raw, Year:Veg.Height, Pasture:Patch, pTreat:cTreat, graze:LastChecked)
+raw <- select(raw, Year:Veg.Height, Pasture:Patch, pTreat:cTreat, grazep:LastChecked)
 
 # This is just used to calculate the date a nest was last occupied
 
@@ -277,17 +277,7 @@ for (i in unique(nest$Spec)) {
                                     "Rest" = "0") |> 
     as.factor()
   
-  spec.surv$start <- ifelse(spec.surv$Year =="2021",
-                            "5/1/2021",
-                            "5/1/2022") |> 
-    as.POSIXct(format="%m/%d/%Y") |> 
-    yday()
-
-  #standardizing the julian dates
-  spec.surv$Julian <- spec.surv$FirstFound - spec.surv$AgeFound - spec.surv$start
-  spec.surv$Julian <- spec.surv$Julian - min(spec.surv$Julian) + 1
-  
-  spec.surv <- select(spec.surv, id:AgeDay1, Julian)
+  spec.surv <- select(spec.surv, id:AgeDay1)
 
   #spec.nest <- rbind(spec.nest, filter21)
   spec.nest <- rbind(spec.nest, spec.surv)

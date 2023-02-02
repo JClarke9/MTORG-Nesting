@@ -8,8 +8,6 @@ output: html_document
 This is the baseline code for each species. I can just either change the species name for this or copy and paste before changing the species for each species.
 
 ```{r}
-setwd("~/Git/NDSU/RMARK")                                                       # set the working directory
-
 library(ggplot2)
 library(vegan)
 library(tidyverse)
@@ -17,7 +15,7 @@ library(RMark)
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
-nest <- read.csv("~/Git/NDSU/RMARK/Working Data/RMarknesting.csv", 
+nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
 
 RWBL.surv <- filter(nest, 
@@ -45,6 +43,8 @@ x <- create.stage.var(RWBL.surv,
                          12)
 
 RWBL.surv <- cbind(RWBL.surv, x)
+
+rm(list = ls()[!ls() %in% "RWBL.surv"])
 ```
 
 ```{r}
@@ -114,14 +114,20 @@ RWBL2.results$S.time$results$beta
 RWBL2.results$S.cTreat$results$beta
 RWBL2.results$S.quad$results$beta
 
-#candidate model set for parasitism and nest stage
+#candidate model set for parasitism and grazing
 RWBL3.run <- function()
 {
   # 1. DSR varies with BHCO number
   S.bhco = list(formula = ~1 + cTreat + Time + BHCONum)
   
+  S.grazed = list(formula = ~1 + cTreat + Time + grazed)
+  
+  S.bhcop = list(formula = ~1 + cTreat + Time + BHCOpres)
+  
+  S.grazep = list(formula = ~1 + cTreat + Time + grazep)
+  
   # 2. DSR varies with quadratic effect of date
-  S.time = list(formula = ~ 1 + cTreat + Time)
+  S.time = list(formula = ~1 + cTreat + Time)
   
   RWBL.model.list = create.model.list("Nest")
   RWBL3.results = mark.wrapper(RWBL.model.list,
@@ -136,7 +142,10 @@ RWBL3.results <- RWBL3.run()
 RWBL3.results
 
 RWBL3.results$S.time$results$beta
+RWBL3.results$S.bhcop$results$beta
+RWBL3.results$S.grazed$results$beta
 RWBL3.results$S.bhco$results$beta
+RWBL3.results$S.grazep$results$beta
 
 #candidate model set for parasitism and nest stage
 RWBL4.run <- function()

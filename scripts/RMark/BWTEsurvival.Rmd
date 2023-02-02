@@ -43,6 +43,8 @@ x <- create.stage.var(BWTE.surv,
                          23)
 
 BWTE.surv <- cbind(BWTE.surv, x)
+
+rm(list = ls()[!ls() %in% c("BWTE.surv")])
 ```
 
 ```{r}
@@ -108,6 +110,32 @@ BWTE2.results
 
 BWTE2.results$S.time$results$beta
 BWTE2.results$S.quad$results$beta
+
+#candidate model set for grazing
+BWTE3.run <- function()
+{
+  # 1. DSR varies with BHCO number
+  S.grazed = list(formula = ~1 + cTreat + Time + grazed)
+  
+  S.grazep = list(formula = ~1 + cTreat + Time + grazep)
+  
+  # 2. DSR varies with quadratic effect of date
+  S.time = list(formula = ~1 + cTreat + Time)
+  BWTE.model.list = create.model.list("Nest")
+  BWTE3.results = mark.wrapper(BWTE.model.list,
+                            data = BWTE.pr,
+                            adjust = FALSE,
+                            delete = TRUE)
+}
+
+#results of candidate model set 
+#all results
+BWTE3.results <- BWTE3.run()
+BWTE3.results
+
+BWTE3.results$S.time$results$beta
+BWTE3.results$S.grazed$results$beta
+BWTE3.results$S.grazep$results$beta
 
 #candidate model set for parasitism and nest stage
 BWTE4.run <- function()

@@ -8,8 +8,6 @@ output: html_document
 This is the baseline code for each species. I can just either change the species name for this or copy and paste before changing the species for each species.
 
 ```{r}
-setwd("~/Git/NDSU/RMARK")                                                       # set the working directory
-
 library(ggplot2)
 library(vegan)
 library(tidyverse)
@@ -17,7 +15,7 @@ library(RMark)
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
-nest <- read.csv("~/Git/NDSU/RMARK/Working Data/RMarknesting.csv", 
+nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
 
 CCSP.surv <- filter(nest, 
@@ -45,6 +43,8 @@ x <- create.stage.var(CCSP.surv,
                          12)
 
 CCSP.surv <- cbind(CCSP.surv, x)
+
+rm(list = ls()[!ls() %in% c("CCSP.surv")])
 ```
 
 ```{r}
@@ -120,11 +120,16 @@ CCSP2.results$S.quad$results$beta
 CCSP3.run <- function()
 {
   # 1. DSR varies with BHCO number
-  S.bhco = list(formula = ~1 + Year + Time + BHCONum)
+  S.bhco = list(formula = ~1 + BHCONum)
+  
+  S.grazed = list(formula = ~1 + grazed)
+  
+  S.bhcop = list(formula = ~1 + BHCOpres)
+  
+  S.grazep = list(formula = ~1 + grazep)
   
   # 2. DSR varies with quadratic effect of date
-  S.time = list(formula = ~ 1 + Year + Time)
-  
+  S.time = list(formula = ~1 + Year + Time)
   CCSP.model.list = create.model.list("Nest")
   CCSP3.results = mark.wrapper(CCSP.model.list,
                             data = CCSP.pr,

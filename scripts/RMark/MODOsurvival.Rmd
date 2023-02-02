@@ -8,8 +8,6 @@ output: html_document
 This is the baseline code for each species. I can just either change the species name for this or copy and paste before changing the species for each species.
 
 ```{r}
-setwd("~/Git/NDSU/RMARK")                            # set the working directory
-
 library(ggplot2)
 library(vegan)
 library(tidyverse)
@@ -17,7 +15,7 @@ library(RMark)
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
-nest <- read.csv("~/Git/NDSU/RMARK/Working Data/RMarknesting.csv", 
+nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
 
 MODO.surv <- filter(nest, 
@@ -45,6 +43,8 @@ x <- create.stage.var(MODO.surv,
                          14)
 
 MODO.surv <- cbind(MODO.surv, x)
+
+rm(list = ls()[!ls() %in% "MODO.surv"])
 ```
 
 ```{r}
@@ -113,6 +113,32 @@ MODO2.results
 
 MODO2.results$S.quad$results$beta
 MODO2.results$S.Dot$results$beta
+
+#candidate model set for grazing
+MODO3.run <- function()
+{
+  S.grazed = list(formula = ~1 + Time + I(Time^2) + grazed)
+  
+  S.grazep = list(formula = ~1 + Time + I(Time^2) + grazep)
+  
+  # 2. DSR varies with quadratic effect of date
+  S.quad = list(formula = ~1 + Time + I(Time^2))
+  
+  MODO.model.list = create.model.list("Nest")
+  MODO3.results = mark.wrapper(MODO.model.list,
+                            data = MODO.pr,
+                            adjust = FALSE,
+                            delete = TRUE)
+}
+
+#results of candidate model set 
+#all results
+MODO3.results <- MODO3.run()
+MODO3.results
+
+MODO3.results$S.quad$results$beta
+MODO3.results$S.grazed$results$beta
+MODO3.results$S.grazep$results$beta
 
 #candidate model set for parasitism and nest BHCONum
 MODO4.run <- function()

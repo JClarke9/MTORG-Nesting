@@ -8,8 +8,6 @@ output: html_document
 This is the baseline code for each species. I can just either change the species name for this or copy and paste before changing the species for each species.
 
 ```{r}
-setwd("~/Git/NDSU/RMARK")                                                       # set the working directory
-
 library(ggplot2)
 library(vegan)
 library(tidyverse)
@@ -17,7 +15,7 @@ library(RMark)
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
-nest <- read.csv("~/Git/NDSU/RMARK/Working Data/RMarknesting.csv", 
+nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
 
 NOPI.surv <- filter(nest, 
@@ -49,6 +47,8 @@ x <- create.stage.var(NOPI.surv,
                          23)
 
 NOPI.surv <- cbind(NOPI.surv, x)
+
+rm(list = ls()[!ls() %in% "NOPI.surv"])
 ```
 
 ```{r}
@@ -115,6 +115,29 @@ NOPI2.results
 NOPI2.results$S.Dot$results$beta
 NOPI2.results$S.time$results$beta
 NOPI2.results$S.quad$results$beta
+
+#candidate model set for grazing
+NOPI3.run <- function()
+{
+  # 1. DSR varies with BHCO number
+  S.grazed = list(formula = ~1 + grazed)
+  
+  S.grazep = list(formula = ~1 + grazep)
+  
+  # 2. DSR varies with quadratic effect of date
+  S.Dot = list(formula = ~1)
+  
+  NOPI.model.list = create.model.list("Nest")
+  NOPI3.results = mark.wrapper(NOPI.model.list,
+                            data = NOPI.pr,
+                            adjust = FALSE,
+                            delete = TRUE)
+}
+
+#results of candidate model set 
+#all results
+NOPI3.results <- NOPI3.run()
+NOPI3.results
 
 #candidate model set for parasitism and nest stage
 NOPI4.run <- function()

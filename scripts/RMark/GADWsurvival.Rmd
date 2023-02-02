@@ -8,8 +8,6 @@ output: html_document
 This is the baseline code for each species. I can just either change the species name for this or copy and paste before changing the species for each species.
 
 ```{r}
-setwd("~/Git/NDSU/RMARK")                                                       # set the working directory
-
 library(ggplot2)
 library(vegan)
 library(tidyverse)
@@ -17,7 +15,7 @@ library(RMark)
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
-nest <- read.csv("~/Git/NDSU/RMARK/Working Data/RMarknesting.csv", 
+nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
 
 GADW.surv <- filter(nest, 
@@ -45,6 +43,8 @@ x <- create.stage.var(GADW.surv,
                          23)
 
 GADW.surv <- cbind(GADW.surv, x)
+
+rm(list = ls()[!ls() %in% c("GADW.surv")])
 ```
 
 ```{r}
@@ -113,53 +113,79 @@ GADW2.results$S.quad$results$beta
 GADW2.results$S.julian$results$beta
 GADW2.results$S.year$results$beta
 
+#candidate model set for grazing
+GADW3.run <- function()
+{
+  # 1. DSR varies with BHCO number
+  S.grazed = list(formula = ~1 + grazed)
+  
+  S.grazep = list(formula = ~1 + grazep)
+  
+  # 2. DSR varies with quadratic effect of date
+  S.Dot = list(formula = ~1)
+  GADW.model.list = create.model.list("Nest")
+  GADW3.results = mark.wrapper(GADW.model.list,
+                            data = GADW.pr,
+                            adjust = FALSE,
+                            delete = TRUE)
+}
+
+#results of candidate model set 
+#all results
+GADW3.results <- GADW3.run()
+GADW3.results
+
+GADW3.results$S.Dot$results$beta
+GADW3.results$S.grazed$results$beta
+GADW3.results$S.grazep$results$beta
+
 #candidate model set for parasitism and nest stage
 GADW4.run <- function()
 {
   # 1. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + cTreat + Time + KBG)
+  S.kbg = list(formula =  ~1 + KBG)
   
   # 2. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.smooth.brome = list(formula = ~1 + cTreat + Time + SmoothB)
+  S.smooth.brome = list(formula = ~1 + SmoothB)
   
   # 3. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + cTreat + Time + Litter)
+  S.lit = list(formula =  ~1 + Litter)
   
   # 4. DSR varies with Bare
-  S.bare = list(formula =  ~1 + cTreat + Time + Bare)
+  S.bare = list(formula =  ~1 + Bare)
   
   # 5. DSR varies with Forb
-  S.forb = list(formula =  ~1 + cTreat + Time + Forb)
+  S.forb = list(formula =  ~1 + Forb)
   
   # 6. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + cTreat + Time + Grasslike)
+  S.grass = list(formula =  ~1 + Grasslike)
   
   # 7. DSR varies with Woody
-  S.woody = list(formula =  ~1 + cTreat + Time + Woody)
+  S.woody = list(formula =  ~1 + Woody)
   
   # 8. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + cTreat + Time + LitterD)
+  S.litdep = list(formula =  ~1 + LitterD)
   
   # 9. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + cTreat + Time + Veg.Height)
+  S.height = list(formula =  ~1 + Veg.Height)
   
   # 10. DSR varies with VOR
-  S.vor = list(formula =  ~1 + cTreat + Time + VOR)
+  S.vor = list(formula =  ~1 + VOR)
   
   # 11. DSR varies with litter and Veg Height
-  S.litheight = list(formula = ~1 + cTreat + Time + Litter + Veg.Height)
+  S.litheight = list(formula = ~1 + Litter + Veg.Height)
   
   # 12. DSR varies with woody and litter depth
-  S.woodylitdep = list(formula = ~1 + cTreat + Time + Woody + LitterD)
+  S.woodylitdep = list(formula = ~1 + Woody + LitterD)
   
   # 13. DSR varies with KBG and litter depth
-  S.kbglitdep = list(formula = ~1 + cTreat + Time + KBG + LitterD)
+  S.kbglitdep = list(formula = ~1 + KBG + LitterD)
   
   # 14. DSR varies with KBG and Veg.Height
-  S.kbgheight = list(formula = ~1 + cTreat + Time + KBG + Veg.Height)
+  S.kbgheight = list(formula = ~1 + KBG + Veg.Height)
   
   # 15. DSR varies with woody and Veg Height
-  S.woodyheight = list(formula = ~1 + cTreat + Time + Woody + Veg.Height)
+  S.woodyheight = list(formula = ~1 + Woody + Veg.Height)
  
   # 1. a model for constant daily survival rate
   S.Dot = list(formula =  ~1)
@@ -176,7 +202,12 @@ GADW4.run <- function()
 GADW4.results <- GADW4.run()
 GADW4.results
 
-GADW4.results$S.Dot$resul$real
+GADW4.results$S.litdep$results$beta
+GADW4.results$S.bare$results$beta
+GADW4.results$S.forb$results$beta
+GADW4.results$S.height$results$beta
+GADW4.results$S.kbglitdep$results$beta
+GADW4.results$S.woodylitdep$results$beta
 ```
 
 ```{r}
