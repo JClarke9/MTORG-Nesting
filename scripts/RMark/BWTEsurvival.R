@@ -1,13 +1,5 @@
----
-title: "BWTE Nest Survival"
-author: "Justin Clarke"
-date: "2022-09-01"
-output: html_document
----
+# Loading libraries -------------------------------------------------------
 
-This is the baseline code for each species. I can just either change the species name for this or copy and paste before changing the species for each species.
-
-```{r}
 library(ggplot2)
 library(vegan)
 library(tidyverse)
@@ -15,8 +7,12 @@ library(RMark)
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
+# Data import -------------------------------------------------------------
+
 nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
+
+# Subsetting data ---------------------------------------------------------
 
 BWTE.surv <- filter(nest, 
                     Spec=="BWTE")                                         # select out only BWTE nests
@@ -25,29 +21,31 @@ BWTE.surv$AgeDay1 <- BWTE.surv$AgeFound - BWTE.surv$FirstFound + 1
 BWTE.surv$Year <- as.factor(BWTE.surv$Year)
 BWTE.surv$cTreat <- as.factor(BWTE.surv$cTreat)
 
+# Creating nest stage variable --------------------------------------------
+
 create.stage.var=function(data,agevar.name,stagevar.name,time.intervals,cutoff)
 {
-nocc=length(time.intervals)
-age.mat=matrix(data[,agevar.name],nrow=dim(data)[1],ncol=nocc-1)
-age.mat=t(t(age.mat)+cumsum(c(0,time.intervals[1:(nocc-2)])))
-stage.mat=t(apply(age.mat,1,function(x) as.numeric(x<=cutoff)))
-stage.mat=data.frame(stage.mat)
-names(stage.mat)=paste(stagevar.name,1:(nocc-1),sep="")
-return(stage.mat)
+  nocc=length(time.intervals)
+  age.mat=matrix(data[,agevar.name],nrow=dim(data)[1],ncol=nocc-1)
+  age.mat=t(t(age.mat)+cumsum(c(0,time.intervals[1:(nocc-2)])))
+  stage.mat=t(apply(age.mat,1,function(x) as.numeric(x<=cutoff)))
+  stage.mat=data.frame(stage.mat)
+  names(stage.mat)=paste(stagevar.name,1:(nocc-1),sep="")
+  return(stage.mat)
 }
 
 x <- create.stage.var(BWTE.surv, 
-                         "AgeDay1", 
-                         "Incub", 
-                         rep(1,max(BWTE.surv$LastChecked)), 
-                         23)
+                      "AgeDay1", 
+                      "Incub", 
+                      rep(1,max(BWTE.surv$LastChecked)), 
+                      23)
 
 BWTE.surv <- cbind(BWTE.surv, x)
 
 rm(list = ls()[!ls() %in% c("BWTE.surv")])
-```
 
-```{r}
+# Daily survival rate models ----------------------------------------------
+
 BWTE.pr <- process.data(BWTE.surv,
                         nocc=max(BWTE.surv$LastChecked), 
                         groups = c("cTreat",
@@ -71,9 +69,9 @@ BWTE1.run <- function()
   
   BWTE.model.list = create.model.list("Nest")
   BWTE1.results = mark.wrapper(BWTE.model.list,
-                            data = BWTE.pr,
-                            adjust = FALSE,
-                            delete = TRUE)
+                               data = BWTE.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
 }
 
 #results of candidate model set 
@@ -98,9 +96,9 @@ BWTE2.run <- function()
   
   BWTE.model.list = create.model.list("Nest")
   BWTE2.results = mark.wrapper(BWTE.model.list,
-                            data = BWTE.pr,
-                            adjust = FALSE,
-                            delete = FALSE)
+                               data = BWTE.pr,
+                               adjust = FALSE,
+                               delete = FALSE)
 }
 
 #results of candidate model set 
@@ -123,9 +121,9 @@ BWTE3.run <- function()
   S.time = list(formula = ~1 + cTreat + Time)
   BWTE.model.list = create.model.list("Nest")
   BWTE3.results = mark.wrapper(BWTE.model.list,
-                            data = BWTE.pr,
-                            adjust = FALSE,
-                            delete = TRUE)
+                               data = BWTE.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
 }
 
 #results of candidate model set 
@@ -190,9 +188,9 @@ BWTE4.run <- function()
   
   BWTE.model.list = create.model.list("Nest")
   BWTE4.results = mark.wrapper(BWTE.model.list,
-                            data = BWTE.pr,
-                            adjust = FALSE,
-                            delete = FALSE)
+                               data = BWTE.pr,
+                               adjust = FALSE,
+                               delete = FALSE)
 }
 
 #results of candidate model set 
@@ -221,9 +219,9 @@ BWTE.real <- BWTE.real |>
 BWTE.avgDSR <- BWTE.real |> 
   group_by(Treat) |> 
   summarize(estimate = mean(estimate))
-```
 
-```{r}
+# Plotting beta coefficients ----------------------------------------------
+
 BWTE.mod <- mark(BWTE.surv, 
                  nocc=max(BWTE.surv$LastChecked), 
                  model = "Nest", 
@@ -272,9 +270,9 @@ BWTE.plot <- ggplot(BWTE.top, aes(x = Variable,
         text=element_text(size=12,
                           colour = "black")) +
   coord_flip()
-```
 
-```{r}
+# Creating predictive plots -----------------------------------------------
+
 plotdata <- BWTE4.results$S.litdep
 
 BWTE.ddl <- make.design.data(BWTE.pr)
@@ -283,8 +281,8 @@ BWTE.ddl <- as.data.frame(BWTE.ddl)
 minlitdep <- min(BWTE.surv$LitterD)
 maxlitdep <- max(BWTE.surv$LitterD)
 LitterD.values = seq(from = minlitdep, 
-                    to = maxlitdep, 
-                    length = 100)
+                     to = maxlitdep, 
+                     length = 100)
 
 litdep.pred <- covariate.predictions(plotdata,
                                      data=data.frame(LitterD=LitterD.values),
@@ -355,10 +353,10 @@ BWTElitdep.plot <- ggplot(transform(litdep.pred$estimates,
                                                   levels=c("Early", "Mid", "Late")),
                                     Treat = factor(Treat,
                                                    levels=c("Rest", "Moderate", "Full", "Heavy"))), 
-                      aes(x = covdata, 
-                          y = estimate,
-                          groups = Group,
-                          fill = Treat)) +
+                          aes(x = covdata, 
+                              y = estimate,
+                              groups = Group,
+                              fill = Treat)) +
   geom_line(size = 1.5,
             aes(colour = Treat)) +
   geom_ribbon(aes(ymin = lcl, 
@@ -366,14 +364,14 @@ BWTElitdep.plot <- ggplot(transform(litdep.pred$estimates,
               alpha = 0.05) +
   facet_grid(Date~.) +
   scale_colour_manual(values = c('#A2A4A2',
-                                 'lightgoldenrod2',
-                                 '#D4A634',
-                                 '#717F5B')) +
-  scale_fill_manual(values = c('#A2A4A2',
-                               'lightgoldenrod2',
-                               '#D4A634',
-                               '#717F5B')) +
-  xlab("Litter Depth (mm)") +
+                                          'lightgoldenrod2',
+                                          '#D4A634',
+                                          '#717F5B')) +
+                                            scale_fill_manual(values = c('#A2A4A2',
+                                                                                  'lightgoldenrod2',
+                                                                                  '#D4A634',
+                                                                                  '#717F5B')) +
+                                                                                    xlab("Litter Depth (mm)") +
   ylab("Estimated DSR") +
   ylim(0, 1.0) +
   theme(plot.title = element_text(family="my_font",                             # select the font for the title
@@ -420,23 +418,23 @@ julian.pred$estimates$Julian[rows68] <- c(1:63)
 BWTEjulian.plot <- ggplot(transform(julian.pred$estimates,
                                     Treat = factor(Treat,
                                                    levels=c("Rest", "Moderate", "Full", "Heavy"))), 
-                      aes(x = Julian,
-                          y = estimate,
-                          fill = Treat)) +
+                          aes(x = Julian,
+                              y = estimate,
+                              fill = Treat)) +
   geom_line(size = 1.5,
             aes(colour = Treat)) +
   geom_ribbon(aes(ymin = lcl, 
                   ymax = ucl), 
               alpha = 0.1) +
   scale_colour_manual(values = c('#A2A4A2',
-                                 'lightgoldenrod2',
-                                 '#D4A634',
-                                 '#717F5B')) +
-  scale_fill_manual(values = c('#A2A4A2',
-                               'lightgoldenrod2',
-                               '#D4A634',
-                               '#717F5B')) +
-  xlab("Julian Day") +
+                                          'lightgoldenrod2',
+                                          '#D4A634',
+                                          '#717F5B')) +
+                                            scale_fill_manual(values = c('#A2A4A2',
+                                                                                  'lightgoldenrod2',
+                                                                                  '#D4A634',
+                                                                                  '#717F5B')) +
+                                                                                    xlab("Julian Day") +
   ylab("Estimated DSR") +
   ylim(0, 1.0) +
   theme(plot.title = element_text(family="my_font",                             # select the font for the title
@@ -473,27 +471,24 @@ ggsave(BWTE.plot,
        width = 6)
 
 ggsave(BWTElitdep.plot,
-       filename = "~/Git/NDSU/RMARK/Figures/BWTElitdep.png",
+       filename = "outputs/figs/BWTElitdep.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
 ggsave(BWTEjulian.plot,
-       filename = "~/Git/NDSU/RMARK/Figures/BWTEjulian.png",
+       filename = "outputs/figs/BWTEjulian.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
-```
 
-```{r}
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,
 #  execute 'rm(list = ls(all = TRUE))' - see 2 lines below.
 # NOTE: this will delete all objects in the R session.
- rm(list = ls(all=TRUE))
+rm(list = ls(all=TRUE))
 # Then, execute 'cleanup(ask = FALSE)' to delete orphaned output
 #  files from MARK. Execute '?cleanup' to learn more
- cleanup(ask = FALSE)
-```
+cleanup(ask = FALSE)

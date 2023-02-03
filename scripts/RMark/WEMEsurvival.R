@@ -1,13 +1,5 @@
----
-title: "WEME Nest Survival"
-author: "Justin Clarke"
-date: "2022-08-31"
-output: html_document
----
+# Loading libraries -------------------------------------------------------
 
-This is the baseline code for each species. I can just either change the species name for this or copy and paste before changing the species for each species.
-
-```{r}
 library(ggplot2)
 library(vegan)
 library(tidyverse)
@@ -15,8 +7,12 @@ library(RMark)
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
+# Data import -------------------------------------------------------------
+
 nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
+
+# Subsetting data ---------------------------------------------------------
 
 WEME.surv <- filter(nest, 
                     Spec=="WEME")                                         # select out only WEME nests
@@ -25,29 +21,31 @@ WEME.surv$AgeDay1 <- WEME.surv$AgeFound - WEME.surv$FirstFound + 1
 WEME.surv$Year <- as.factor(WEME.surv$Year)
 WEME.surv$cTreat <- as.factor(WEME.surv$cTreat)
 
+# Creating stage variable -------------------------------------------------
+
 create.stage.var=function(data,agevar.name,stagevar.name,time.intervals,cutoff)
 {
-nocc=length(time.intervals)
-age.mat=matrix(data[,agevar.name],nrow=dim(data)[1],ncol=nocc-1)
-age.mat=t(t(age.mat)+cumsum(c(0,time.intervals[1:(nocc-2)])))
-stage.mat=t(apply(age.mat,1,function(x) as.numeric(x<=cutoff)))
-stage.mat=data.frame(stage.mat)
-names(stage.mat)=paste(stagevar.name,1:(nocc-1),sep="")
-return(stage.mat)
+  nocc=length(time.intervals)
+  age.mat=matrix(data[,agevar.name],nrow=dim(data)[1],ncol=nocc-1)
+  age.mat=t(t(age.mat)+cumsum(c(0,time.intervals[1:(nocc-2)])))
+  stage.mat=t(apply(age.mat,1,function(x) as.numeric(x<=cutoff)))
+  stage.mat=data.frame(stage.mat)
+  names(stage.mat)=paste(stagevar.name,1:(nocc-1),sep="")
+  return(stage.mat)
 }
 
 x <- create.stage.var(WEME.surv, 
-                         "AgeDay1", 
-                         "Incub", 
-                         rep(1,max(WEME.surv$LastChecked)), 
-                         14)
+                      "AgeDay1", 
+                      "Incub", 
+                      rep(1,max(WEME.surv$LastChecked)), 
+                      14)
 
 WEME.surv <- cbind(WEME.surv, x)
 
 rm(list = ls()[!ls() %in% "WEME.surv"])
-```
 
-```{r}
+# Daily survival rate models ----------------------------------------------
+
 WEME.pr <- process.data(WEME.surv,
                         nocc=max(WEME.surv$LastChecked),
                         groups = c("cTreat", 
@@ -71,9 +69,9 @@ WEME1.run <- function()
   
   WEME.model.list = create.model.list("Nest")
   WEME1.results = mark.wrapper(WEME.model.list,
-                            data = WEME.pr,
-                            adjust = FALSE,
-                            delete = TRUE)
+                               data = WEME.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
 }
 
 #results of candidate model set 
@@ -101,9 +99,9 @@ WEME2.run <- function()
   
   WEME.model.list = create.model.list("Nest")
   WEME2.results = mark.wrapper(WEME.model.list,
-                            data = WEME.pr,
-                            adjust = FALSE,
-                            delete = FALSE)
+                               data = WEME.pr,
+                               adjust = FALSE,
+                               delete = FALSE)
 }
 
 #results of candidate model set 
@@ -131,9 +129,9 @@ WEME3.run <- function()
   
   WEME.model.list = create.model.list("Nest")
   WEME3.results = mark.wrapper(WEME.model.list,
-                            data = WEME.pr,
-                            adjust = FALSE,
-                            delete = TRUE)
+                               data = WEME.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
 }
 
 #results of candidate model set 
@@ -199,9 +197,9 @@ WEME4.run <- function()
   
   WEME.model.list = create.model.list("Nest")
   WEME4.results = mark.wrapper(WEME.model.list,
-                            data = WEME.pr,
-                            adjust = FALSE,
-                            delete = FALSE)
+                               data = WEME.pr,
+                               adjust = FALSE,
+                               delete = FALSE)
 }
 
 #results of candidate model set 
@@ -216,9 +214,9 @@ WEME4.results$S.forb$results$beta
 WEME4.results$S.grazed$results$beta
 
 WEME4.results$S.bare$results$real
-```
 
-```{r}
+# Plotting beta coefficients ----------------------------------------------
+
 WEME.mod <- mark(WEME.surv, 
                  nocc=max(WEME.surv$LastChecked), 
                  model = "Nest", 
@@ -265,11 +263,11 @@ WEME.plot <- ggplot(WEME.top, aes(x = Variable,
         text=element_text(size=12,                                              # change the size of the axis titles
                           colour = "black")) +                                  # change the color of the axis titles
   coord_flip()
-                       
-WEME.plot
-```
 
-```{r}
+WEME.plot
+
+# Creating predictive plots -----------------------------------------------
+
 plotdata <- WEME4.results$S.bare
 
 WEME.ddl <- make.design.data(WEME.pr)
@@ -278,8 +276,8 @@ WEME.ddl <- as.data.frame(WEME.ddl)
 minbare <- min(WEME.surv$Bare)
 maxbare <- max(WEME.surv$Bare)
 Bare.values = seq(from = minbare, 
-                    to = maxbare, 
-                    length = 100)
+                  to = maxbare, 
+                  length = 100)
 
 bare.pred <- covariate.predictions(plotdata,
                                    data=data.frame(Bare=Bare.values),
@@ -288,9 +286,9 @@ bare.pred <- covariate.predictions(plotdata,
 bare.pred$estimates$Group <- "WEME"
 
 WEMEbare.plot <- ggplot(bare.pred$estimates,
-                    aes(x = covdata,
-                        y = estimate,
-                        fill = Group)) +
+                        aes(x = covdata,
+                            y = estimate,
+                            fill = Group)) +
   geom_line(size = 1.5,
             aes(colour = Group)) +
   geom_ribbon(aes(ymin = lcl, 
@@ -323,27 +321,24 @@ WEME.plot
 WEMEbare.plot
 
 ggsave(WEME.plot,
-       filename = "~/Git/NDSU/RMARK/Figures/WEMEbeta.png",
+       filename = "outputs/figs/WEMEbeta.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
 ggsave(WEMEbare.plot,
-       filename = "~/Git/NDSU/RMARK/Figures/WEMEbare.png",
+       filename = "outputs/figs/WEMEbare.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
-```
 
-```{r}
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,
 #  execute 'rm(list = ls(all = TRUE))' - see 2 lines below.
 # NOTE: this will delete all objects in the R session.
- rm(list = ls(all=TRUE))
+rm(list = ls(all=TRUE))
 # Then, execute 'cleanup(ask = FALSE)' to delete orphaned output
 #  files from MARK. Execute '?cleanup' to learn more
- cleanup(ask = FALSE)
-```
+cleanup(ask = FALSE)

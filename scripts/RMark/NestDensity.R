@@ -1,12 +1,4 @@
----
-title: "Nest Density"
-author: "Justin Clarke"
-date: "2022-09-22"
-output: html_document
----
-
-```{r}
-setwd("~/Git/MTORG-Nesting")                                                       # set the working directory
+# Loading libraries -------------------------------------------------------
 
 library(vegan)
 library(tidyverse)
@@ -14,20 +6,21 @@ library(lubridate)
 library(plotrix)
 library(RMark)
 
+# Data import -------------------------------------------------------------
+
 nest <- read.csv("working/RMarknesting.csv",
                  row.names = 1)
 
-```
+# Creating a density analysis function ------------------------------------
 
-```{r}
-
-# currently I'm using max number of nests for each treatment, mean age, constant DSR for each treatment, and average patch size.
+# currently I'm using max number of nests for each treatment, 
+#mean age, constant DSR for each treatment, and average patch size.
 
 density <- function(df, spec, model, groups, age) {
   
   beta <- data.frame(model$data$group.covariates,                               # create a dataframe with grouping categories (i.e. treatments)
                      model$results$real)                                        # and DSR estimates
-
+  
   temp.count <- df |>                                                           # create a dataframe
     group_by(Pasture = as.factor(Pasture),                                      # grouped by patch (i.e. each quarter)
              cTreat = as.factor({{groups}}),                                    # and the treatment groups ~ specified in function
@@ -35,11 +28,11 @@ density <- function(df, spec, model, groups, age) {
              Year = as.factor(Year)) |> 
     summarise(count=n()) |>                                                     # count the number of each species and create a new column
     ungroup()                                                                   # ungroup the list
-
+  
   temp.comb <- full_join(temp.count,                                            # join the count dataframe
-                    beta,                                                       # with the DSR dataframe
-                    by = c("cTreat", "Year"))                                           # by treatment
-
+                         beta,                                                       # with the DSR dataframe
+                         by = c("cTreat", "Year"))                                           # by treatment
+  
   temp.comb <- complete(temp.comb[1:9],                                         # this takes the dataframe
                         nesting(Year, cTreat),
                         Patch,                                                # as well as any missing treatments
@@ -48,7 +41,7 @@ density <- function(df, spec, model, groups, age) {
                                     se = 0,
                                     lcl = 0,
                                     ucl = 0))                                   # and fills all count values as 0
-
+  
   temp.comb <- temp.comb |> 
     mutate(Pasture = case_when(
       Year == 2021 & cTreat == 0 & Patch == "NE" ~ 4,
@@ -98,31 +91,31 @@ density <- function(df, spec, model, groups, age) {
              Year = Year) |>                                 
     summarise(meanAge=mean({{age}})) |>                                         # calculate the mean age for each patch
     ungroup()
-
+  
   temp.age <- complete(temp.age,                                                # this takes the dataframe 
                        nesting(Year, cTreat),
                        Patch,                                                   # as well as any missing treatments
                        fill = list(count = 0,
                                    meanAge = 0))                                # and fills all count values as 0
-
+  
   temp.den <- cbind(temp.comb,                                                  # combine the count/DSR dataframe with the mean age information
                     meanAge=temp.age$meanAge)
-
+  
   Spec.Density <- data.frame(Year = temp.den$Year,
                              Patch = temp.den$Patch,                            # create a species dataframe with patch
                              cTreat = temp.den$cTreat,                          # treatment
                              density = ((temp.den$count/(temp.den$estimate^temp.den$meanAge))/16)) # and the density equation
-
-    # this calculates the exact confidence interval ~ better for smaller sample sizes
-    #exactPoiCI <- function(x, conf.level) {
-    #alpha = 1 - conf.level
-    #upper <- 0.5 * qchisq((1-(alpha/2)), (2*(x+1)))
-    #lower <- 0.5 * qchisq(alpha/2, (2*x))
-    #CI <- data.frame(lower, upper)
-    #}
-    #CI <- exactPoiCI(Spec.Density$density, 0.95)
-    #print(CI)
-
+  
+  # this calculates the exact confidence interval ~ better for smaller sample sizes
+  #exactPoiCI <- function(x, conf.level) {
+  #alpha = 1 - conf.level
+  #upper <- 0.5 * qchisq((1-(alpha/2)), (2*(x+1)))
+  #lower <- 0.5 * qchisq(alpha/2, (2*x))
+  #CI <- data.frame(lower, upper)
+  #}
+  #CI <- exactPoiCI(Spec.Density$density, 0.95)
+  #print(CI)
+  
   # this is good for large sample sizes (mine is pretty small)
   spec.graph <- Spec.Density |> 
     group_by(cTreat) |> 
@@ -130,31 +123,31 @@ density <- function(df, spec, model, groups, age) {
               se = sqrt(mean(density)/n()),
               ucl = mean(density) + (1.96) * sqrt(mean(density)/n()),
               lcl = mean(density) - (1.96) * sqrt(mean(density)/n()))
-
+  
   density.plot <- ggplot(spec.graph, 
-                     aes(x = cTreat, 
-                         y = density)) +
-  geom_point(aes(x = cTreat,
+                         aes(x = cTreat, 
+                             y = density)) +
+    geom_point(aes(x = cTreat,
                    y = density),
-             size = 5) +
+               size = 5) +
     geom_errorbar(aes(x = cTreat,
-                     ymin = lcl,
-                     ymax = ucl),
-                width = .5,
-                size = 1) +
-  ggtitle({{spec}}) +
-  theme(panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-        panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-        panel.background = element_rect(fill="white",                           # make the interior background transparent
-                                        colour = NA),                           # remove any other colors
-        plot.background = element_rect(fill="white",                            # make the outer background transparent
-                                       colour=NA),                              # remove any other colors
-        plot.title = element_text(hjust = 0.5),
-        axis.line = element_line(colour = "black"),                             # color the x and y axis
-        axis.text = element_text(size=20, colour = "black"),                    # color the axis text
-        axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-        text=element_text(size=20,                                              # change the size of the axis titles
-                          colour = "black")) +                                  # change the color of the axis titles
+                      ymin = lcl,
+                      ymax = ucl),
+                  width = .5,
+                  size = 1) +
+    ggtitle({{spec}}) +
+    theme(panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+          panel.background = element_rect(fill="white",                           # make the interior background transparent
+                                          colour = NA),                           # remove any other colors
+          plot.background = element_rect(fill="white",                            # make the outer background transparent
+                                         colour=NA),                              # remove any other colors
+          plot.title = element_text(hjust = 0.5),
+          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.text = element_text(size=20, colour = "black"),                    # color the axis text
+          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          text=element_text(size=20,                                              # change the size of the axis titles
+                            colour = "black")) +                                  # change the color of the axis titles
     labs(x = NULL, y = "Nests Per Ha") +
     scale_x_discrete(breaks=c("0", "39", "49", "68"),
                      labels=c("0"="Rest", "39"="Moderate", "49"="Full", "68"="Heavy"),
@@ -163,10 +156,9 @@ density <- function(df, spec, model, groups, age) {
   print(spec.graph)
   print(Spec.Density)
 }
-```
 
-```{r}
-#Western Meadowlark density analysis
+# WEME Density Analysis ---------------------------------------------------
+
 
 WEME.surv <- filter(nest, Spec=="WEME")
 
@@ -179,10 +171,9 @@ kruskal.test(density ~ cTreat, data = WEME.nest)
 
 rm(list = ls()[!ls() %in%  c("nest", "density", "WEME.nest")])
 cleanup(ask = FALSE)
-```
 
-```{r}
-#Brewer's Blackbird density analysis
+# BRBL Density Analysis ---------------------------------------------------
+
 
 BRBL.surv <- filter(nest, Spec=="BRBL")
 
@@ -195,10 +186,9 @@ kruskal.test(density ~ cTreat, data = BRBL.nest)
 
 rm(list = ls()[!ls() %in%  c("nest", "density", "BRBL.nest")])
 cleanup(ask = FALSE)
-```
 
-```{r}
-#Red-winged Blackabird density analysis
+# RWBL Density Analysis ---------------------------------------------------
+
 
 RWBL.surv <- filter(nest, Spec=="RWBL")
 
@@ -211,10 +201,9 @@ kruskal.test(density ~ cTreat, data = RWBL.nest)
 
 rm(list = ls()[!ls() %in%  c("nest", "density", "RWBL.nest")])
 cleanup(ask = FALSE)
-```
 
-```{r}
-#Clay-colored Sparrow density analysis
+# CCSP Density Analysis ---------------------------------------------------
+
 
 CCSP.surv <- filter(nest, Spec=="CCSP")
 
@@ -231,12 +220,13 @@ kruskal.test(density ~ cTreat, data = CCSP.nest)
 
 rm(list = ls()[!ls() %in%  c("nest", "density", "CCSP.nest")])
 cleanup(ask = FALSE)
-```
 
-The following nests did not include year in the top model so I included it in order to group them to create nest densities for each treatment and year.
+#The following nests did not include year in the top model 
+#so I included it in order to group them to create nest densities 
+#for each treatment and year.
 
-```{r}
-#Northern Pintail density analysis
+# NOPI Density Analysis ---------------------------------------------------
+
 
 NOPI.surv <- filter(nest, Spec=="NOPI")
 
@@ -249,10 +239,9 @@ kruskal.test(density ~ cTreat, data = NOPI.nest)
 
 rm(list = ls()[!ls() %in%  c("nest", "density", "NOPI.nest")])
 cleanup(ask = FALSE)
-```
 
-```{r}
-#Blue-winged Teal density analysis
+# BWTE Density Analysis ---------------------------------------------------
+
 
 BWTE.surv <- filter(nest, Spec=="BWTE")
 
@@ -265,10 +254,9 @@ kruskal.test(density ~ cTreat, data = BWTE.nest)
 
 rm(list = ls()[!ls() %in%  c("nest", "density", "BWTE.nest")])
 cleanup(ask = FALSE)
-```
 
-```{r}
-#Gadwall density analysis
+# GADW Density Analysis ---------------------------------------------------
+
 
 GADW.surv <- filter(nest, Spec=="GADW")
 
@@ -281,10 +269,9 @@ kruskal.test(density ~ cTreat, data = GADW.nest)
 
 rm(list = ls()[!ls() %in%  c("nest", "density", "GADW.nest")])
 cleanup(ask = FALSE)
-```
 
-```{r}
-#Mourning Dove density analysis
+# MODO Density Analysis ---------------------------------------------------
+
 
 MODO.surv <- filter(nest, Spec=="MODO")
 
@@ -297,4 +284,3 @@ kruskal.test(density ~ cTreat, data = MODO.nest)
 
 rm(list = ls()[!ls() %in%  c("nest", "density", "MODO.nest")])
 cleanup(ask = FALSE)
-```

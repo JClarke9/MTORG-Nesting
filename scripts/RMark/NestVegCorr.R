@@ -1,34 +1,20 @@
----
-title: "Nesting Veg Correlations"
-author: "Justin Clarke"
-date: "2022-08-31"
-output: html_document
----
-
-```{r}
-setwd("~/Git/NDSU/RMARK")                                                       # set the working directory
+# Loading libraries -------------------------------------------------------
 
 library(ggcorrplot)
 library(GGally)
-
-nest <- read.csv("~/Git/NDSU/RMARK/Working Data/RMarknesting.csv")
-
-WEME.surv <- filter(nest, Spec=="WEME")                                         # select out only WEME nests
-
-WEME.surv$TotalVegCover <- rowSums(WEME.surv[18:24], na.rm = TRUE)
-WEME.surv[18:24] <- WEME.surv[18:24]/WEME.surv$TotalVegCover * 100
-
-WEME.surv$LitterD <- as.integer(WEME.surv$LitterD)
-WEME.surv$Veg.Height <- as.integer(WEME.surv$Veg.Height)
-
-```
-
-
-
-```{r}
 library(FactoMineR)
 library(factoextra)
 library(corrplot)
+
+# Data import -------------------------------------------------------------
+
+nest <- read.csv("working/RMarknesting.csv")
+
+# Subsetting data ---------------------------------------------------------
+
+WEME.surv <- filter(nest, Spec=="WEME")
+
+# Creating a PCA ----------------------------------------------------------
 
 veg <- WEME.surv[c(18:26, 31)]
 
@@ -54,19 +40,18 @@ WEME.veg <- data.frame(tall.veg, sparse.grass)
 WEME.surv <- cbind(WEME.surv, WEME.veg)
 
 write.csv(WEME.surv, "~/Git/NDSU/RMARK/Working Data/WEMEsurvival.csv")
-```
 
+# Creating correlation function -------------------------------------------
 
-```{r}
 my_custom_cor <- function(                               # begins creation of a function/graph for the upper half
-                                                         # which will contain the coefficient of correlation and an
-                                                         # indicator of significane
+  # which will contain the coefficient of correlation and an
+  # indicator of significane
   data,                                                  # variable 1, analagous to ggplot data argument
   mapping,                                               # variable 2, analagous to ggplot mapping argument
   color = I("grey50"),                                   # variable 3, analagous to ggplot color argument
   sizeRange = c(1, 5),                                   # variable that limits maximum and minimum font size
   ...) {                                                 # ... allows for arguments to be passed to ggplot commands
-                                                         # { opens the code that will define the function
+  # { opens the code that will define the function
   
   # get the x and y data to use the other code
   x <- GGally::eval_data_col(data,                       # pulls the values for x-axis from the data
@@ -148,12 +133,14 @@ my_custom_smooth <- function(                            # create a function/gra
 
 my_custom_smooth(iris, aes(Sepal.Length, Sepal.Width))   # test plot using data built into R
 
+# Running WEME correlations -----------------------------------------------
+
 a <- ggpairs(as.data.frame(WEME.surv[c(18:26, 31)]),     # create the matrix and put it in an object -- allows it to
-                                                         # be modified by ggplot2 commands later
-        upper = list(continuous = my_custom_cor),        # set the upper half to be the figure we created
-        lower = list(continuous = my_custom_smooth),     # set the lower halff to be the scatterplot we created
-       axisLabels = "none",                              # remove the axis labels
-       diag = list(continuous = "barDiag"))              # adds a histogram down the diagonal
+             # be modified by ggplot2 commands later
+             upper = list(continuous = my_custom_cor),        # set the upper half to be the figure we created
+             lower = list(continuous = my_custom_smooth),     # set the lower halff to be the scatterplot we created
+             axisLabels = "none",                              # remove the axis labels
+             diag = list(continuous = "barDiag"))              # adds a histogram down the diagonal
 
 b <- a + theme_bw() +                                    # change the theme of the graph to be black and white
   theme(strip.text.y = element_text(size = 5.6,          # change the facet font size on the y-axis
@@ -165,8 +152,7 @@ b <- a + theme_bw() +                                    # change the theme of t
 
 b
 
-ggsave("~/Git/NDSU/RMARK/Figures/WEMEcorrelations.jpg", 
+ggsave("outputs/figs/WEMEcorrelations.jpg", 
        plot = b, 
        width = 10, 
        height = 10)
-```

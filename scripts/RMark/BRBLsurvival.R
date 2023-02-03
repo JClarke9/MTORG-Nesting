@@ -1,13 +1,5 @@
----
-title: "BRBL Nest Survival"
-author: "Justin Clarke"
-date: "2022-09-02"
-output: html_document
----
+# Loading Libraries -------------------------------------------------------
 
-This is the baseline code for each species. I can just either change the species name for this or copy and paste before changing the species for each species.
-
-```{r}
 library(ggplot2)
 library(vegan)
 library(tidyverse)
@@ -15,8 +7,12 @@ library(RMark)
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
+# Data import -------------------------------------------------------------
+
 nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
+
+# Subsetting Data ---------------------------------------------------------
 
 BRBL.surv <- filter(nest, 
                     Spec=="BRBL")                                         # select out only BRBL nests
@@ -29,30 +25,32 @@ BRBL.surv$AgeDay1 <- BRBL.surv$AgeFound - BRBL.surv$FirstFound + 1
 BRBL.surv$Year <- as.factor(BRBL.surv$Year)
 BRBL.surv$cTreat <- as.factor(BRBL.surv$cTreat)
 
+# Creating nest stage variable --------------------------------------------
+
 create.stage.var=function(data,agevar.name,stagevar.name,time.intervals,cutoff)
 {
-nocc=length(time.intervals)
-age.mat=matrix(data[,agevar.name],nrow=dim(data)[1],ncol=nocc-1)
-age.mat=t(t(age.mat)+cumsum(c(0,time.intervals[1:(nocc-2)])))
-stage.mat=t(apply(age.mat,1,function(x) as.numeric(x<=cutoff)))
-stage.mat=data.frame(stage.mat)
-names(stage.mat)=paste(stagevar.name,1:(nocc-1),sep="")
-return(stage.mat)
+  nocc=length(time.intervals)
+  age.mat=matrix(data[,agevar.name],nrow=dim(data)[1],ncol=nocc-1)
+  age.mat=t(t(age.mat)+cumsum(c(0,time.intervals[1:(nocc-2)])))
+  stage.mat=t(apply(age.mat,1,function(x) as.numeric(x<=cutoff)))
+  stage.mat=data.frame(stage.mat)
+  names(stage.mat)=paste(stagevar.name,1:(nocc-1),sep="")
+  return(stage.mat)
 }
 
 x <- create.stage.var(BRBL.surv, 
-                         "AgeDay1", 
-                         "Incub", 
-                         rep(1,max(BRBL.surv$LastChecked)), 
-                         12)
+                      "AgeDay1", 
+                      "Incub", 
+                      rep(1,max(BRBL.surv$LastChecked)), 
+                      12)
 
 BRBL.surv <- cbind(BRBL.surv, x)
 
 #remove everything but the final dataframe
 rm(list = ls()[!ls() %in%  c("BRBL.surv")])
-```
 
-```{r}
+# Daily survival rate models ----------------------------------------------
+
 BRBL.pr <- process.data(BRBL.surv,
                         nocc=max(BRBL.surv$LastChecked),
                         groups = c("cTreat", 
@@ -76,9 +74,9 @@ BRBL1.run <- function()
   
   BRBL.model.list = create.model.list("Nest")
   BRBL1.results = mark.wrapper(BRBL.model.list,
-                            data = BRBL.pr,
-                            adjust = FALSE,
-                            delete = TRUE)
+                               data = BRBL.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
 }
 
 #results of candidate model set 
@@ -106,9 +104,9 @@ BRBL2.run <- function()
   
   BRBL.model.list = create.model.list("Nest")
   BRBL2.results = mark.wrapper(BRBL.model.list,
-                            data = BRBL.pr,
-                            adjust = FALSE,
-                            delete = TRUE)
+                               data = BRBL.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
 }
 
 #results of candidate model set 
@@ -137,9 +135,9 @@ BRBL3.run <- function()
   
   BRBL.model.list = create.model.list("Nest")
   BRBL3.results = mark.wrapper(BRBL.model.list,
-                            data = BRBL.pr,
-                            adjust = FALSE,
-                            delete = TRUE)
+                               data = BRBL.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
 }
 
 #results of candidate model set 
@@ -203,9 +201,9 @@ BRBL4.run <- function()
   
   BRBL.model.list = create.model.list("Nest")
   BRBL4.results = mark.wrapper(BRBL.model.list,
-                            data = BRBL.pr,
-                            adjust = FALSE,
-                            delete = FALSE)
+                               data = BRBL.pr,
+                               adjust = FALSE,
+                               delete = FALSE)
 }
 
 #results of candidate model set 
@@ -230,9 +228,9 @@ BRBL.real <- BRBL.real |>
 BRBL.avgDSR <- BRBL.real |> 
   group_by(Year) |> 
   summarize(estimate = mean(estimate))
-```
 
-```{r}
+# Plotting Beta Coefficients ----------------------------------------------
+
 BRBL4.results$S.vor$results$real
 
 BRBL.mod <- mark(BRBL.surv, nocc=max(BRBL.surv$LastChecked), 
@@ -280,9 +278,9 @@ BRBL.plot <- ggplot(BRBL.top, aes(x = Variable,
         text=element_text(size=12,                                              # change the size of the axis titles
                           colour = "black")) +                                    # change the color of the axis titles
   coord_flip()
-```
 
-```{r}
+# Creating Predictive Plots -----------------------------------------------
+
 plotdata <- BRBL4.results$S.vor
 
 BRBL.ddl <- make.design.data(BRBL.pr)
@@ -291,8 +289,8 @@ BRBL.ddl <- as.data.frame(BRBL.ddl)
 minvor <- min(BRBL.surv$VOR)
 maxvor <- max(BRBL.surv$VOR)
 VOR.values = seq(from = minvor, 
-                    to = maxvor, 
-                    length = 100)
+                 to = maxvor, 
+                 length = 100)
 
 vor.pred <- covariate.predictions(plotdata,
                                   data=data.frame(VOR=VOR.values),
@@ -335,10 +333,10 @@ head(vor.pred$estimates)
 BRBLvor.plot <- ggplot(transform(vor.pred$estimates,
                                  Year = factor(Year, levels=c("2021", "2022")),
                                  Date = factor(Date, levels=c("Early", "Mid", "Late"))),
-                      aes(x = covdata, 
-                          y = estimate,
-                          groups = Group,
-                          fill = Year)) +
+                       aes(x = covdata, 
+                           y = estimate,
+                           groups = Group,
+                           fill = Year)) +
   geom_line(size = 1.5,
             aes(linetype = Date,
                 colour = Year)) +
@@ -347,10 +345,10 @@ BRBLvor.plot <- ggplot(transform(vor.pred$estimates,
               alpha = 0.05)  +
   facet_grid(Date~.) +
   scale_colour_manual(values = c('#56B4E9',
-                                 '#D55E00')) +
-  scale_fill_manual(values = c('#56B4E9',
-                               '#D55E00')) +
-  xlab("VOR") +
+                                          '#D55E00')) +
+                                            scale_fill_manual(values = c('#56B4E9',
+                                                                                  '#D55E00')) +
+                                                                                    xlab("VOR") +
   ylab("Estimated DSR") +
   xlim(1 , 16) +
   ylim(0, 1) +
@@ -391,19 +389,19 @@ julian.pred$estimates$Julian[Year22] <- c(1:76)
 
 BRBLjulian.plot <- ggplot(transform(julian.pred$estimates,
                                     Year = factor(Year, levels=c("2021", "2022"))), 
-                      aes(x = Julian,
-                          y = estimate,
-                          fill = Year)) +
+                          aes(x = Julian,
+                              y = estimate,
+                              fill = Year)) +
   geom_line(size = 1.5,
             aes(colour=Year)) +
   geom_ribbon(aes(ymin = lcl, 
                   ymax = ucl), 
               alpha = 0.2) +
   scale_colour_manual(values = c('#56B4E9',
-                                 '#D55E00')) +
-  scale_fill_manual(values = c('#56B4E9',
-                               '#D55E00')) +
-  xlab("Julian Day") +
+                                          '#D55E00')) +
+                                            scale_fill_manual(values = c('#56B4E9',
+                                                                                  '#D55E00')) +
+                                                                                    xlab("Julian Day") +
   ylab("Estimated DSR") +
   ylim(0, 1.0) +
   theme(plot.title = element_text(family="my_font",                             # select the font for the title
@@ -431,34 +429,31 @@ BRBLvor.plot
 BRBLjulian.plot
 
 ggsave(BRBL.plot,
-       filename = "~/Git/NDSU/RMARK/Figures/BRBLbeta.png",
+       filename = "outputs/figs/BRBLbeta.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
 ggsave(BRBLvor.plot,
-       filename = "~/Git/NDSU/RMARK/Figures/BRBLvor.png",
+       filename = "outputs/figs/BRBLvor.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
 ggsave(BRBLjulian.plot,
-       filename = "~/Git/NDSU/RMARK/Figures/BRBLjulian.png",
+       filename = "outputs/figs/BRBLjulian.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
-```
 
-```{r}
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,
 #  execute 'rm(list = ls(all = TRUE))' - see 2 lines below.
 # NOTE: this will delete all objects in the R session.
- rm(list = ls(all=TRUE))
+rm(list = ls(all=TRUE))
 # Then, execute 'cleanup(ask = FALSE)' to delete orphaned output
 #  files from MARK. Execute '?cleanup' to learn more
- cleanup(ask = FALSE)
-```
+cleanup(ask = FALSE)

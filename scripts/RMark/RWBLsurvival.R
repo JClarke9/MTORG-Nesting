@@ -1,13 +1,5 @@
----
-title: "RWBL Nest Survival"
-author: "Justin Clarke"
-date: "2022-09-01"
-output: html_document
----
+# Loading libraries -------------------------------------------------------
 
-This is the baseline code for each species. I can just either change the species name for this or copy and paste before changing the species for each species.
-
-```{r}
 library(ggplot2)
 library(vegan)
 library(tidyverse)
@@ -15,8 +7,12 @@ library(RMark)
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
+# Data  import ------------------------------------------------------------
+
 nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
+
+# Subsetting data ---------------------------------------------------------
 
 RWBL.surv <- filter(nest, 
                     Spec=="RWBL")                                         # select out only RWBL nests
@@ -25,29 +21,31 @@ RWBL.surv$AgeDay1 <- RWBL.surv$AgeFound - RWBL.surv$FirstFound + 1
 RWBL.surv$Year <- as.factor(RWBL.surv$Year)
 RWBL.surv$cTreat <- as.factor(RWBL.surv$cTreat)
 
+# Creating stage variable -------------------------------------------------
+
 create.stage.var=function(data,agevar.name,stagevar.name,time.intervals,cutoff)
 {
-nocc=length(time.intervals)
-age.mat=matrix(data[,agevar.name],nrow=dim(data)[1],ncol=nocc-1)
-age.mat=t(t(age.mat)+cumsum(c(0,time.intervals[1:(nocc-2)])))
-stage.mat=t(apply(age.mat,1,function(x) as.numeric(x<=cutoff)))
-stage.mat=data.frame(stage.mat)
-names(stage.mat)=paste(stagevar.name,1:(nocc-1),sep="")
-return(stage.mat)
+  nocc=length(time.intervals)
+  age.mat=matrix(data[,agevar.name],nrow=dim(data)[1],ncol=nocc-1)
+  age.mat=t(t(age.mat)+cumsum(c(0,time.intervals[1:(nocc-2)])))
+  stage.mat=t(apply(age.mat,1,function(x) as.numeric(x<=cutoff)))
+  stage.mat=data.frame(stage.mat)
+  names(stage.mat)=paste(stagevar.name,1:(nocc-1),sep="")
+  return(stage.mat)
 }
 
 x <- create.stage.var(RWBL.surv, 
-                         "AgeDay1", 
-                         "Incub", 
-                         rep(1,max(RWBL.surv$LastChecked)), 
-                         12)
+                      "AgeDay1", 
+                      "Incub", 
+                      rep(1,max(RWBL.surv$LastChecked)), 
+                      12)
 
 RWBL.surv <- cbind(RWBL.surv, x)
 
 rm(list = ls()[!ls() %in% "RWBL.surv"])
-```
 
-```{r}
+# Daily survival rate models ----------------------------------------------
+
 RWBL.pr <- process.data(RWBL.surv,
                         nocc=max(RWBL.surv$LastChecked),
                         groups = c("cTreat", "Year"),
@@ -70,9 +68,9 @@ RWBL1.run <- function()
   
   RWBL.model.list = create.model.list("Nest")
   RWBL1.results = mark.wrapper(RWBL.model.list,
-                            data = RWBL.pr,
-                            adjust = FALSE,
-                            delete = TRUE)
+                               data = RWBL.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
 }
 
 #results of candidate model set 
@@ -100,9 +98,9 @@ RWBL2.run <- function()
   
   RWBL.model.list = create.model.list("Nest")
   RWBL2.results = mark.wrapper(RWBL.model.list,
-                            data = RWBL.pr,
-                            adjust = FALSE,
-                            delete = TRUE)
+                               data = RWBL.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
 }
 
 #results of candidate model set 
@@ -131,9 +129,9 @@ RWBL3.run <- function()
   
   RWBL.model.list = create.model.list("Nest")
   RWBL3.results = mark.wrapper(RWBL.model.list,
-                            data = RWBL.pr,
-                            adjust = FALSE,
-                            delete = TRUE)
+                               data = RWBL.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
 }
 
 #results of candidate model set 
@@ -200,9 +198,9 @@ RWBL4.run <- function()
   
   RWBL.model.list = create.model.list("Nest")
   RWBL4.results = mark.wrapper(RWBL.model.list,
-                            data = RWBL.pr,
-                            adjust = FALSE,
-                            delete = FALSE)
+                               data = RWBL.pr,
+                               adjust = FALSE,
+                               delete = FALSE)
 }
 
 #results of candidate model set 
@@ -239,9 +237,9 @@ RWBL.avgDSR <- RWBL.real |>
   group_by(Treat,
            Year) |> 
   summarize(estimate = mean(estimate))
-```
 
-```{r}
+# Plotting beta coefficients ----------------------------------------------
+
 RWBL.mod <- mark(RWBL.surv, 
                  nocc=max(RWBL.surv$LastChecked), 
                  model = "Nest", 
@@ -263,15 +261,15 @@ RWBL.top$SEup <- RWBL.top$Coefficient + RWBL.top$se
 RWBL.top$SElow <- RWBL.top$Coefficient - RWBL.top$se
 
 RWBL.plot <- ggplot(RWBL.top, aes(x = Variable, 
-                                     y = Coefficient)) +
+                                  y = Coefficient)) +
   geom_hline(yintercept = 0,
              colour = gray(1/2), lty = 2) +
   geom_point(aes(x = Variable,
-                   y = Coefficient),
+                 y = Coefficient),
              size = 5) +
   geom_errorbar(aes(x = Variable,
-                     ymin = lcl,
-                     ymax = ucl),
+                    ymin = lcl,
+                    ymax = ucl),
                 width = .5,
                 size = 1) +
   ggtitle("RWBL Beta Coefficient") +
@@ -287,11 +285,11 @@ RWBL.plot <- ggplot(RWBL.top, aes(x = Variable,
         text=element_text(size=12,                                              # change the size of the axis titles
                           colour = "black")) +                                    # change the color of the axis titles
   coord_flip()
-                       
-RWBL.plot
-```
 
-```{r}
+RWBL.plot
+
+# Creating predictive plots -----------------------------------------------
+
 plotdata <- RWBL4.results$S.bare
 
 RWBL.ddl <- make.design.data(RWBL.pr)
@@ -300,8 +298,8 @@ RWBL.ddl <- as.data.frame(RWBL.ddl)
 minbare <- min(RWBL.surv$Bare)
 maxbare <- max(RWBL.surv$Bare)
 bare.values = seq(from = minbare, 
-                    to = maxbare, 
-                    length = 100)
+                  to = maxbare, 
+                  length = 100)
 
 bare.pred <- covariate.predictions(plotdata,
                                    data=data.frame(Bare=bare.values),
@@ -368,10 +366,10 @@ head(bare.pred$estimates)
 RWBLbare.plot <- ggplot(transform(bare.pred$estimates,
                                   Treat = factor(Treat, levels=c("Rest", "Moderate", "Full", "Heavy")),
                                   Date = factor(Date, levels=c("Early", "Mid", "Late"))), 
-                      aes(x = covdata, 
-                          y = estimate,
-                          groups = Group,
-                          fill = Treat)) +
+                        aes(x = covdata, 
+                            y = estimate,
+                            groups = Group,
+                            fill = Treat)) +
   geom_line(size = 1.5,
             aes(linetype = Date,
                 colour = Treat)) +
@@ -380,14 +378,14 @@ RWBLbare.plot <- ggplot(transform(bare.pred$estimates,
               alpha = 0.05)  +
   facet_grid(Date~.) +
   scale_colour_manual(values = c('#A2A4A2',
-                                 'lightgoldenrod2',
-                                 '#D4A634',
-                                 '#717F5B')) +
-  scale_fill_manual(values = c('#A2A4A2',
-                               'lightgoldenrod2',
-                               '#D4A634',
-                               '#717F5B')) +
-  xlab("Bare Cover") +
+                                          'lightgoldenrod2',
+                                          '#D4A634',
+                                          '#717F5B')) +
+                                            scale_fill_manual(values = c('#A2A4A2',
+                                                                                  'lightgoldenrod2',
+                                                                                  '#D4A634',
+                                                                                  '#717F5B')) +
+                                                                                    xlab("Bare Cover") +
   ylab("Estimated DSR") +
   ylim(0, 1) + 
   theme(plot.title = element_text(family="my_font",                             # select the font for the title
@@ -432,24 +430,24 @@ julian.pred$estimates$Julian[Heavy] <- c(1:71)
 head(julian.pred$estimates)
 
 RWBLjulian.plot <- ggplot(transform(julian.pred$estimates,
-                                  Treat = factor(Treat, levels=c("Rest", "Moderate", "Full", "Heavy"))), 
-                      aes(x = Julian,
-                          y = estimate,
-                          fill = Treat)) +
+                                    Treat = factor(Treat, levels=c("Rest", "Moderate", "Full", "Heavy"))), 
+                          aes(x = Julian,
+                              y = estimate,
+                              fill = Treat)) +
   geom_line(size = 1.5,
             aes(colour=Treat)) +
   geom_ribbon(aes(ymin = lcl, 
                   ymax = ucl), 
               alpha = 0.3) +
   scale_colour_manual(values = c('#A2A4A2',
-                                 'lightgoldenrod2',
-                                 '#D4A634',
-                                 '#717F5B')) +
-  scale_fill_manual(values = c('#A2A4A2',
-                               'lightgoldenrod2',
-                               '#D4A634',
-                               '#717F5B')) +
-  xlab("Julian Day") +
+                                          'lightgoldenrod2',
+                                          '#D4A634',
+                                          '#717F5B')) +
+                                            scale_fill_manual(values = c('#A2A4A2',
+                                                                                  'lightgoldenrod2',
+                                                                                  '#D4A634',
+                                                                                  '#717F5B')) +
+                                                                                    xlab("Julian Day") +
   ylab("Estimated DSR") +
   ylim(0, 1.0) +
   theme(plot.title = element_text(family="my_font",                             # select the font for the title
@@ -477,34 +475,31 @@ RWBLbare.plot
 RWBLjulian.plot
 
 ggsave(RWBL.plot,
-       filename = "~/Git/NDSU/RMARK/Figures/RWBLbeta.png",
+       filename = "outputs/figs/RWBLbeta.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
 ggsave(RWBLbare.plot,
-       filename = "~/Git/NDSU/RMARK/Figures/RWBLbare.png",
+       filename = "outputs/figs/RWBLbare.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
 ggsave(RWBLjulian.plot,
-       filename = "~/Git/NDSU/RMARK/Figures/RWBLjulian.png",
+       filename = "outputs/figs/RWBLjulian.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
-```
 
-```{r}
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,
 #  execute 'rm(list = ls(all = TRUE))' - see 2 lines below.
 # NOTE: this will delete all objects in the R session.
- rm(list = ls(all=TRUE))
+rm(list = ls(all=TRUE))
 # Then, execute 'cleanup(ask = FALSE)' to delete orphaned output
 #  files from MARK. Execute '?cleanup' to learn more
- cleanup(ask = FALSE)
-```
+cleanup(ask = FALSE)

@@ -1,13 +1,5 @@
----
-title: "CCSP Nest Survival"
-author: "Justin Clarke"
-date: "2022-08-31"
-output: html_document
----
+# Loading libraries -------------------------------------------------------
 
-This is the baseline code for each species. I can just either change the species name for this or copy and paste before changing the species for each species.
-
-```{r}
 library(ggplot2)
 library(vegan)
 library(tidyverse)
@@ -15,8 +7,12 @@ library(RMark)
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
+# Data import -------------------------------------------------------------
+
 nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
+
+# Subsetting data ---------------------------------------------------------
 
 CCSP.surv <- filter(nest, 
                     Spec=="CCSP")                                         # select out only CCSP nests
@@ -25,29 +21,31 @@ CCSP.surv$AgeDay1 <- CCSP.surv$AgeFound - CCSP.surv$FirstFound + 1
 CCSP.surv$Year <- as.factor(CCSP.surv$Year)
 CCSP.surv$cTreat <- as.factor(CCSP.surv$cTreat)
 
+# Creating stage variable -------------------------------------------------
+
 create.stage.var=function(data,agevar.name,stagevar.name,time.intervals,cutoff)
 {
-nocc=length(time.intervals)
-age.mat=matrix(data[,agevar.name],nrow=dim(data)[1],ncol=nocc-1)
-age.mat=t(t(age.mat)+cumsum(c(0,time.intervals[1:(nocc-2)])))
-stage.mat=t(apply(age.mat,1,function(x) as.numeric(x<=cutoff)))
-stage.mat=data.frame(stage.mat)
-names(stage.mat)=paste(stagevar.name,1:(nocc-1),sep="")
-return(stage.mat)
+  nocc=length(time.intervals)
+  age.mat=matrix(data[,agevar.name],nrow=dim(data)[1],ncol=nocc-1)
+  age.mat=t(t(age.mat)+cumsum(c(0,time.intervals[1:(nocc-2)])))
+  stage.mat=t(apply(age.mat,1,function(x) as.numeric(x<=cutoff)))
+  stage.mat=data.frame(stage.mat)
+  names(stage.mat)=paste(stagevar.name,1:(nocc-1),sep="")
+  return(stage.mat)
 }
 
 x <- create.stage.var(CCSP.surv, 
-                         "AgeDay1", 
-                         "Incub", 
-                         rep(1,max(CCSP.surv$LastChecked)), 
-                         12)
+                      "AgeDay1", 
+                      "Incub", 
+                      rep(1,max(CCSP.surv$LastChecked)), 
+                      12)
 
 CCSP.surv <- cbind(CCSP.surv, x)
 
 rm(list = ls()[!ls() %in% c("CCSP.surv")])
-```
 
-```{r}
+# Daily survival rate models ----------------------------------------------
+
 CCSP.pr <- process.data(CCSP.surv,
                         nocc=max(CCSP.surv$LastChecked),
                         groups = c("cTreat", 
@@ -71,9 +69,9 @@ CCSP1.run <- function()
   
   CCSP.model.list = create.model.list("Nest")
   CCSP1.results = mark.wrapper(CCSP.model.list,
-                            data = CCSP.pr,
-                            adjust = FALSE,
-                            delete = TRUE)
+                               data = CCSP.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
 }
 
 #results of candidate model set 
@@ -101,9 +99,9 @@ CCSP2.run <- function()
   
   CCSP.model.list = create.model.list("Nest")
   CCSP2.results = mark.wrapper(CCSP.model.list,
-                            data = CCSP.pr,
-                            adjust = FALSE,
-                            delete = TRUE)
+                               data = CCSP.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
 }
 
 #results of candidate model set 
@@ -132,9 +130,9 @@ CCSP3.run <- function()
   S.time = list(formula = ~1 + Year + Time)
   CCSP.model.list = create.model.list("Nest")
   CCSP3.results = mark.wrapper(CCSP.model.list,
-                            data = CCSP.pr,
-                            adjust = FALSE,
-                            delete = TRUE)
+                               data = CCSP.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
 }
 
 #results of candidate model set 
@@ -198,9 +196,9 @@ CCSP4.run <- function()
   
   CCSP.model.list = create.model.list("Nest")
   CCSP4.results = mark.wrapper(CCSP.model.list,
-                            data = CCSP.pr,
-                            adjust = FALSE,
-                            delete = TRUE)
+                               data = CCSP.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
 }
 
 #results of candidate model set 
@@ -226,9 +224,9 @@ CCSP.real <- CCSP.real |>
 CCSP.avgDSR <- CCSP.real |> 
   group_by(Year) |> 
   summarize(estimate = mean(estimate))
-```
 
-```{r}
+# Plotting beta coefficients ----------------------------------------------
+
 CCSP.mod <- mark(CCSP.surv, 
                  nocc=max(CCSP.surv$LastChecked), 
                  model = "Nest", 
@@ -280,9 +278,9 @@ CCSP.plot <- ggplot(CCSP.top,
         text=element_text(size=12,                                              # change the size of the axis titles
                           colour = "black")) +                                    # change the color of the axis titles
   coord_flip()
-```
 
-```{r}
+# Creating predictive plots -----------------------------------------------
+
 CCSP.ddl <- make.design.data(CCSP.pr)
 CCSP.ddl <- as.data.frame(CCSP.ddl)
 
@@ -342,10 +340,10 @@ head(height.pred$estimates)
 CCSPheight.plot <- ggplot(transform(height.pred$estimates,
                                     Year = factor(Year, levels=c("2021", "2022")),
                                     Date = factor(Date, levels=c("Early", "Mid", "Late"))), 
-                      aes(x = Veg.Height, 
-                          y = estimate,
-                          groups = Group,
-                          fill = Year)) +
+                          aes(x = Veg.Height, 
+                              y = estimate,
+                              groups = Group,
+                              fill = Year)) +
   geom_line(size = 1.5,
             aes(linetype = Date,
                 colour = Year)) +
@@ -354,10 +352,10 @@ CCSPheight.plot <- ggplot(transform(height.pred$estimates,
               alpha = 0.1) +
   facet_grid(Date~.) +
   scale_colour_manual(values = c('#56B4E9',
-                                 '#D55E00')) +
-  scale_fill_manual(values = c('#56B4E9',
-                               '#D55E00')) +
-  xlab("Veg Height (mm)") +
+                                          '#D55E00')) +
+                                            scale_fill_manual(values = c('#56B4E9',
+                                                                                  '#D55E00')) +
+                                                                                    xlab("Veg Height (mm)") +
   ylab("Estimated DSR") +
   ylim(0.7, 1) + 
   theme(plot.title = element_text(family="my_font",                             # select the font for the title
@@ -383,9 +381,9 @@ CCSPheight.plot <- ggplot(transform(height.pred$estimates,
 CCSPheight.plot
 
 bhco.pred <- covariate.predictions(plotdata,
-                                     data=data.frame(Veg.Height=mean(Veg.Heightvalues),
-                                                     BHCONum=BHCONum.values),
-                                     indices = c(6, 41, 81, 346, 481, 421))
+                                   data=data.frame(Veg.Height=mean(Veg.Heightvalues),
+                                                   BHCONum=BHCONum.values),
+                                   indices = c(6, 41, 81, 346, 481, 421))
 
 Day5.21 <- which(bhco.pred$estimates$par.index == 6)
 Day40.21 <- which(bhco.pred$estimates$par.index == 41)
@@ -424,22 +422,22 @@ head(bhco.pred$estimates)
 CCSPbhco.plot <- ggplot(transform(bhco.pred$estimates,
                                   Year = factor(Year, levels=c("2021", "2022")),
                                   Date = factor(Date, levels=c("Early", "Mid", "Late"))),
-                      aes(x = BHCONum,
-                          y = estimate,
-                          groups = Group,
-                          fill = Year)) +
+                        aes(x = BHCONum,
+                            y = estimate,
+                            groups = Group,
+                            fill = Year)) +
   geom_line(size = 1.5,
             aes(linetype = Date,
-            colour=Year)) +
+                colour=Year)) +
   geom_ribbon(aes(ymin = lcl, 
                   ymax = ucl), 
               alpha = 0.1) +
   facet_grid(Date~.) +
   scale_colour_manual(values = c('#56B4E9',
-                                 '#D55E00')) +
-  scale_fill_manual(values = c('#56B4E9',
-                               '#D55E00')) +
-  xlab("Julian Day") +
+                                          '#D55E00')) +
+                                            scale_fill_manual(values = c('#56B4E9',
+                                                                                  '#D55E00')) +
+                                                                                    xlab("Julian Day") +
   ylab("Estimated DSR") +
   ylim(.6, 1.0) +
   theme(plot.title = element_text(family="my_font",                             # select the font for the title
@@ -478,19 +476,19 @@ julian.pred$estimates$Julian[Year22] <- c(1:85)
 
 CCSPjulian.plot <- ggplot(transform(julian.pred$estimates,
                                     Year = factor(Year, levels=c("2021", "2022"))),
-                      aes(x = Julian,
-                          y = estimate,
-                          fill = Year)) +
+                          aes(x = Julian,
+                              y = estimate,
+                              fill = Year)) +
   geom_line(size = 1.5,
             aes(colour=Year)) +
   geom_ribbon(aes(ymin = lcl, 
                   ymax = ucl), 
               alpha = 0.3) +
   scale_colour_manual(values = c('#56B4E9',
-                                 '#D55E00')) +
-  scale_fill_manual(values = c('#56B4E9',
-                               '#D55E00')) +
-  xlab("Julian Day") +
+                                          '#D55E00')) +
+                                            scale_fill_manual(values = c('#56B4E9',
+                                                                                  '#D55E00')) +
+                                                                                    xlab("Julian Day") +
   ylab("Estimated DSR") +
   ylim(0, 1.0) +
   theme(plot.title = element_text(family="my_font",                             # select the font for the title
@@ -519,41 +517,38 @@ CCSPbhco.plot
 CCSPjulian.plot
 
 ggsave(CCSP.plot,
-       filename = "~/Git/NDSU/RMARK/Figures/CCSPbeta.png",
+       filename = "outputs/figs/CCSPbeta.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
 ggsave(CCSPheight.plot,
-       filename = "~/Git/NDSU/RMARK/Figures/CCSPheight.png",
+       filename = "outputs/figs/CCSPheight.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
 ggsave(CCSPbhco.plot,
-       filename = "~/Git/NDSU/RMARK/Figures/CCSPbhco.png",
+       filename = "outputs/figs/CCSPbhco.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
 ggsave(CCSPjulian.plot,
-       filename = "~/Git/NDSU/RMARK/Figures/CCSPjulian.png",
+       filename = "outputs/figs/CCSPjulian.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
-```
 
-```{r}
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,
 #  execute 'rm(list = ls(all = TRUE))' - see 2 lines below.
 # NOTE: this will delete all objects in the R session.
- rm(list = ls(all=TRUE))
+rm(list = ls(all=TRUE))
 # Then, execute 'cleanup(ask = FALSE)' to delete orphaned output
 #  files from MARK. Execute '?cleanup' to learn more
- cleanup(ask = FALSE)
-```
+cleanup(ask = FALSE)

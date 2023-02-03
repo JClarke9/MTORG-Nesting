@@ -1,13 +1,5 @@
----
-title: "GADW Nest Survival"
-author: "Justin Clarke"
-date: "2022-09-02"
-output: html_document
----
+# Loading libraries -------------------------------------------------------
 
-This is the baseline code for each species. I can just either change the species name for this or copy and paste before changing the species for each species.
-
-```{r}
 library(ggplot2)
 library(vegan)
 library(tidyverse)
@@ -15,8 +7,12 @@ library(RMark)
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
+# Data import -------------------------------------------------------------
+
 nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
+
+# Subsetting data ---------------------------------------------------------
 
 GADW.surv <- filter(nest, 
                     Spec=="GADW")                                         # select out only GADW nests
@@ -25,29 +21,31 @@ GADW.surv$AgeDay1 <- GADW.surv$AgeFound - GADW.surv$FirstFound + 1
 GADW.surv$Year <- as.factor(GADW.surv$Year)
 GADW.surv$cTreat <- as.factor(GADW.surv$cTreat)
 
+# Creating stage variable -------------------------------------------------
+
 create.stage.var=function(data,agevar.name,stagevar.name,time.intervals,cutoff)
 {
-nocc=length(time.intervals)
-age.mat=matrix(data[,agevar.name],nrow=dim(data)[1],ncol=nocc-1)
-age.mat=t(t(age.mat)+cumsum(c(0,time.intervals[1:(nocc-2)])))
-stage.mat=t(apply(age.mat,1,function(x) as.numeric(x<=cutoff)))
-stage.mat=data.frame(stage.mat)
-names(stage.mat)=paste(stagevar.name,1:(nocc-1),sep="")
-return(stage.mat)
+  nocc=length(time.intervals)
+  age.mat=matrix(data[,agevar.name],nrow=dim(data)[1],ncol=nocc-1)
+  age.mat=t(t(age.mat)+cumsum(c(0,time.intervals[1:(nocc-2)])))
+  stage.mat=t(apply(age.mat,1,function(x) as.numeric(x<=cutoff)))
+  stage.mat=data.frame(stage.mat)
+  names(stage.mat)=paste(stagevar.name,1:(nocc-1),sep="")
+  return(stage.mat)
 }
 
 x <- create.stage.var(GADW.surv, 
-                         "AgeDay1", 
-                         "Incub", 
-                         rep(1,max(GADW.surv$LastChecked)), 
-                         23)
+                      "AgeDay1", 
+                      "Incub", 
+                      rep(1,max(GADW.surv$LastChecked)), 
+                      23)
 
 GADW.surv <- cbind(GADW.surv, x)
 
 rm(list = ls()[!ls() %in% c("GADW.surv")])
-```
 
-```{r}
+# Daily survival rate models ----------------------------------------------
+
 GADW.pr <- process.data(GADW.surv,
                         nocc=max(GADW.surv$LastChecked), 
                         groups = c("cTreat",
@@ -71,9 +69,9 @@ GADW1.run <- function()
   
   GADW.model.list = create.model.list("Nest")
   GADW1.results = mark.wrapper(GADW.model.list,
-                            data = GADW.pr,
-                            adjust = FALSE,
-                            delete = TRUE)
+                               data = GADW.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
 }
 
 #results of candidate model set 
@@ -98,9 +96,9 @@ GADW2.run <- function()
   
   GADW.model.list = create.model.list("Nest")
   GADW2.results = mark.wrapper(GADW.model.list,
-                            data = GADW.pr,
-                            adjust = FALSE,
-                            delete = TRUE)
+                               data = GADW.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
 }
 
 #results of candidate model set 
@@ -125,9 +123,9 @@ GADW3.run <- function()
   S.Dot = list(formula = ~1)
   GADW.model.list = create.model.list("Nest")
   GADW3.results = mark.wrapper(GADW.model.list,
-                            data = GADW.pr,
-                            adjust = FALSE,
-                            delete = TRUE)
+                               data = GADW.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
 }
 
 #results of candidate model set 
@@ -186,15 +184,15 @@ GADW4.run <- function()
   
   # 15. DSR varies with woody and Veg Height
   S.woodyheight = list(formula = ~1 + Woody + Veg.Height)
- 
+  
   # 1. a model for constant daily survival rate
   S.Dot = list(formula =  ~1)
   
   GADW.model.list = create.model.list("Nest")
   GADW4.results = mark.wrapper(GADW.model.list,
-                            data = GADW.pr,
-                            adjust = FALSE,
-                            delete = FALSE)
+                               data = GADW.pr,
+                               adjust = FALSE,
+                               delete = FALSE)
 }
 
 #results of candidate model set 
@@ -208,15 +206,12 @@ GADW4.results$S.forb$results$beta
 GADW4.results$S.height$results$beta
 GADW4.results$S.kbglitdep$results$beta
 GADW4.results$S.woodylitdep$results$beta
-```
 
-```{r}
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,
 #  execute 'rm(list = ls(all = TRUE))' - see 2 lines below.
 # NOTE: this will delete all objects in the R session.
- rm(list = ls(all=TRUE))
+rm(list = ls(all=TRUE))
 # Then, execute 'cleanup(ask = FALSE)' to delete orphaned output
 #  files from MARK. Execute '?cleanup' to learn more
- cleanup(ask = FALSE)
-```
+cleanup(ask = FALSE)
