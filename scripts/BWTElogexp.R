@@ -1,24 +1,21 @@
----
-title: "RWBB logexp Survival"
-author: "Justin Clarke"
-date: "2022-09-12"
-output: html_document
----
+# Load libraries ----------------------------------------------------------
 
-```{r}
+
 library(lubridate)
 library(vegan)
 library(tidyverse)
 
+# Data import -------------------------------------------------------------
+
 raw <- read.csv("~/Git/NDSU/Nesting.csv")                                       # read in the data set
 
 raw$Date <- as.Date(raw$Date,                                                   # read the Date column as a date
-                      "%m/%d/%y") |>                                            # show the format of the existing dates
-    yday()                                                                      # calculate the Date day
+                    "%m/%d/%y") |>                                            # show the format of the existing dates
+  yday()                                                                      # calculate the Date day
 
 raw$FirstFound <- as.Date(raw$FirstFound,                                                   # read the Date column as a date
-                      "%m/%d/%y") |>                                            # show the format of the existing dates
-    yday()                                                                      # calculate the Date day
+                          "%m/%d/%y") |>                                            # show the format of the existing dates
+  yday()                                                                      # calculate the Date day
 
 raw$aRobel <- rowMeans(raw[,28:31])                                             # create a new column with the robel readings averaged
 
@@ -46,31 +43,28 @@ raw$AgeFound <- as.numeric(raw$AgeFound)
 library(MASS)
 logexp <- function(exposure = 1)
 {
-    linkfun <- function(mu) qlogis(mu^(1/exposure))
-    ## FIXME: is there some trick we can play here to allow
-    ##   evaluation in the context of the 'data' argument?
-    linkinv <- function(eta)  plogis(eta)^exposure
-    logit_mu_eta <- function(eta) {
-        ifelse(abs(eta)>30,.Machine$double.eps,
-               exp(eta)/(1+exp(eta))^2)
-        ## OR .Call(stats:::C_logit_mu_eta, eta, PACKAGE = "stats")
-    }
-    mu.eta <- function(eta) {       
-        exposure * plogis(eta)^(exposure-1) *
-            logit_mu_eta(eta)
-    }
-    valideta <- function(eta) TRUE
-    link <- paste("logexp(", deparse(substitute(exposure)), ")",
-                   sep="")
-    structure(list(linkfun = linkfun, linkinv = linkinv,
-                   mu.eta = mu.eta, valideta = valideta, 
-                   name = link),
-              class = "link-glm")
+  linkfun <- function(mu) qlogis(mu^(1/exposure))
+  ## FIXME: is there some trick we can play here to allow
+  ##   evaluation in the context of the 'data' argument?
+  linkinv <- function(eta)  plogis(eta)^exposure
+  logit_mu_eta <- function(eta) {
+    ifelse(abs(eta)>30,.Machine$double.eps,
+           exp(eta)/(1+exp(eta))^2)
+    ## OR .Call(stats:::C_logit_mu_eta, eta, PACKAGE = "stats")
+  }
+  mu.eta <- function(eta) {       
+    exposure * plogis(eta)^(exposure-1) *
+      logit_mu_eta(eta)
+  }
+  valideta <- function(eta) TRUE
+  link <- paste("logexp(", deparse(substitute(exposure)), ")",
+                sep="")
+  structure(list(linkfun = linkfun, linkinv = linkinv,
+                 mu.eta = mu.eta, valideta = valideta, 
+                 name = link),
+            class = "link-glm")
 }
-```
 
-
-```{r}
 ## Import data from proper folder using R-studio and CSV file
 ##install and load “lme4”, “MuMIn”, and “AICcmodavg” packages before proceeding
 
@@ -78,44 +72,46 @@ library(lme4)
 library(MuMIn)
 library(AICcmodavg)
 
-WEME <- raw |> 
-  filter(Spec=="WEME") |> 
+BWTE <- raw |> 
+  filter(Spec=="BWTE") |> 
   na.omit() |> 
   ungroup()
 
-attributes(WEME)$na.action <- NULL
+BWTE <- BWTE %>% 
+  filter(BWTE$Expos != 0)
 
-WEME$trials <- 1
+attributes(BWTE)$na.action <- NULL
 
-WEME[,c(6,19:31,39)] <- scale(WEME[,c(6,19:31,39)], center = TRUE, scale = TRUE)
+BWTE$trials <- 1
 
-WEME$Stage <- recode(WEME$Stage,
-                     "Incubating" = "0",
-                     "Laying" = "1",
-                     "Nestling" = "2")
-WEME$Stage <- as.numeric(WEME$Stage)
+BWTE[,c(6,19:31,39)] <- scale(BWTE[,c(6,19:31,39)], center = TRUE, scale = TRUE)
+
+BWTE$Stage <- recode(BWTE$Stage,
+                     "Incubating" = "INC",
+                     "Laying" = "LAY",
+                     "Nestling" = "NST")
 ## STEP 1a
 
 R1 <- glmer(Fate/trials ~ (1|id),
-            family = binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
+            family = binomial(logexp(exposure=BWTE$Expos)),
+            data=BWTE)
 R2 <- glmer(Fate/trials ~ (1|id) + (1|Year),
-            family = binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
+            family = binomial(logexp(exposure=BWTE$Expos)),
+            data=BWTE)
 R3 <- glmer(Fate/trials ~ (1|Pasture/id),
-            family=binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
+            family=binomial(logexp(exposure=BWTE$Expos)),
+            data=BWTE)
 R4 <- glmer(Fate/trials ~ (1|Pasture/id) + (1|Year),
-            family=binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
+            family=binomial(logexp(exposure=BWTE$Expos)),
+            data=BWTE)
 
 ## AIC Table
 
 Cand.Rand.mods <- list(
-"id-R1" = R1,
-"id+Year-R2" = R2,
-"Pasture/id-R3" = R3, 
-"Pasture/id+Year-R4" = R4)
+  "id-R1" = R1,
+  "id+Year-R2" = R2,
+  "Pasture/id-R3" = R3, 
+  "Pasture/id+Year-R4" = R4)
 
 aictab(cand.set = Cand.Rand.mods,
        second.ord = TRUE)
@@ -136,30 +132,14 @@ Cp(R4)
 ## STEP 1b
 
 E1 <- glmer(Fate/trials ~ (1|id) + cTreat,
-            family = binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
-S1 <- glmer(Fate/trials ~ (1|id) + Stage,
-            family=binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
-B1 <- glmer(Fate/trials ~ (1|id) + BHCOpres,
-            family=binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
-T1 <- glmer(Fate/trials ~ (1|id) + Date,
-            family=binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
-T4 <- glmer(Fate/trials ~ (1|id) + Date + Date^2,
-            family=binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
+            family = binomial(logexp(exposure=BWTE$Expos)),
+            data=BWTE)
 
 ## AIC Table
 
 Cand.Exp.mods <- list(
-"id-Null" = R1,
-"id+cTreat-E1" = E1,
-"id+Stage=S1" = S1,
-"id+BHCOpres=B1" = B1,
-"id+Date=T1" = T1,
-"id+Date2=T4" = T4)
+  "id-Null" = R1,
+  "id+cTreat-E1" = E1)
 
 aictab(cand.set = Cand.Exp.mods,
        second.ord = TRUE)
@@ -178,24 +158,18 @@ Cp(E1)
 ##STEP 2
 
 T1 <- glmer(Fate/trials ~ (1|id) + Date,
-            family=binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
-T4 <- glmer(Fate/trials ~ (1|id) + Date + Date^2,
-            family=binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
-T5 <- glmer(Fate/trials ~ (1|id) + AgeFound,
-            family=binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
+            family=binomial(logexp(exposure=BWTE$Expos)),
+            data=BWTE)
+T2 <- glmer(Fate/trials ~ (1|id) + Date + Date^2,
+            family=binomial(logexp(exposure=BWTE$Expos)),
+            data=BWTE)
 
 ## AIC Table
 
 Cand.Temp.mods <- list(
-"id-Null" = R1, 
-"Date-T1" = T1, 
-"Stage-T2" = T2, 
-"Date+Stage-T3" = T3,
-"Quad Date-T4" = T4,
-"Age-T5" = T5)
+  "id-Null" = R1, 
+  "Date-T1" = T1, 
+  "Quad Date-T2" = T2)
 
 aictab(cand.set = Cand.Temp.mods,
        second.ord = TRUE)
@@ -244,54 +218,54 @@ VarF/(VarF + VarCorr(T2)$id[1] + pi^2/3)
 ##STEP 3a
 
 N1 <- glmer(Fate/trials ~ (1|id) + Stage + KBG,
-            family=binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
+            family=binomial(logexp(exposure=BWTE$Expos)),
+            data=BWTE)
 N2 <- glmer(Fate/trials ~ (1|id) + Stage + Smooth.Brome,
-            family=binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
+            family=binomial(logexp(exposure=BWTE$Expos)),
+            data=BWTE)
 N3 <- glmer(Fate/trials ~ (1|id) + Stage + Litter,
-            family=binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
+            family=binomial(logexp(exposure=BWTE$Expos)),
+            data=BWTE)
 N4 <- glmer(Fate/trials ~ (1|id) + Stage + Bare,
-            family=binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
+            family=binomial(logexp(exposure=BWTE$Expos)),
+            data=BWTE)
 N5 <- glmer(Fate/trials ~ (1|id) + Stage + Forb,
-            family=binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
+            family=binomial(logexp(exposure=BWTE$Expos)),
+            data=BWTE)
 N6 <- glmer(Fate/trials ~ (1|id) + Stage + Grasslike,
-            family=binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
+            family=binomial(logexp(exposure=BWTE$Expos)),
+            data=BWTE)
 N7 <- glmer(Fate/trials ~ (1|id) + Stage + Woody,
-            family=binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
+            family=binomial(logexp(exposure=BWTE$Expos)),
+            data=BWTE)
 N8 <- glmer(Fate/trials ~ (1|id) + Stage + Litter.Depth,
-            family=binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
+            family=binomial(logexp(exposure=BWTE$Expos)),
+            data=BWTE)
 N9 <- glmer(Fate/trials ~ (1|id) + Stage + Veg.Height,
-            family=binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
+            family=binomial(logexp(exposure=BWTE$Expos)),
+            data=BWTE)
 N10<- glmer(Fate/trials ~ (1|id) + Stage + aRobel,
-            family=binomial(logexp(exposure=WEME$Expos)),
-            data=WEME)
+            family=binomial(logexp(exposure=BWTE$Expos)),
+            data=BWTE)
 N11 <- glmer(Fate/trials ~ (1|id) + Stage + Litter.Depth + aRobel,
-             family=binomial(logexp(exposure=WEME$Expos)),
-             data=WEME)
+             family=binomial(logexp(exposure=BWTE$Expos)),
+             data=BWTE)
 
 ##AIC Table
 Cand.Nest.mods <- list(
-"id–Null" = R1,
-"Stage–T2" = T2,
-"KBG-N1" = N1,
-"Smooth Brome-N2" = N2,
-"Litter-N3" = N3,
-"Bare-N4" = N4,
-"Forb-N5" = N5,
-"Grasslike-N6" = N6,
-"Woody-N7" = N7,
-"Litter Depth-N8" = N8,
-"Veg Height-N9" = N9,
-"aRobel-N10" = N10,
-"Litter Depth+aRobel-N11" = N11)
+  "id–Null" = R1,
+  "Stage–T2" = T2,
+  "KBG-N1" = N1,
+  "Smooth Brome-N2" = N2,
+  "Litter-N3" = N3,
+  "Bare-N4" = N4,
+  "Forb-N5" = N5,
+  "Grasslike-N6" = N6,
+  "Woody-N7" = N7,
+  "Litter Depth-N8" = N8,
+  "Veg Height-N9" = N9,
+  "aRobel-N10" = N10,
+  "Litter Depth+aRobel-N11" = N11)
 
 aictab(cand.set = Cand.Nest.mods, second.ord = TRUE)
 
@@ -351,4 +325,3 @@ VarF/(VarF + VarCorr(N3)$id[1] + VarCorr(N3)$Pasture[1] +  pi^2/3)
 
 ## Proportion Change in Variance (PCV) for fitted model (rand.ef2)
 100*(1 - (VarCorr(N3)$Pasture[1])/(VarCorr(R2)$Pasture[1]))
-```

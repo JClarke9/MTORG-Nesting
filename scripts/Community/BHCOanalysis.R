@@ -1,15 +1,7 @@
----
-title: "BHCO Analysis"
-author: "Justin Clarke"
-date: "2022-09-30"
-output: html_document
----
+# Data import -------------------------------------------------------------
 
-```{r}
-setwd("~/Git/NDSU/Avian Community Analysis")
+raw <- read.csv("working/RAWadjusted.csv")
 
-raw <- read.csv("~/Git/NDSU/Avian Community Analysis/WorkingData/RAWadjusted.csv")
-                                                                                
 cowbird <- raw |>                                                               # select the data frame
   group_by(id,                                                                  # group the data by Nest.ID
            Spec,                                                                # species
@@ -78,8 +70,7 @@ cowbird$BHCOpres <- replace(cowbird$BHCOpres,                                   
                             cowbird$BHCOpres == "0",                            # replace a 0 (absent) with
                             "unparasitized")                                    # unparasitized
 
-write.csv(cowbird, "BHCOdata.csv")                                              # write a CSV
+write.csv(cowbird, "working/BHCOdata.csv")                                      # write a CSV
 
 c.chi <- chisq.test(c.matrix)                                                   # run a chi squared test on the matrix
 c.chi                                                                           # display the results of the chi squared test
-```

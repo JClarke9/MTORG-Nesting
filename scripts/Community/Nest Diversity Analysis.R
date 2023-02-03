@@ -1,16 +1,10 @@
----
-title: "Nest Diversity Analysis"
-author: "Justin Clarke"
-date: "2022-10-05"
-output: html_document
----
-
-```{r}
-setwd("~/Git/NDSU/Avian Community Analysis")
+# Loading libraries -------------------------------------------------------
 
 library(vegan)
 library(tidyverse)
 library(wesanderson)
+
+# Data import -------------------------------------------------------------
 
 birds21 <- read.csv("~/Git/NDSU/Avian Community Analysis/WorkingData/birds21.csv", 
                     header = TRUE, 
@@ -20,18 +14,18 @@ birds22 <- read.csv("~/Git/NDSU/Avian Community Analysis/WorkingData/birds22.csv
                     row.names =1)
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))                          # downloading a font to be used for my ordination
-```
 
-```{r}
+# Data wrangling ----------------------------------------------------------
+
 species21 <- aggregate(birds21[2:25],                                           # select the data frame for the analysis (I excluded the row with treatments) 
-                         by=list(birds21$cTreat),                               # select values to group by
-                         FUN=sum)                                               # add together abundances for each species
+                       by=list(birds21$cTreat),                               # select values to group by
+                       FUN=sum)                                               # add together abundances for each species
 
 # I wanted to get the simpson diversity for each of the
 # grazing intensities for 2021
 simpson.group21 <- diversity(species21[2:25],                                   # select the data frame for the analysis (I excluded the row with treatments) 
-                     index="simpson",                                           # using the simpson index
-                     MARGIN = 1)                                                # not positive what this does
+                             index="simpson",                                           # using the simpson index
+                             MARGIN = 1)                                                # not positive what this does
 
 summary(simpson.group21)                                                        # show the output of the simpson diversity index
 simpson.group21 <- as.data.frame(simpson.group21)                               # assign the simpson diversity index to a data frame
@@ -43,8 +37,8 @@ simpson.group21                                                                 
 # between grazing intensities
 
 simpson21 <- diversity(birds21[2:25],                                           # select the data frame for the analysis (I excluded the row with treatments) 
-                     index="simpson",                                           # using the simpson index
-                     MARGIN = 1)                                                # not positive what this does
+                       index="simpson",                                           # using the simpson index
+                       MARGIN = 1)                                                # not positive what this does
 
 summary(simpson21)                                                              # show the output of the simpson diversity index
 simpson21 <- as.data.frame(simpson21)                                           # assign the simpson diversity index to a data frame
@@ -53,22 +47,20 @@ simpson21                                                                       
 
 
 aov.simp21 <- aov(simpson21~Treat,                                              # select the variables to compare with an ANOVA
-                simpson21)                                                      # select the data frame
+                  simpson21)                                                      # select the data frame
 summary(aov.simp21)                                                             # show the output of the ANOVA
-```
 
-This section calculates some basic community analysis including richness, shannon diversity, and using an analysis of similarities to determine if communities between each treatment are different. I found a function (simper; Clarke 1993) that will determine what species in each of the communities is contributing the most to the observed different.
+# Calculate species diversity ---------------------------------------------
 
-```{r}
 species22 <- aggregate(birds22[2:28],                                           # select the data frame for the analysis (I excluded the row with treatments) 
-                         by=list(birds22$cTreat),                               # select values to group by
-                         FUN=sum)                                               # add together abundances for each species
+                       by=list(birds22$cTreat),                               # select values to group by
+                       FUN=sum)                                               # add together abundances for each species
 
 # I wanted to get the simpson diversity for each of the
 # grazing intensities for 2022
 simpson.group22 <- diversity(species22[2:28],                                   # select the data frame for the analysis (I excluded the row with treatments) 
-                     index="simpson",                                           # using the simpson index
-                     MARGIN = 1)                                                # not positive what this does
+                             index="simpson",                                           # using the simpson index
+                             MARGIN = 1)                                                # not positive what this does
 
 summary(simpson.group22)                                                        # show the output of the simpson diversity index
 simpson.group22 <- as.data.frame(simpson.group22)                               # assign the simpson diversity index to a data frame
@@ -80,8 +72,8 @@ simpson.group22                                                                 
 # between grazing intensities
 
 simpson22 <- diversity(birds22[2:28],                                           # select the data frame for the analysis (I excluded the row with treatments) 
-                     index="simpson",                                           # using the simpson index
-                     MARGIN = 1)                                                # not positive what this does
+                       index="simpson",                                           # using the simpson index
+                       MARGIN = 1)                                                # not positive what this does
 
 summary(simpson22)                                                              # show the output of the simpson diversity index
 simpson22 <- as.data.frame(simpson22)                                           # assign the simpson diversity index to a data frame
@@ -90,11 +82,11 @@ simpson22                                                                       
 
 
 aov.simp22 <- aov(simpson22~Treat,                                              # select the variables to compare with an ANOVA
-                simpson22)                                                      # select the data frame
+                  simpson22)                                                      # select the data frame
 summary(aov.simp22)                                                             # show the output of the ANOVA
-```
 
-```{r}
+# Creating diversity data frame -------------------------------------------
+
 simp21 <- rename(simpson21, 
                  "simpson"="simpson21")
 simp21$Year <- 2021
@@ -119,23 +111,24 @@ simp.div <- full_join(simpson.group21,
          "2021 Diversity" = "simpson.group21", 
          "2022 Diversity" = "simpson.group22")
 
-write.csv(simp.total, "~/Git/NDSU/Avian Community Analysis/Figures/SimpsonTotal.csv")
-```
+write.csv(simp.total, "outputs/figs/SimpsonTotal.csv")
 
-```{r}
+# Creating diversity plot -------------------------------------------------
+
+
 simp.box <- ggplot(simp.total,                                                  # select the data to graph
                    aes(fill=Year,
                        x=Treat,                                                # define the x axis
                        y=simpson)) +
   geom_boxplot(colour= "white",                                            # create black outlines around the bar plot
-    size=2.5) +  
+               size=2.5) +  
   geom_boxplot(colour= "#273046",                                                     # create black outlines around the bar plot
-           size=2,
-           notch = FALSE, 
-    outlier.color = NULL,
-    outlier.size = NA,
-    outlier.shape = NA,
-    fatten=1) +
+               size=2,
+               notch = FALSE, 
+               outlier.color = NULL,
+               outlier.size = NA,
+               outlier.shape = NA,
+               fatten=1) +
   scale_fill_manual(values=c("#798E87", "#CCC591")) +                                   # select the color for group 2
   theme(plot.title = element_text(family="my_font",                             # select the font for the title
                                   size=40,
@@ -165,7 +158,7 @@ simp.box <- ggplot(simp.total,                                                  
 simp.box
 
 ggsave(simp.box, 
-       filename = "~/Git/NDSU/Avian Community Analysis/Figures/SimpsonsBox.png",  
+       filename = "outputs/figs/SimpsonsBox.png",  
        dpi = "print", 
        bg = "transparent",
        width = 15,

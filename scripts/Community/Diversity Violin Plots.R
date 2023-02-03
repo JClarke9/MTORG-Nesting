@@ -1,36 +1,33 @@
----
-title: "Richness and Diversity Violin Plots"
-author: "Justin Clarke"
-date: "2022-10-26"
-output: html_document
----
-
-```{r}
-setwd("~/Git/NDSU/Avian Community Analysis")
+# Loading libraries -------------------------------------------------------
 
 library(wesanderson)
 library(patchwork)
 
-tot.rich <- read.csv("~/Git/NDSU/Avian Community Analysis/WorkingData/TotalRichness.csv",
+windowsFonts(my_font = windowsFont("Gandi Sans"))
+
+# Data import -------------------------------------------------------------
+
+
+tot.rich <- read.csv("working/TotalRichness.csv",
                      row.names=1)
+
+tot.simp <- read.csv("working/SimpsonTotal.csv",
+                     row.names=1)
+
 
 tot.rich$Year <- as.factor(tot.rich$Year)
 tot.rich$Treat <- as.factor(tot.rich$Treat)
 
-tot.simp <- read.csv("~/Git/NDSU/Avian Community Analysis/WorkingData/SimpsonTotal.csv",
-                     row.names=1)
-
 tot.simp$Year <- as.factor(tot.simp$Year)
 tot.simp$Treat <- as.factor(tot.simp$Treat)
 
-windowsFonts(my_font = windowsFont("Gandi Sans"))
-```
+# Creating violin plots ---------------------------------------------------
 
-```{r}
+
 rich.viol <- ggplot(tot.rich, 
-                 aes(fill=Year,
-                     x=Treat, 
-                     y=Richness)) +
+                    aes(fill=Year,
+                        x=Treat, 
+                        y=Richness)) +
   geom_violin(trim=FALSE,
               draw_quantiles=c(.25, 
                                .75),
@@ -47,8 +44,8 @@ rich.viol <- ggplot(tot.rich,
                                        colour=NA), 
         axis.line = element_line(colour = "black"),                             # color the x and y axis
         axis.text.x = element_text(family="my_font",
-                                 size=13, 
-                                 colour = "black"),                             # color the axis text
+                                   size=13, 
+                                   colour = "black"),                             # color the axis text
         axis.text.y = element_text(colour = "black",
                                    size = 10),
         axis.ticks = element_line(colour = "black"),
@@ -68,9 +65,9 @@ rich.viol <- ggplot(tot.rich,
 rich.viol
 
 simp.viol <- ggplot(tot.simp, 
-                 aes(fill=Year,
-                     x=Treat, 
-                     y=simpson)) +
+                    aes(fill=Year,
+                        x=Treat, 
+                        y=simpson)) +
   geom_violin(trim=FALSE,
               draw_quantiles=c(.25, 
                                .75),
@@ -87,8 +84,8 @@ simp.viol <- ggplot(tot.simp,
                                        colour=NA), 
         axis.line = element_line(colour = "black"),                             # color the x and y axis
         axis.text.x = element_text(family="my_font",
-                                 size=13, 
-                                 colour = "black"),                             # color the axis text
+                                   size=13, 
+                                   colour = "black"),                             # color the axis text
         axis.text.y = element_text(colour = "black",
                                    size = 10),
         axis.ticks = element_line(colour = "black"),
@@ -106,27 +103,27 @@ simp.viol <- ggplot(tot.simp,
   coord_cartesian(xlim=NULL, ylim=c(0,1))
 
 simp.viol
-```
 
-```{r}
+# Combining violin plots --------------------------------------------------
+
 birds.viol <- (rich.viol/simp.viol)
 
 birds.viol <- birds.viol + plot_annotation(theme=theme(panel.grid.major = element_blank(), # remove the vertical grid lines
-        panel.grid.minor = element_blank(), # remove the horizontal grid lines
-        panel.background = element_rect(fill=NA, # make the interior background transparent
-                                        colour = NA), 
-        plot.background = element_rect(fill =NA, # make the outer background transparent
-                                       colour = NA), 
-        axis.line = element_line(colour = "black"), # color the x and y axis
-        axis.text = element_text(colour = "black"), # color the axis text
-        axis.ticks = element_line(colour = "black"),
-        text=element_text(colour = "black"),# change the color of the axis titles
-        legend.position = "none"))
+                                                       panel.grid.minor = element_blank(), # remove the horizontal grid lines
+                                                       panel.background = element_rect(fill=NA, # make the interior background transparent
+                                                                                       colour = NA), 
+                                                       plot.background = element_rect(fill =NA, # make the outer background transparent
+                                                                                      colour = NA), 
+                                                       axis.line = element_line(colour = "black"), # color the x and y axis
+                                                       axis.text = element_text(colour = "black"), # color the axis text
+                                                       axis.ticks = element_line(colour = "black"),
+                                                       text=element_text(colour = "black"),# change the color of the axis titles
+                                                       legend.position = "none"))
 
 birds.viol
 
 ggsave(birds.viol, 
-       filename = "~/Git/NDSU/Avian Community Analysis/Figures/AvianDiversityViolin.png",  
+       filename = "outputs/figs/AvianDiversityViolin.png",  
        dpi = "print", 
        bg = "transparent",
        width = 6,
