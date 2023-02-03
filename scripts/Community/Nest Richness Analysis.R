@@ -9,19 +9,20 @@ library(wesanderson)
 
 # Data import -------------------------------------------------------------
 
-totals21 <- read.csv("~/Git/NDSU/Avian Community Analysis/WorkingData/totals21.csv", 
+totals21 <- read.csv("working/totals21.csv", 
                      row.names = 1)                             # read in the data set
-totals22 <- read.csv("~/Git/NDSU/Avian Community Analysis/WorkingData/totals22.csv", 
+
+totals22 <- read.csv("working/totals22.csv", 
                      row.names = 1)                             # read in the data set
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
 # 2021 site by species matrix ---------------------------------------------
 
-birds21 <- pivot_wider(totals21[c(1:3,5)],                                           # select the data frame to turn into a matrix
-                       names_from = Spec,                                      # select the column names
-                       values_from = Abundance,                                # select the abundance values for each species
-                       values_fill = list(Abundance = 0)) |>                   # fill all NA with 0
+birds21 <- pivot_wider(totals21[c(1:3,5)],                                      # select the data frame to turn into a matrix
+                       names_from = Spec,                                       # select the column names
+                       values_from = Abundance,                                 # select the abundance values for each species
+                       values_fill = list(Abundance = 0)) |>                    # fill all NA with 0
   column_to_rownames("Pasture")                                                 # set column names as the pasture ID
 
 write.csv(birds21, 
@@ -41,14 +42,12 @@ fac.birds21 <- totals21 |>
               values_fill = list(Abundance = 0)) |> 
   column_to_rownames("Pasture")
 
-gen.birds21 <- totals21 |> 
-  filter(Group == "GEN") |> 
+wet.birds21 <- totals21 |> 
+  filter(Group == "WET") |> 
   pivot_wider(names_from = Spec,
               values_from = Abundance,
               values_fill = list(Abundance = 0)) |> 
   column_to_rownames("Pasture")
-
-# 2021 Richness calculations ----------------------------------------------
 
 #calculate species richness for all birds
 
@@ -78,7 +77,7 @@ obl.rich21
 
 #calculate species richness for facultative birds
 
-fac.rich21 <- specnumber(fac.birds21[3:14],
+fac.rich21 <- specnumber(fac.birds21[3:15],
                          fac.birds21$cTreat,
                          MARGIN=1) |> 
   data.frame() |> 
@@ -89,25 +88,25 @@ colnames(fac.rich21) <- c("treat",
 
 fac.rich21
 
-#calculate species richness for generalist birds
+#calculate species richness for wetland birds
 
-gen.rich21 <- specnumber(gen.birds21[3:6],
-                         gen.birds21$cTreat,
+wet.rich21 <- specnumber(wet.birds21[3:5],
+                         wet.birds21$cTreat,
                          MARGIN=1) |> 
   data.frame() |> 
   rownames_to_column()
 
-colnames(gen.rich21) <- c("treat", 
-                          "gen.rich21")
+colnames(wet.rich21) <- c("treat", 
+                          "wet.rich21")
 
-gen.rich21
+wet.rich21
 
 rich21 <- full_join(tot.rich21, 
                     obl.rich21, 
                     by="treat") |> 
   full_join(fac.rich21, 
             by="treat") |> 
-  full_join(gen.rich21, 
+  full_join(wet.rich21, 
             by="treat")
 
 rich21
@@ -120,7 +119,7 @@ birds22 <- pivot_wider(totals22[c(1:3,5)],                                      
                        values_fill = list(Abundance = 0)) |>                   # fill all NA with 0
   column_to_rownames("Pasture")                                                 # set column names as the pasture ID
 
-write.csv(birds22, file = "~/Git/NDSU/Avian Community Analysis/WorkingData/birds22.csv")
+write.csv(birds22, file = "working/birds22.csv")
 
 obl.birds22 <- totals22 |> 
   filter(Group == "OBL") |> 
@@ -136,8 +135,8 @@ fac.birds22 <- totals22 |>
               values_fill = list(Abundance = 0)) |> 
   column_to_rownames("Pasture")
 
-gen.birds22 <- totals22 |> 
-  filter(Group == "GEN") |> 
+wet.birds22 <- totals22 |> 
+  filter(Group == "WET") |> 
   pivot_wider(names_from = Spec,
               values_from = Abundance,
               values_fill = list(Abundance = 0)) |> 
@@ -173,7 +172,7 @@ obl.rich22
 
 #calculate species richness for facultative birds
 
-fac.rich22 <- specnumber(fac.birds22[3:13],
+fac.rich22 <- specnumber(fac.birds22[3:10],
                          fac.birds22$cTreat,
                          MARGIN=1) |> 
   data.frame() |> 
@@ -186,23 +185,23 @@ fac.rich22
 
 #calculate species richness for generalist birds
 
-gen.rich22 <- specnumber(gen.birds22[3:10],
-                         gen.birds22$cTreat,
+wet.rich22 <- specnumber(wet.birds22[3:8],
+                         wet.birds22$cTreat,
                          MARGIN=1) |> 
   data.frame() |> 
   rownames_to_column()
 
-colnames(gen.rich22) <- c("treat", 
-                          "gen.rich22")
+colnames(wet.rich22) <- c("treat", 
+                          "wet.rich22")
 
-gen.rich22
+wet.rich22
 
 rich22 <- full_join(tot.rich22, 
                     obl.rich22, 
                     by="treat") |> 
   full_join(fac.rich22, 
             by="treat") |> 
-  full_join(gen.rich22, 
+  full_join(wet.rich22, 
             by="treat")
 
 rich22
@@ -218,9 +217,9 @@ rich <- full_join(tot.rich21,
             by="treat") |> 
   full_join(fac.rich22, 
             by="treat") |> 
-  full_join(gen.rich21, 
+  full_join(wet.rich21, 
             by="treat") |> 
-  full_join(gen.rich22, 
+  full_join(wet.rich22, 
             by="treat")
 
 rich <- rich |> 
@@ -231,8 +230,8 @@ rich <- rich |>
          "OBL Richness 2022" = "obl.rich22",
          "FAC Richness 2021" = "fac.rich21",
          "FAC Richness 2022" = "fac.rich22",
-         "GEN Richness 2021" = "gen.rich21",
-         "GEN Richness 2022" = "gen.rich22")
+         "WET Richness 2021" = "wet.rich21",
+         "WET Richness 2022" = "wet.rich22")
 
 write.csv(rich, file = "working/richness.csv")
 
@@ -368,7 +367,7 @@ totals21.bar <- complete(totals21.bar,
 
 totals.bar <- rbind(totals21.bar,
                     totals22.bar) |> 
-  filter(Group != "GEN") |> 
+  filter(Group != "WET") |> 
   group_by(Pasture,
            cTreat,
            Group) |> 
@@ -376,7 +375,7 @@ totals.bar <- rbind(totals21.bar,
   ungroup()
 
 totals22.bar <- totals22 |> 
-  filter(Group != "GEN") |> 
+  filter(Group != "WET") |> 
   group_by(Pasture,
            cTreat,
            Group) |> 
@@ -391,7 +390,7 @@ totals22.bar <- complete(totals22.bar,
 
 totals.bar <- rbind(totals21.bar,
                     totals22.bar) |> 
-  filter(Group != "GEN") |> 
+  filter(Group != "WET") |> 
   group_by(Pasture,
            cTreat,
            Group) |> 
@@ -657,9 +656,7 @@ birds22.bar <- birds22.bar + plot_annotation(theme=theme(panel.grid.major = elem
                                                          legend.position = "none"))
 
 birds22.bar
-```
 
-```{r}
 birds.bar <- (birds21.bar|birds22.bar)
 
 birds.bar <- birds.bar + plot_annotation(theme=theme(panel.grid.major = element_blank(), # remove the vertical grid lines
@@ -781,4 +778,3 @@ ggsave(totalbirds.bar,
        bg = "black",
        width = 15,
        height = 10)
-```

@@ -15,8 +15,8 @@
 "14",2,"RWBL","Full","FAC",3
 "15",2,"STGR","Full","OBL",1
 "16",2,"WEME","Full","OBL",1
-"17",2,"WIPH","Full","GEN",1
-"18",2,"WISN","Full","GEN",1
+"17",2,"WIPH","Full","WET",1
+"18",2,"WISN","Full","WET",1
 "19",3,"BOBO","Moderate","OBL",2
 "20",3,"BRBL","Moderate","FAC",2
 "21",3,"BWTE","Moderate","FAC",1
@@ -86,7 +86,7 @@
 "85",11,"WEME","Rest","OBL",1
 "86",12,"AMWI","Heavy","FAC",1
 "87",12,"CCSP","Heavy","FAC",13
-"88",12,"KILL","Heavy","GEN",1
+"88",12,"KILL","Heavy","FAC",1
 "89",12,"MALL","Heavy","FAC",1
 "90",12,"MODO","Heavy","FAC",4
 "91",12,"NOPI","Heavy","FAC",1
@@ -99,7 +99,7 @@
 "98",13,"NOPI","Full","FAC",1
 "99",13,"RWBL","Full","FAC",1
 "100",13,"STGR","Full","OBL",1
-"101",13,"WIPH","Full","GEN",1
+"101",13,"WIPH","Full","WET",1
 "102",14,"BOBO","Moderate","OBL",2
 "103",14,"BRBL","Moderate","FAC",1
 "104",14,"BWTE","Moderate","FAC",2
@@ -110,7 +110,7 @@
 "109",14,"MODO","Moderate","FAC",4
 "110",14,"NSHO","Moderate","FAC",1
 "111",14,"RWBL","Moderate","FAC",5
-"112",14,"YHBL","Moderate","GEN",1
+"112",14,"YHBL","Moderate","WET",1
 "113",15,"BRBL","Rest","FAC",2
 "114",15,"CCSP","Rest","FAC",12
 "115",15,"SAVS","Rest","OBL",1

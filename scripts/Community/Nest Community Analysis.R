@@ -1,12 +1,9 @@
 # Load libraries ----------------------------------------------------------
 
 library(ggord)
-library(ggplot2)
-library(vegan)
 library(tidyverse)
-library(patchwork)
-library(pkgbuild)
-library(grDevices)
+library(vegan)
+library(cowplot)
 library(indicspecies)
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
@@ -21,20 +18,43 @@ windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
 # Data import -------------------------------------------------------------
 
-totals21 <- read.csv("~/Git/NDSU/Avian Community Analysis/WorkingData/totals21.csv", 
+totals21 <- read.csv("working/totals21.csv", 
                      row.names = 1)
-totals22 <- read.csv("~/Git/NDSU/Avian Community Analysis/WorkingData/totals22.csv", 
+totals22 <- read.csv("working/totals22.csv", 
                      row.names = 1)
-birds21 <- read.csv("~/Git/NDSU/Avian Community Analysis/WorkingData/birds21.csv", 
+birds21 <- read.csv("working/birds21.csv", 
                     header = TRUE, 
                     row.names = 1)
-birds22 <- read.csv("~/Git/NDSU/Avian Community Analysis/WorkingData/birds22.csv", 
+birds22 <- read.csv("working/birds22.csv", 
                     header = TRUE, 
                     row.names = 1)
 
-# Creating ordination object ----------------------------------------------
 
-# I think this was to get rid of any singleton species
+# Defining Theme ----------------------------------------------------------
+
+my_theme <-  theme(plot.title = element_text(family="my_font",                             # select the font for the title
+                                             size=15,
+                                             hjust=.5),
+                   panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+                   panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+                   panel.background = element_rect(fill=NA,                                # make the interior background transparent
+                                                   colour = NA),                           # remove any other colors
+                   plot.background = element_rect(fill=NA,                                 # make the outer background transparent
+                                                  colour=NA),                              # remove any other colors
+                   panel.border = element_rect(colour = NA),                               # remove colors
+                   axis.line = element_line(colour = "black"),                             # color the x and y axis
+                   axis.text.x = element_blank(),                                          # color the axis text
+                   axis.text.y = element_blank(),
+                   axis.ticks = element_line(colour = "black"),                            # set axis tick color
+                   text=element_text(family = "my_font",
+                                     size=7,                                              # change the size of the axis titles
+                                     colour = "black"),                                    # change the color of the
+                   legend.position="right") 
+
+
+
+# Creating 2021 Ordination ------------------------------------------------
+
 
 birds.b21 <- as.data.frame(colSums(birds21[2:25]>0))                            # create a new data frame that counts the number of occurrences (i.e. columns where it was observed)
 
@@ -80,8 +100,8 @@ avian.ordination21 <- ggord(ord.birds21,                                        
                             xlim= c(-2, 2.5),                                                           # set the limits of the x axis
                             ylim= c(-2, 2),                                                         # set the limits of the y axis
                             grp_title = "Grazing Intensity") +
-  geom_text(aes(x = -1.1,
-                y = 1.9,
+  geom_text(aes(x = -1.2,
+                y = 1.77,
                 label = c("Stress = 0.12")),
             family = "my_font",
             size = 3) +
@@ -90,30 +110,13 @@ avian.ordination21 <- ggord(ord.birds21,                                        
                 label = c("p = 0.06")),
             family = "my_font",
             size = 3) +
-  theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                  size=15,
-                                  hjust=.5),
-        panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-        panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-        panel.background = element_rect(fill=NA,                                # make the interior background transparent
-                                        colour = NA),                           # remove any other colors
-        plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                       colour=NA),                              # remove any other colors
-        panel.border = element_rect(colour = NA),                               # remove colors
-        axis.line = element_line(colour = "black"),                             # color the x and y axis
-        axis.text.x = element_blank(),                                          # color the axis text
-        axis.text.y = element_blank(),
-        axis.ticks = element_line(colour = "black"),                            # set axis tick color
-        text=element_text(family = "my_font",
-                          size=7,                                              # change the size of the axis titles
-                          colour = "black"),                                    # change the color of the
-        legend.position="none") +
+  my_theme +
   labs(title = "2021")
 
 avian.ordination21                                                                # show the ordination output
 
 ggsave(avian.ordination21,                                                        # select the file
-       filename = "avian ordination21.png",                                       # name the ordination
+       filename = "outputs/figs/Ord21.png",                                       # name the ordination
        dpi = "print",                                                           # select the print quality (300 dpi)
        bg = "transparent",                                                      # set the background color to white
        width = 15,
@@ -187,8 +190,8 @@ avian.ordination22 <- ggord(ord.birds22,                                        
                             xlim= c(-2, 2.5),                                                           # set the limits of the x axis
                             ylim= c(-2, 2),                                                         # set the limits of the y axis
                             grp_title = "Grazing Intensity") +
-  geom_text(aes(x = -1.1,
-                y = 1.9,
+  geom_text(aes(x = -1.2,
+                y = 1.77,
                 label = c("Stress = 0.10")),
             family = "my_font",
             size = 3) +
@@ -197,31 +200,13 @@ avian.ordination22 <- ggord(ord.birds22,                                        
                 label = c("p = 0.10")),
             family = "my_font",
             size = 3) +
-  theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                  size=15,
-                                  hjust=.5),
-        panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-        panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-        panel.background = element_rect(fill=NA,                                # make the interior background transparent
-                                        colour = NA),                           # remove any other colors
-        plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                       colour=NA),                              # remove any other colors
-        panel.border = element_rect(colour = NA),                               # remove colors
-        axis.line = element_line(colour = "black"),                             # color the x and y axis
-        axis.text.x = element_blank(),                                          # color the axis text
-        axis.text.y = element_blank(),
-        axis.ticks = element_line(colour = "black"),                            # set axis tick color
-        text=element_text(family = "my_font",
-                          size=12,                                              # change the size of the axis titles
-                          colour = "black"),                                    # change the color of the axis titles
-        legend.key.size = unit(.2,"cm"),
-        legend.position="right") +
+  my_theme +
   labs(title = "2022")
 
 avian.ordination22                                                                # show the ordination output
 
 ggsave(avian.ordination22,
-       filename = "outputs/figs/avian ordination22.png",
+       filename = "outputs/figs/Ord22.png",
        dpi = "print",
        bg = "transparent",
        width = 5,
@@ -249,31 +234,22 @@ perm22 <- adonis2(birds.PMr22 ~ cTreat,                                        #
 
 perm22                                                                           # show the results of the permanova
 
+
 # Combining ordinations ---------------------------------------------------
 
-avianord.year <- (avian.ordination21|avian.ordination22)
 
-avianord.year <- avianord.year + plot_annotation(theme=theme(
-  plot.title = element_text(family="my_font",                             # select the font for the title
-                            size=15,
-                            hjust=.5),
-  panel.grid.major = element_blank(), # remove the vertical grid lines
-  panel.grid.minor = element_blank(), # remove the horizontal grid lines
-  panel.background = element_rect(fill= NA, # make the interior background transparent
-                                  colour = NA), 
-  plot.background = element_rect(fill = NA, # make the outer background transparent
-                                 colour = NA), 
-  axis.line = element_line(colour = "black"), # color the x and y axis
-  axis.text = element_text(colour = "black"), # color the axis text
-  axis.ticks = element_line(colour = "black"),
-  text=element_text(colour = "black"),# change the color of the axis titles
-  legend.position = "none"),
-  title = "Avian Nesting Community")
+legend <- get_legend(avian.ordination22)
+
+avianord.year <- plot_grid(avian.ordination21 + theme(legend.position = "none"), 
+                           avian.ordination22 + theme(legend.position = "none"),
+                           legend,
+                           rel_widths = c(1,1,.4),
+                           nrow = 1)
 
 avianord.year
 
 ggsave(avianord.year, 
-       filename = "outputs/figs/Avian Ordination Years.png",  
+       filename = "outputs/figs/AvianOrd.png",  
        dpi = "print", 
        bg = "transparent",
        width = 6,
@@ -298,7 +274,6 @@ ind.spec22 <- multipatt(birds.perm22[2:21],                                     
 
 summary(ind.spec22,                                                               # show summary table
         alpha = 0.05)                                                           # only report species with a significant p-value
-```
 
 # Creating environmental overlay ------------------------------------------
 

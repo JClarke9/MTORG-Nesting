@@ -56,7 +56,7 @@ rm(list = ls()[!ls() %in% "WEME.surv"])
 
 WEME.pr <- process.data(WEME.surv,
                         nocc=max(WEME.surv$LastChecked),
-                        groups = c("cTreat", 
+                        groups = c("cTreat",
                                    "Year"),
                         model="Nest")
 

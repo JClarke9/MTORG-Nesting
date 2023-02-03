@@ -1,5 +1,5 @@
-"","Grazing Intensity","Total Richness 2021","Total Richness 2022","OBL Richness 2021","OBL Richness 2022","FAC Richness 2021","FAC Richness 2022","GEN Richness 2021","GEN Richness 2022"
-"1","Full",18,19,5,6,11,8,2,5
-"2","Heavy",10,17,1,5,8,9,1,3
-"3","Moderate",19,17,6,5,12,11,1,1
-"4","Rest",12,16,5,5,7,9,NA,2
+"","Grazing Intensity","Total Richness 2021","Total Richness 2022","OBL Richness 2021","OBL Richness 2022","FAC Richness 2021","FAC Richness 2022","WET Richness 2021","WET Richness 2022"
+"1","Full",18,19,5,6,11,6,2,5
+"2","Heavy",10,17,1,5,9,7,NA,3
+"3","Moderate",19,17,6,5,12,7,1,NA
+"4","Rest",12,16,5,5,7,7,NA,1

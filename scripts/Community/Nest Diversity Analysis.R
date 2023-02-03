@@ -6,10 +6,11 @@ library(wesanderson)
 
 # Data import -------------------------------------------------------------
 
-birds21 <- read.csv("~/Git/NDSU/Avian Community Analysis/WorkingData/birds21.csv", 
+birds21 <- read.csv("working/birds21.csv", 
                     header = TRUE, 
                     row.names =1)
-birds22 <- read.csv("~/Git/NDSU/Avian Community Analysis/WorkingData/birds22.csv", 
+
+birds22 <- read.csv("working/birds22.csv", 
                     header = TRUE, 
                     row.names =1)
 
@@ -113,6 +114,7 @@ simp.div <- full_join(simpson.group21,
 
 write.csv(simp.total, "outputs/figs/SimpsonTotal.csv")
 
+
 # Creating diversity plot -------------------------------------------------
 
 
@@ -163,4 +165,3 @@ ggsave(simp.box,
        bg = "transparent",
        width = 15,
        height = 10)
-```
