@@ -1,18 +1,22 @@
 # Loading libraries -------------------------------------------------------
 
 library(ggplot2)
-library(vegan)
 library(tidyverse)
 library(RMark)
 
-windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
 # Data import -------------------------------------------------------------
+
 
 nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
 
+
+windowsFonts(my_font = windowsFont("Gandhi Sans"))
+
+
 # Subsetting data ---------------------------------------------------------
+
 
 WEME.surv <- filter(nest, 
                     Spec=="WEME")                                         # select out only WEME nests
@@ -21,7 +25,9 @@ WEME.surv$AgeDay1 <- WEME.surv$AgeFound - WEME.surv$FirstFound + 1
 WEME.surv$Year <- as.factor(WEME.surv$Year)
 WEME.surv$cTreat <- as.factor(WEME.surv$cTreat)
 
+
 # Creating stage variable -------------------------------------------------
+
 
 create.stage.var=function(data,agevar.name,stagevar.name,time.intervals,cutoff)
 {
@@ -44,7 +50,9 @@ WEME.surv <- cbind(WEME.surv, x)
 
 rm(list = ls()[!ls() %in% "WEME.surv"])
 
+
 # Daily survival rate models ----------------------------------------------
+
 
 WEME.pr <- process.data(WEME.surv,
                         nocc=max(WEME.surv$LastChecked),
@@ -215,7 +223,9 @@ WEME4.results$S.grazed$results$beta
 
 WEME4.results$S.bare$results$real
 
+
 # Plotting beta coefficients ----------------------------------------------
+
 
 WEME.mod <- mark(WEME.surv, 
                  nocc=max(WEME.surv$LastChecked), 
@@ -266,7 +276,9 @@ WEME.plot <- ggplot(WEME.top, aes(x = Variable,
 
 WEME.plot
 
+
 # Creating predictive plots -----------------------------------------------
+
 
 plotdata <- WEME4.results$S.bare
 
