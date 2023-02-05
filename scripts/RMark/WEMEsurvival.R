@@ -46,7 +46,7 @@ x <- create.stage.var(WEME.surv,
                       rep(1,max(WEME.surv$LastChecked)), 
                       14)
 
-WEME.surv <- cbind(WEME.surv, x)
+WEME.surv <- bind_cols(WEME.surv, x)
 
 rm(list = ls()[!ls() %in% "WEME.surv"])
 

@@ -40,7 +40,7 @@ x <- create.stage.var(MODO.surv,
                       rep(1,max(MODO.surv$LastChecked)), 
                       14)
 
-MODO.surv <- cbind(MODO.surv, x)
+MODO.surv <- bind_cols(MODO.surv, x)
 
 rm(list = ls()[!ls() %in% "MODO.surv"])
 

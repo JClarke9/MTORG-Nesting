@@ -44,7 +44,7 @@ x <- create.stage.var(NOPI.surv,
                       rep(1,max(NOPI.surv$LastChecked)), 
                       23)
 
-NOPI.surv <- cbind(NOPI.surv, x)
+NOPI.surv <- bind_cols(NOPI.surv, x)
 
 rm(list = ls()[!ls() %in% "NOPI.surv"])
 

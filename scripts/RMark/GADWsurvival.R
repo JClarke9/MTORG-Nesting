@@ -40,7 +40,7 @@ x <- create.stage.var(GADW.surv,
                       rep(1,max(GADW.surv$LastChecked)), 
                       23)
 
-GADW.surv <- cbind(GADW.surv, x)
+GADW.surv <- bind_cols(GADW.surv, x)
 
 rm(list = ls()[!ls() %in% c("GADW.surv")])
 
@@ -86,10 +86,10 @@ GADW1.results$S.year$results$beta
 GADW2.run <- function()
 {
   # 1. DSR varies with time
-  S.time = list(formula = ~1 + cTreat + Time)
+  S.time = list(formula = ~1 + Time)
   
   # 3. DSR varies with quadratic effect of date
-  S.quad = list(formula = ~1 + cTreat+ Time + I(Time^2))
+  S.quad = list(formula = ~1 + Time + I(Time^2))
   
   # 1. a model for constant daily survival rate
   S.Dot = list(formula =  ~1)
@@ -206,6 +206,16 @@ GADW4.results$S.forb$results$beta
 GADW4.results$S.height$results$beta
 GADW4.results$S.kbglitdep$results$beta
 GADW4.results$S.woodylitdep$results$beta
+
+
+# Plotting Beta Coefficients ----------------------------------------------
+
+
+GADW.mod <- mark(GADW.surv, 
+                 nocc=max(GADW.surv$LastChecked), 
+                 model = "Nest", 
+                 model.parameters = list(S = list(formula =  ~1 + LitterD)))
+
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,

@@ -14,8 +14,8 @@ nest <- read.csv("working/RMarknesting.csv",
 
 # Subsetting data ---------------------------------------------------------
 
-BWTE.surv <- filter(nest, 
-                    Spec=="BWTE")                                         # select out only BWTE nests
+BWTE.surv <- dplyr::filter(nest,
+                           Spec=="BWTE")                                         # select out only BWTE nests
 
 BWTE.surv$AgeDay1 <- BWTE.surv$AgeFound - BWTE.surv$FirstFound + 1
 BWTE.surv$Year <- as.factor(BWTE.surv$Year)
@@ -40,7 +40,7 @@ x <- create.stage.var(BWTE.surv,
                       rep(1,max(BWTE.surv$LastChecked)), 
                       23)
 
-BWTE.surv <- cbind(BWTE.surv, x)
+BWTE.surv <- bind_cols(BWTE.surv, x)
 
 rm(list = ls()[!ls() %in% c("BWTE.surv")])
 
@@ -98,7 +98,7 @@ BWTE2.run <- function()
   BWTE2.results = mark.wrapper(BWTE.model.list,
                                data = BWTE.pr,
                                adjust = FALSE,
-                               delete = FALSE)
+                               delete = TRUE)
 }
 
 #results of candidate model set 

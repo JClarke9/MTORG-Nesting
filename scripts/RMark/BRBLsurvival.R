@@ -44,7 +44,7 @@ x <- create.stage.var(BRBL.surv,
                       rep(1,max(BRBL.surv$LastChecked)), 
                       12)
 
-BRBL.surv <- cbind(BRBL.surv, x)
+BRBL.surv <- bind_cols(BRBL.surv, x)
 
 #remove everything but the final dataframe
 rm(list = ls()[!ls() %in%  c("BRBL.surv")])

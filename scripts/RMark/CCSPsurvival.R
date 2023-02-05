@@ -40,7 +40,7 @@ x <- create.stage.var(CCSP.surv,
                       rep(1,max(CCSP.surv$LastChecked)), 
                       12)
 
-CCSP.surv <- cbind(CCSP.surv, x)
+CCSP.surv <- bind_cols(CCSP.surv, x)
 
 rm(list = ls()[!ls() %in% c("CCSP.surv")])
 
@@ -118,16 +118,17 @@ CCSP2.results$S.quad$results$beta
 CCSP3.run <- function()
 {
   # 1. DSR varies with BHCO number
-  S.bhco = list(formula = ~1 + BHCONum)
+  S.bhco = list(formula = ~1 + Year + Time + BHCONum)
   
-  S.grazed = list(formula = ~1 + grazed)
+  S.grazed = list(formula = ~1 + Year + Time + grazed)
   
-  S.bhcop = list(formula = ~1 + BHCOpres)
+  S.bhcop = list(formula = ~1 + Year + Time + BHCOpres)
   
-  S.grazep = list(formula = ~1 + grazep)
+  S.grazep = list(formula = ~1 + Year + Time + grazep)
   
   # 2. DSR varies with quadratic effect of date
   S.time = list(formula = ~1 + Year + Time)
+  
   CCSP.model.list = create.model.list("Nest")
   CCSP3.results = mark.wrapper(CCSP.model.list,
                                data = CCSP.pr,
@@ -147,52 +148,52 @@ CCSP3.results$S.time$results$beta
 CCSP4.run <- function()
 {
   # 1. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + Year + Time + BHCONum + KBG)
+  S.kbg = list(formula =  ~1 + Year + Time + BHCOpres + KBG)
   
   # 2. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.smooth.brome = list(formula = ~1 + Year + Time + BHCONum + SmoothB)
+  S.smooth.brome = list(formula = ~1 + Year + Time + BHCOpres + SmoothB)
   
   # 3. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + Year + Time + BHCONum + Litter)
+  S.lit = list(formula =  ~1 + Year + Time + BHCOpres + Litter)
   
   # 4. DSR varies with Bare
-  S.bare = list(formula =  ~1 + Year + Time + BHCONum + Bare)
+  S.bare = list(formula =  ~1 + Year + Time + BHCOpres + Bare)
   
   # 5. DSR varies with Forb
-  S.forb = list(formula =  ~1 + Year + Time + BHCONum + Forb)
+  S.forb = list(formula =  ~1 + Year + Time + BHCOpres + Forb)
   
   # 6. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + Year + Time + BHCONum + Grasslike)
+  S.grass = list(formula =  ~1 + Year + Time + BHCOpres + Grasslike)
   
   # 7. DSR varies with Woody
-  S.woody = list(formula =  ~1 + Year + Time + BHCONum + Woody)
+  S.woody = list(formula =  ~1 + Year + Time + BHCOpres + Woody)
   
   # 8. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + Year + Time + BHCONum + LitterD)
+  S.litdep = list(formula =  ~1 + Year + Time + BHCOpres + LitterD)
   
   # 9. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Year + Time + BHCONum + Veg.Height)
+  S.height = list(formula =  ~1 + Year + Time + BHCOpres + Veg.Height)
   
   # 10. DSR varies with VOR
-  S.vor = list(formula =  ~1 + Year + Time + BHCONum + VOR)
+  S.vor = list(formula =  ~1 + Year + Time + BHCOpres + VOR)
   
   # 11. DSR varies with litter and Veg Height
-  S.litheight = list(formula = ~1 + Year + Time + BHCONum + Litter + Veg.Height)
+  S.litheight = list(formula = ~1 + Year + Time + BHCOpres + Litter + Veg.Height)
   
   # 12. DSR varies with woody and litter depth
-  S.woodylitdep = list(formula = ~1 + Year + Time + BHCONum + Woody + LitterD)
+  S.woodylitdep = list(formula = ~1 + Year + Time + BHCOpres + Woody + LitterD)
   
   # 13. DSR varies with KBG and litter depth
-  S.kbglitdep = list(formula = ~1 + Year + Time + BHCONum + KBG + LitterD)
+  S.kbglitdep = list(formula = ~1 + Year + Time + BHCOpres + KBG + LitterD)
   
   # 14. DSR varies with KBG and Veg.Height
-  S.kbgheight = list(formula = ~1 + Year + Time + BHCONum + KBG + Veg.Height)
+  S.kbgheight = list(formula = ~1 + Year + Time + BHCOpres + KBG + Veg.Height)
   
   # 15. DSR varies with woody and Veg Height
-  S.woodyheight = list(formula = ~1 + Year + Time + BHCONum + Woody + Veg.Height)
+  S.woodyheight = list(formula = ~1 + Year + Time + BHCOpres + Woody + Veg.Height)
   
   # 1. DSR varies with BHCO number
-  S.bhco = list(formula =  ~1 + Year + Time + BHCONum)
+  S.bhcop = list(formula =  ~1 + Year + Time + BHCOpres)
   
   CCSP.model.list = create.model.list("Nest")
   CCSP4.results = mark.wrapper(CCSP.model.list,
@@ -211,7 +212,7 @@ CCSP4.results$S.litheight$results$beta
 CCSP4.results$S.woodyheight$results$beta
 CCSP4.results$S.kbgheight$results$beta
 
-CCSP.real <- as.data.frame(CCSP4.results$S.vor$results$real)
+CCSP.real <- as.data.frame(CCSP4.results$S.height$results$real)
 CCSP.real <- rownames_to_column(CCSP.real, var = "Group")
 CCSP.real[,1] <- gsub("S g0", "", CCSP.real[,1])
 
@@ -231,7 +232,7 @@ CCSP.mod <- mark(CCSP.surv,
                  nocc=max(CCSP.surv$LastChecked), 
                  model = "Nest", 
                  groups = c("Year"), 
-                 model.parameters = list(S = list(formula =  ~1 + Year + Time + BHCONum + Veg.Height)))
+                 model.parameters = list(S = list(formula =  ~1 + Year + Time + BHCOpres + Veg.Height)))
 
 CCSP4.results$S.height$results$real
 CCSP.mod$results$beta
