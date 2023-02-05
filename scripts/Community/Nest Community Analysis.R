@@ -33,7 +33,7 @@ birds22 <- read.csv("working/birds22.csv",
 # Defining Theme ----------------------------------------------------------
 
 my_theme <-  theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                             size=15,
+                                             size=30,
                                              hjust=.5),
                    panel.grid.major = element_blank(),                                     # remove the vertical grid lines
                    panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
@@ -43,13 +43,15 @@ my_theme <-  theme(plot.title = element_text(family="my_font",                  
                                                   colour=NA),                              # remove any other colors
                    panel.border = element_rect(colour = NA),                               # remove colors
                    axis.line = element_line(colour = "black"),                             # color the x and y axis
-                   axis.text.x = element_blank(),                                          # color the axis text
-                   axis.text.y = element_blank(),
+                   axis.text.x = element_text(family = "my_font",
+                                              size = 15),                                          # color the axis text
+                   axis.text.y = element_text(family = "my_font",
+                                              size = 15),
                    axis.ticks = element_line(colour = "black"),                            # set axis tick color
                    text=element_text(family = "my_font",
-                                     size=7,                                              # change the size of the axis titles
+                                     size=24,                                              # change the size of the axis titles
                                      colour = "black"),                                    # change the color of the
-                   legend.position="right") 
+                   legend.position="none") 
 
 
 
@@ -97,30 +99,30 @@ avian.ordination21 <- ggord(ord.birds21,                                        
                             alpha_el = .4,                                                            # change the transparency of the ellipses
                             txt=NULL,                                                                 # change the size of the text
                             repel=TRUE,                                                               # prevent overlap of labels
-                            xlim= c(-2, 2.5),                                                           # set the limits of the x axis
+                            xlim= c(-2, 2),                                                           # set the limits of the x axis
                             ylim= c(-2, 2),                                                         # set the limits of the y axis
                             grp_title = "Grazing Intensity") +
   geom_text(aes(x = -1.2,
-                y = 1.77,
+                y = 1.85,
                 label = c("Stress = 0.12")),
             family = "my_font",
-            size = 3) +
+            size = 5) +
   geom_text(aes(x = -1.2,
                 y = 1.7,
                 label = c("p = 0.06")),
             family = "my_font",
-            size = 3) +
+            size = 5) +
   my_theme +
-  labs(title = "2021")
+  labs(title = NULL)
 
 avian.ordination21                                                                # show the ordination output
 
 ggsave(avian.ordination21,                                                        # select the file
        filename = "outputs/figs/Ord21.png",                                       # name the ordination
        dpi = "print",                                                           # select the print quality (300 dpi)
-       bg = "transparent",                                                      # set the background color to white
-       width = 15,
-       height = 15)
+       bg = "white",                                                      # set the background color to white
+       width = 6.5,
+       height = 6.5)
 
 birds.PMr21 <- vegdist(birds.perm21[2:18],                                          # create a resemblance matrix from the filtered data matrix
                        method='bray')                                             # create a new resemblance matrix
@@ -191,26 +193,26 @@ avian.ordination22 <- ggord(ord.birds22,                                        
                             ylim= c(-2, 2),                                                         # set the limits of the y axis
                             grp_title = "Grazing Intensity") +
   geom_text(aes(x = -1.2,
-                y = 1.77,
+                y = 1.85,
                 label = c("Stress = 0.10")),
             family = "my_font",
-            size = 3) +
+            size = 5) +
   geom_text(aes(x = -1.2,
                 y = 1.7,
                 label = c("p = 0.10")),
             family = "my_font",
-            size = 3) +
+            size = 5) +
   my_theme +
-  labs(title = "2022")
+  labs(title = NULL)
 
 avian.ordination22                                                                # show the ordination output
 
 ggsave(avian.ordination22,
        filename = "outputs/figs/Ord22.png",
        dpi = "print",
-       bg = "transparent",
-       width = 5,
-       height = 4)
+       bg = "white",
+       width = 6.5,
+       height = 6.5)
 
 birds.PMr22 <- vegdist(birds.perm22[2:21],                                          # create a resemblance matrix from the filtered data matrix
                        method='bray')                                             # create a new resemblance matrix
