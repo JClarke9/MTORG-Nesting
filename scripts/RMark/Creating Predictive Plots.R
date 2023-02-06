@@ -358,6 +358,62 @@ litdep.plot <- ggplot(predLD.plot,
 litdep.plot
 
 
+NOPI.pr <- process.data(NOPI.surv,
+                        nocc=max(NOPI.surv$LastChecked),
+                        group = "Year",
+                        model="Nest")
+
+NOPI.ddl <- make.design.data(NOPI.pr)
+NOPI.ddl <- as.data.frame(NOPI.ddl)
+
+NOPI.minL <- min(NOPI.surv$Litter)
+NOPI.maxL <- max(NOPI.surv$Litter)
+NOPI.lit = seq(from = NOPI.minL, 
+               to = NOPI.maxL, 
+               length = 100)
+
+NOPI.predV <- covariate.predictions(NOPI.mod,
+                                    data=data.frame(Litter = NOPI.lit),
+                                    indices = 1)
+
+NOPI.predV$estimates$Group <- "NOPI"
+
+lit.plot <- ggplot(NOPI.predV$estimates,
+                   aes(x = covdata,
+                       y = estimate,
+                       groups = Group)) +
+  geom_line(size = 1.5,
+            aes(linetype = Group)) +
+  geom_ribbon(aes(ymin = lcl, 
+                  ymax = ucl), 
+              alpha = 0.05)  +
+  theme(plot.title = element_text(family="my_font",                             # select the font for the title
+                                  size=16,
+                                  hjust=.5),
+        panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+        panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+        panel.background = element_rect(fill=NA,                                # make the interior background transparent
+                                        colour = NA),                           # remove any other colors
+        plot.background = element_rect(fill=NA,                                 # make the outer background transparent
+                                       colour=NA),                              # remove any other colors
+        axis.line = element_line(colour = "black"),                             # color the x and y axis
+        axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
+        axis.text.x = element_text(size=12, colour = "black"),
+        axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+        text=element_text(size=12,                                              # change the size of the axis titles
+                          colour = "black"),                                    # change the color of the axis titles
+        legend.background = element_rect(fill=NA),
+        legend.position = c(.85, .1),
+        legend.box = "horizontal") +
+  labs(title = "Litter Cover",
+       x = "Litter Cover (%)",
+       y = "Estimated DSR",
+       linetype = "Species") +
+  ylim(.4, 1)
+
+lit.plot
+
+
 ggsave(height.plot,
        filename = "outputs/figs/heightDSR_pred.png",
        dpi = "retina",
@@ -374,6 +430,13 @@ ggsave(VOR.plot,
 
 ggsave(litdep.plot,
        filename = "outputs/figs/litdepDSR_pred.png",
+       dpi = "retina",
+       bg = "white",
+       height = 6.5,
+       width = 6.5)
+
+ggsave(lit.plot,
+       filename = "outputs/figs/litDSR_pred.png",
        dpi = "retina",
        bg = "white",
        height = 6.5,
