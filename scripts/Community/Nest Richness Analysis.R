@@ -4,7 +4,7 @@ library(vegan)
 library(tidyverse)
 library(RColorBrewer)
 library(emmeans)
-library(patchwork)
+library(cowplot)
 library(wesanderson)
 
 # Data import -------------------------------------------------------------
@@ -275,15 +275,13 @@ rich.box <- ggplot(tot.rich,                                                  # 
                    aes(fill=Year,
                        x=Treat,                                                # define the x axis
                        y=Richness)) +
-  geom_boxplot(colour= "black",                                            # create black outlines around the bar plot
-               size=2.5) +  
   geom_boxplot(colour= "#273046",                                                 # create black outlines around the bar plot
-               size=2,
+               size=1,
                notch = FALSE, 
                outlier.color = NULL,
                outlier.size = NA,
                outlier.shape = NA,
-               fatten=1) +                                                      # not sure what this does
+               fatten=1) +
   #stat_summary(geom = 'pointrange',
   #             fun.data = "mean_sdl",
   #             fun.args = list(mult = 1),
@@ -292,7 +290,7 @@ rich.box <- ggplot(tot.rich,                                                  # 
   #             position = position_dodge(0.75)) +
   scale_fill_manual(values=c("#798E87", "#CCC591")) +                                   # select the color for group 2
   theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                  size=40,
+                                  size=30,
                                   hjust=.5),
         panel.grid.major = element_blank(),                                     # remove the vertical grid lines
         panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
@@ -301,13 +299,13 @@ rich.box <- ggplot(tot.rich,                                                  # 
         plot.background = element_rect(fill=NA,                      # make the outer background transparent
                                        colour=NA),                              # remove any other colors
         axis.line = element_line(colour = "black"),                             # color the x and y axis
-        axis.text.y = element_text(size=28, colour = "black"),                    # color the axis text
-        axis.text.x = element_blank(),
+        axis.text.y = element_text(size=20, colour = "black"),                    # color the axis text
+        axis.text.x = element_text(size=20, colour = "black"),                    # color the axis text
         axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-        text=element_text(size=32,                                              # change the size of the axis titles
+        text=element_text(size=24,                                              # change the size of the axis titles
                           colour = "black"),                                    # change the color of the axis titles
         legend.position = "none") +                                             # remove the legend
-  labs(title = "Avian Nesting Richness", 
+  labs(title = "Breeding Bird Richness", 
        x = NULL, 
        y = "Species Richness") +                                               # changing axis titles
   scale_x_discrete(breaks=c("Rest", "Moderate", "Full", "Heavy"), 
@@ -321,12 +319,12 @@ rich.box
 
 ggsave(rich.box, 
        filename = "outputs/figs/RichnessBox.png",  
-       dpi = "print", 
-       bg = "transparent",
-       width = 15,
-       height = 10)
+       dpi = "retina", 
+       bg = "white",
+       width = 6,
+       height = 6.5)
 
-birds.div <- (rich.box/simp.box)
+birds.div <- plot_grid(rich.box, simp.box)
 
 birds.div <- birds.div + plot_annotation(theme=theme(panel.grid.major = element_blank(), # remove the vertical grid lines
                                                      panel.grid.minor = element_blank(), # remove the horizontal grid lines

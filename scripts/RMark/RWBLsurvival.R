@@ -40,7 +40,7 @@ x <- create.stage.var(RWBL.surv,
                       rep(1,max(RWBL.surv$LastChecked)), 
                       12)
 
-RWBL.surv <- cbind(RWBL.surv, x)
+RWBL.surv <- bind_cols(RWBL.surv, x)
 
 rm(list = ls()[!ls() %in% "RWBL.surv"])
 

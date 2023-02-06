@@ -98,10 +98,15 @@ simp.total <- rbind(simp21, simp22)
 
 simp.total$Year <- as.factor(simp.total$Year)
 
-simp.aov <- aov(simpson~ Treat/Year, simp.total)
-summary(simp.aov)
+qqnorm(simp.total$simpson)
+qqline(simp.total$simpson)
+hist(simp.total$simpson)
 
-TukeyHSD(simp.aov)
+simp.aov <- glm(simpson~ Year, 
+                simp.total,
+                family = Gamma(link = "inverse"))
+
+summary(simp.aov)
 
 simp.div <- full_join(simpson.group21, 
                       simpson.group22, 
@@ -122,10 +127,8 @@ simp.box <- ggplot(simp.total,                                                  
                    aes(fill=Year,
                        x=Treat,                                                # define the x axis
                        y=simpson)) +
-  geom_boxplot(colour= "white",                                            # create black outlines around the bar plot
-               size=2.5) +  
   geom_boxplot(colour= "#273046",                                                     # create black outlines around the bar plot
-               size=2,
+               size=1,
                notch = FALSE, 
                outlier.color = NULL,
                outlier.size = NA,
@@ -133,7 +136,7 @@ simp.box <- ggplot(simp.total,                                                  
                fatten=1) +
   scale_fill_manual(values=c("#798E87", "#CCC591")) +                                   # select the color for group 2
   theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                  size=40,
+                                  size=30,
                                   hjust=.5),
         panel.grid.major = element_blank(),                                     # remove the vertical grid lines
         panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
@@ -141,14 +144,14 @@ simp.box <- ggplot(simp.total,                                                  
                                         colour = NA),                           # remove any other colors
         plot.background = element_rect(fill=NA,                      # make the outer background transparent
                                        colour=NA),                              # remove any other colors
-        axis.line = element_line(colour = "white"),                             # color the x and y axis
-        axis.text.y = element_text(size=28, colour = "white"),                    # color the axis text
-        axis.text.x = element_text(size=28, colour = "white"),
-        axis.ticks = element_line(colour = "white"),                            # change the colors of the axis tick marks
-        text=element_text(size=32,                                              # change the size of the axis titles
-                          colour = "white"),                                    # change the color of the axis titles
+        axis.line = element_line(colour = "black"),                             # color the x and y axis
+        axis.text.y = element_text(size=20, colour = "black"),                    # color the axis text
+        axis.text.x = element_text(size=20, colour = "black"),
+        axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+        text=element_text(size=24,                                              # change the size of the axis titles
+                          colour = "black"),                                    # change the color of the axis titles
         legend.position = "none") +                                             # remove the legend
-  labs(title = "Avian Nesting Diversity", 
+  labs(title = "Breeding Bird Diversity", 
        x = NULL, 
        y = "Simpson's Diversity") +                                               # changing axis titles
   scale_x_discrete(breaks=c("Rest", "Moderate", "Full", "Heavy"), 
@@ -161,7 +164,7 @@ simp.box
 
 ggsave(simp.box, 
        filename = "outputs/figs/SimpsonsBox.png",  
-       dpi = "print", 
-       bg = "transparent",
-       width = 15,
-       height = 10)
+       dpi = "retina", 
+       bg = "white",
+       width = 6,
+       height = 6.5)

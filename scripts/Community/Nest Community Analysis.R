@@ -44,9 +44,9 @@ my_theme <-  theme(plot.title = element_text(family="my_font",                  
                    panel.border = element_rect(colour = NA),                               # remove colors
                    axis.line = element_line(colour = "black"),                             # color the x and y axis
                    axis.text.x = element_text(family = "my_font",
-                                              size = 15),                                          # color the axis text
+                                              size = 20),                                          # color the axis text
                    axis.text.y = element_text(family = "my_font",
-                                              size = 15),
+                                              size = 20),
                    axis.ticks = element_line(colour = "black"),                            # set axis tick color
                    text=element_text(family = "my_font",
                                      size=24,                                              # change the size of the axis titles
@@ -113,13 +113,13 @@ avian.ordination21 <- ggord(ord.birds21,                                        
             family = "my_font",
             size = 5) +
   my_theme +
-  labs(title = NULL)
+  labs(title = "2021 Breeding Bird Community")
 
 avian.ordination21                                                                # show the ordination output
 
 ggsave(avian.ordination21,                                                        # select the file
        filename = "outputs/figs/Ord21.png",                                       # name the ordination
-       dpi = "print",                                                           # select the print quality (300 dpi)
+       dpi = "retina",                                                           # select the print quality (300 dpi)
        bg = "white",                                                      # set the background color to white
        width = 6.5,
        height = 6.5)
@@ -203,13 +203,13 @@ avian.ordination22 <- ggord(ord.birds22,                                        
             family = "my_font",
             size = 5) +
   my_theme +
-  labs(title = NULL)
+  labs(title = "2022 Breeding Bird Community")
 
 avian.ordination22                                                                # show the ordination output
 
 ggsave(avian.ordination22,
        filename = "outputs/figs/Ord22.png",
-       dpi = "print",
+       dpi = "retina",
        bg = "white",
        width = 6.5,
        height = 6.5)
