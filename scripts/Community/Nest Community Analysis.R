@@ -314,19 +314,19 @@ ordination.veg21 <- ggord(ord.birds21,                                          
                                             '#D4A634',                                                       # choose colors for each of the groups
                                             '#717F5B'),                                                      # choose colors for each of the groups
                                             grp_in = birds21$cTreat,                                                # group the communities based on grazing intensity
-                          ellipse=TRUE,                                                             # show confidence ellipses for each group
-                          ellipse_pro=0.95,                                                         # set confidence intervals to 95%
-                          arrow = NULL,                                                             # remove the arrow
-                          size=10,                                                                  # change the size of the points
-                          alpha_el = 0.4,                                                           # change the transparency of the ellipses
-                          txt=NULL,                                                                 # change the size of the text
-                          repel=TRUE,                                                               # prevent overlap of labels
-                          xlim= c(-2, 2),                                                           # set the limits of the x axis
-                          ylim= c(-2, 2.1)) +                                                       # set the limits of the y axis
-  theme( plot.title = element_text(family="my_font",                             # select the font for the title
-                                   hjust=.5),                                    # center the title
-         panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-         panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+                          ellipse=TRUE,                                         # show confidence ellipses for each group
+                          ellipse_pro=0.95,                                     # set confidence intervals to 95%
+                          arrow = NULL,                                         # remove the arrow
+                          size=10,                                              # change the size of the points
+                          alpha_el = 0.4,                                       # change the transparency of the ellipses
+                          txt=NULL,                                             # change the size of the text
+                          repel=TRUE,                                           # prevent overlap of labels
+                          xlim= c(-2, 2),                                       # set the limits of the x axis
+                          ylim= c(-2, 2.1)) +                                   # set the limits of the y axis
+  theme( plot.title = element_text(family="my_font",                            # select the font for the title
+                                   hjust=.5),                                   # center the title
+         panel.grid.major = element_blank(),                                    # remove the vertical grid lines
+         panel.grid.minor = element_blank(),                                    # remove the horizontal grid lines
          panel.background = element_rect(fill="white",                     # make the interior background transparent
                                          colour = NA),                           # remove other colors
          plot.background = element_rect(fill="white",                      # make the outer background transparent
