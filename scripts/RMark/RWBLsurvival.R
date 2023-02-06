@@ -149,49 +149,49 @@ RWBL3.results$S.grazep$results$beta
 RWBL4.run <- function()
 {
   # 1. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + cTreat + Time + BHCONum + KBG)
+  S.kbg = list(formula =  ~1 + cTreat + Time + KBG)
   
   # 2. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.smooth.brome = list(formula = ~1 + cTreat + Time + BHCONum + SmoothB)
+  S.smooth.brome = list(formula = ~1 + cTreat + Time + SmoothB)
   
   # 3. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + cTreat + Time + BHCONum + Litter)
+  S.lit = list(formula =  ~1 + cTreat + Time + Litter)
   
   # 4. DSR varies with Bare
-  S.bare = list(formula =  ~1 + cTreat + Time + BHCONum + Bare)
+  S.bare = list(formula =  ~1 + cTreat + Time + Bare)
   
   # 5. DSR varies with Forb
-  S.forb = list(formula =  ~1 + cTreat + Time + BHCONum + Forb)
+  S.forb = list(formula =  ~1 + cTreat + Time + Forb)
   
   # 6. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + cTreat + Time + BHCONum + Grasslike)
+  S.grass = list(formula =  ~1 + cTreat + Time + Grasslike)
   
   # 7. DSR varies with Woody
-  S.woody = list(formula =  ~1 + cTreat + Time + BHCONum + Woody)
+  S.woody = list(formula =  ~1 + cTreat + Time + Woody)
   
   # 8. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + cTreat + Time + BHCONum + LitterD)
+  S.litdep = list(formula =  ~1 + cTreat + Time + LitterD)
   
   # 9. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + cTreat + Time + BHCONum + Veg.Height)
+  S.height = list(formula =  ~1 + cTreat + Time + Veg.Height)
   
   # 10. DSR varies with VOR
-  S.vor = list(formula =  ~1 + cTreat + Time + BHCONum + VOR)
+  S.vor = list(formula =  ~1 + cTreat + Time + VOR)
   
   # 11. DSR varies with litter and Veg Height
-  S.litheight = list(formula = ~1 + cTreat + Time + BHCONum + Litter + Veg.Height)
+  S.litheight = list(formula = ~1 + cTreat + Time + Litter + Veg.Height)
   
   # 12. DSR varies with woody and litter depth
-  S.woodylitdep = list(formula = ~1 + cTreat + Time + BHCONum + Woody + LitterD)
+  S.woodylitdep = list(formula = ~1 + cTreat + Time + Woody + LitterD)
   
   # 13. DSR varies with KBG and litter depth
-  S.kbglitdep = list(formula = ~1 + cTreat + Time + BHCONum + KBG + LitterD)
+  S.kbglitdep = list(formula = ~1 + cTreat + Time + KBG + LitterD)
   
   # 14. DSR varies with KBG and Veg.Height
-  S.kbgheight = list(formula = ~1 + cTreat + Time + BHCONum + KBG + Veg.Height)
+  S.kbgheight = list(formula = ~1 + cTreat + Time + KBG + Veg.Height)
   
   # 15. DSR varies with woody and Veg Height
-  S.woodyheight = list(formula = ~1 + cTreat + Time + BHCONum + Woody + Veg.Height)
+  S.woodyheight = list(formula = ~1 + cTreat + Time + Woody + Veg.Height)
   
   # 2. DSR varies with current treatment
   S.cTreat = list(formula = ~cTreat)

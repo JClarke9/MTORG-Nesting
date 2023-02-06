@@ -21,10 +21,6 @@ NOPI.surv$AgeDay1 <- NOPI.surv$AgeFound - NOPI.surv$FirstFound + 1
 NOPI.surv$Year <- as.factor(NOPI.surv$Year)
 NOPI.surv$cTreat <- as.factor(NOPI.surv$cTreat)
 
-NOPI.surv$AgeDay1 <- NOPI.surv$AgeFound - NOPI.surv$FirstFound + 1
-NOPI.surv$Year <- as.factor(NOPI.surv$Year)
-NOPI.surv$cTreat <- as.factor(NOPI.surv$cTreat)
-
 # Creating stage variable -------------------------------------------------
 
 create.stage.var=function(data,agevar.name,stagevar.name,time.intervals,cutoff)

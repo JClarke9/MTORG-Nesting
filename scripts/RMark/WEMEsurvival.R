@@ -230,7 +230,7 @@ WEME4.results$S.bare$results$real
 WEME.mod <- mark(WEME.surv, 
                  nocc=max(WEME.surv$LastChecked), 
                  model = "Nest", 
-                 model.parameters = list(S = list(formula =  ~1 + Bare)))
+                 model.parameters = list(S = list(formula =  ~1 + grazed + KBG + Veg.Height)))
 
 WEME4.beta <- WEME4.results$S.bare$results$beta
 WEME4.beta

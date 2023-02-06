@@ -21,10 +21,6 @@ BRBL.surv$AgeDay1 <- BRBL.surv$AgeFound - BRBL.surv$FirstFound + 1
 BRBL.surv$Year <- as.factor(BRBL.surv$Year)
 BRBL.surv$cTreat <- as.factor(BRBL.surv$cTreat)
 
-BRBL.surv$AgeDay1 <- BRBL.surv$AgeFound - BRBL.surv$FirstFound + 1
-BRBL.surv$Year <- as.factor(BRBL.surv$Year)
-BRBL.surv$cTreat <- as.factor(BRBL.surv$cTreat)
-
 # Creating nest stage variable --------------------------------------------
 
 create.stage.var=function(data,agevar.name,stagevar.name,time.intervals,cutoff)
