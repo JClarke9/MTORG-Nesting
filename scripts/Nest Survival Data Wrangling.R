@@ -280,7 +280,7 @@ for (i in unique(nest$Spec)) {
   spec.surv <- select(spec.surv, id:AgeDay1)
 
   #spec.nest <- rbind(spec.nest, filter21)
-  spec.nest <- rbind(spec.nest, spec.surv)
+  spec.nest <- bind_rows(spec.nest, spec.surv)
 }
 
 #remove everything but the final dataframe

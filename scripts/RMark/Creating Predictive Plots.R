@@ -75,10 +75,12 @@ WEME.mod <- mark(WEME.surv,
                  model = "Nest", 
                  model.parameters = list(S = list(formula =  ~1 + grazed + KBG + Veg.Height)))
 
+
 BRBL.mod <- mark(BRBL.surv, nocc=max(BRBL.surv$LastChecked), 
                  model = "Nest", 
                  groups = "Year", 
                  model.parameters = list(S = list(formula =  ~1 + Year + Time + VOR)))
+
 
 RWBL.mod <- mark(RWBL.surv, 
                  nocc=max(RWBL.surv$LastChecked), 
@@ -86,11 +88,13 @@ RWBL.mod <- mark(RWBL.surv,
                  groups ="cTreat", 
                  model.parameters = list(S = list(formula =  ~1 + cTreat + Time + Bare)))
 
+
 CCSP.mod <- mark(CCSP.surv, 
                  nocc=max(CCSP.surv$LastChecked), 
                  model = "Nest", 
                  groups = c("Year"), 
                  model.parameters = list(S = list(formula =  ~1 + Year + Time + BHCOpres + Veg.Height)))
+
 
 BWTE.mod <- mark(BWTE.surv, 
                  nocc=max(BWTE.surv$LastChecked), 
@@ -98,20 +102,32 @@ BWTE.mod <- mark(BWTE.surv,
                  groups = "cTreat", 
                  model.parameters = list(S = list(formula =  ~1 + cTreat + Time + LitterD)))
 
+
 GADW.mod <- mark(GADW.surv, 
                  nocc=max(GADW.surv$LastChecked), 
                  model = "Nest", 
                  model.parameters = list(S = list(formula =  ~1 + LitterD)))
+
 
 NOPI.mod <- mark(NOPI.surv, 
                  nocc=max(NOPI.surv$LastChecked), 
                  model = "Nest", 
                  model.parameters = list(S = list(formula =  ~1 + Litter)))
 
+
 MODO.mod <- mark(MODO.surv, 
                  nocc=max(MODO.surv$LastChecked), 
                  model = "Nest", 
                  model.parameters = list(S = list(formula = ~1 + Time + I(Time^2) + KBG + LitterD)))
+
+WEME.mod$results$beta
+BRBL.mod$results$beta
+RWBL.mod$results$beta
+CCSP.mod$results$beta
+BWTE.mod$results$beta
+GADW.mod$results$beta
+NOPI.mod$results$beta
+MODO.mod$results$beta
 
 
 # Plotting Vegetation Height Pred -----------------------------------------
@@ -385,13 +401,13 @@ NOPI.lit = seq(from = NOPI.minL,
                to = NOPI.maxL, 
                length = 100)
 
-NOPI.predV <- covariate.predictions(NOPI.mod,
+NOPI.predL <- covariate.predictions(NOPI.mod,
                                     data=data.frame(Litter = NOPI.lit),
                                     indices = 1)
 
-NOPI.predV$estimates$Group <- "NOPI"
+NOPI.predL$estimates$Group <- "NOPI"
 
-lit.plot <- ggplot(NOPI.predV$estimates,
+lit.plot <- ggplot(NOPI.predL$estimates,
                    aes(x = covdata,
                        y = estimate,
                        groups = Group,
@@ -430,6 +446,41 @@ lit.plot <- ggplot(NOPI.predV$estimates,
 
 lit.plot
 
+DSR_pred <- list(CCSP.predH,
+                 WEME.predH,
+                 BRBL.predV,
+                 GADW.predLD,
+                 BWTE.predLD,
+                 MODO.predLD,
+                 NOPI.predL)
+
+DSR_range <- data.frame()
+
+for(i in 1:length(DSR_pred)) {
+  z <- data.frame(spec = unique(DSR_pred[[i]]$estimate$Group),
+                  max = max(DSR_pred[[i]]$estimates$estimate))
+  y <- data.frame(spec = unique(DSR_pred[[i]]$estimate$Group),
+                  min = min(DSR_pred[[i]]$estimates$estimate))
+  
+  x <- full_join(z, y)
+  
+  DSR_range <- bind_rows(DSR_range, x)
+}
+
+DSR_range <- data.frame(max = max(CCSP.predH$estimates$estimate,
+                                  WEME.predH$estimates$estimate,
+                                  BRBL.predV$estimates$estimate,
+                                  GADW.predLD$estimates$estimate,
+                                  BWTE.predLD$estimates$estimate,
+                                  MODO.predLD$estimates$estimate,
+                                  NOPI.predL$estimates$estimate),
+                        min = min(CCSP.predH$estimates$estimate,
+                                  WEME.predH$estimates$estimate,
+                                  BRBL.predV$estimates$estimate,
+                                  GADW.predLD$estimates$estimate,
+                                  BWTE.predLD$estimates$estimate,
+                                  MODO.predLD$estimates$estimate,
+                                  NOPI.predL$estimates$estimate))
 
 ggsave(height.plot,
        filename = "outputs/figs/heightDSR_pred.png",
