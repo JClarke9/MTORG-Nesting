@@ -35,12 +35,9 @@ birds22 <- read.csv("working/birds22.csv",
 my_theme <-  theme(plot.title = element_text(family="my_font",                             # select the font for the title
                                              size=30,
                                              hjust=.5),
-                   panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-                   panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-                   panel.background = element_rect(fill=NA,                                # make the interior background transparent
-                                                   colour = NA),                           # remove any other colors
-                   plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                                  colour=NA),                              # remove any other colors
+                   panel.grid = element_blank(),                                     # remove the horizontal grid lines
+                   panel.background = element_blank(),
+                   plot.background = element_blank(),
                    panel.border = element_rect(colour = NA),                               # remove colors
                    axis.line = element_line(colour = "black"),                             # color the x and y axis
                    axis.text.x = element_text(family = "my_font",
@@ -99,7 +96,7 @@ avian.ordination21 <- ggord(ord.birds21,                                        
                             alpha_el = .4,                                                            # change the transparency of the ellipses
                             txt=NULL,                                                                 # change the size of the text
                             repel=TRUE,                                                               # prevent overlap of labels
-                            xlim= c(-2, 2),                                                           # set the limits of the x axis
+                            xlim= c(-2, 2.5),                                                           # set the limits of the x axis
                             ylim= c(-2, 2),                                                         # set the limits of the y axis
                             grp_title = "Grazing Intensity") +
   geom_text(aes(x = -1.2,
@@ -113,7 +110,7 @@ avian.ordination21 <- ggord(ord.birds21,                                        
             family = "my_font",
             size = 5) +
   my_theme +
-  labs(title = "2021 Breeding Bird Community")
+  labs(title = "2021")
 
 avian.ordination21                                                                # show the ordination output
 
@@ -203,7 +200,7 @@ avian.ordination22 <- ggord(ord.birds22,                                        
             family = "my_font",
             size = 5) +
   my_theme +
-  labs(title = "2022 Breeding Bird Community")
+  labs(title = "2022")
 
 avian.ordination22                                                                # show the ordination output
 
@@ -243,19 +240,16 @@ perm22                                                                          
 legend <- get_legend(avian.ordination22)
 
 avianord.year <- plot_grid(avian.ordination21 + theme(legend.position = "none"), 
-                           avian.ordination22 + theme(legend.position = "none"),
-                           legend,
-                           rel_widths = c(1,1,.4),
-                           nrow = 1)
+                           avian.ordination22 + theme(legend.position = "none"))
 
 avianord.year
 
 ggsave(avianord.year, 
        filename = "outputs/figs/AvianOrd.png",  
        dpi = "print", 
-       bg = "transparent",
-       width = 6,
-       height = 6)
+       bg = "white",
+       width = 13,
+       height = 6.5)
 
 # Indicator species analysis ----------------------------------------------
 

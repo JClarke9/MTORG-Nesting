@@ -166,12 +166,16 @@ predH.plot <- predH |>
 height.plot <- ggplot(predH.plot,
                       aes(x = estimates.covdata,
                           y = estimates.estimate,
-                          groups = estimates.Group)) +
+                          groups = estimates.Group,
+                          fill = estimates.Group)) +
   geom_line(size = 1.5,
-            aes(linetype = estimates.Group)) +
+            aes(color = estimates.Group)) +
   geom_ribbon(aes(ymin = estimates.lcl, 
                   ymax = estimates.ucl), 
-              alpha = 0.05)  +
+              alpha = 0.20,
+              show.legend = FALSE)  +
+  scale_color_manual(values = c("#B0A8A5", "#F6D056")) +
+  scale_fill_manual(values = c("#B0A8A5", "#F6D056")) +
   theme(plot.title = element_text(family="my_font",                             # select the font for the title
                                   size=16,
                                   hjust=.5),
@@ -185,16 +189,17 @@ height.plot <- ggplot(predH.plot,
         axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
         axis.text.x = element_text(size=12, colour = "black"),
         axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-        text=element_text(size=12,                                              # change the size of the axis titles
+        text=element_text(size=16,                                              # change the size of the axis titles
                           colour = "black"),                                    # change the color of the axis titles
         legend.background = element_rect(fill=NA),
-        legend.position = c(.85, .1),
+        legend.position = c(.9, .1),
         legend.box = "horizontal") +
   labs(title = "Vegetation Height",
        x = "Vegetation Height (cm)",
        y = "Estimated DSR",
-       linetype = "Species") +
-  xlim(1, 1000) +
+       color = "Species",
+       fill = NULL) +
+  xlim(90, 1000) +
   ylim(0.6, 1)
 
 height.plot
@@ -223,12 +228,16 @@ BRBL.predV$estimates$Group <- "BRBL"
 VOR.plot <- ggplot(BRBL.predV$estimates,
                       aes(x = covdata,
                           y = estimate,
-                          groups = Group)) +
+                          groups = Group,
+                          fill = Group)) +
   geom_line(size = 1.5,
-            aes(linetype = Group)) +
+            aes(color = Group)) +
   geom_ribbon(aes(ymin = lcl, 
                   ymax = ucl), 
-              alpha = 0.05)  +
+              alpha = 0.20,
+              show.legend = FALSE)  +
+  scale_color_manual(values = "#060202") +
+  scale_fill_manual(values = "#060202") +
   theme(plot.title = element_text(family="my_font",                             # select the font for the title
                                   size=16,
                                   hjust=.5),
@@ -242,15 +251,15 @@ VOR.plot <- ggplot(BRBL.predV$estimates,
         axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
         axis.text.x = element_text(size=12, colour = "black"),
         axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-        text=element_text(size=12,                                              # change the size of the axis titles
+        text=element_text(size=16,                                              # change the size of the axis titles
                           colour = "black"),                                    # change the color of the axis titles
         legend.background = element_rect(fill=NA),
-        legend.position = c(.85, .1),
+        legend.position = c(.9, .1),
         legend.box = "horizontal") +
   labs(title = "Visual Obstruction Reading",
        x = "VOR",
        y = "Estimated DSR",
-       linetype = "Species") +
+       color = "Species") +
   ylim(0.25, 1)
 
 VOR.plot
@@ -324,12 +333,16 @@ predLD.plot <- predLD |>
 litdep.plot <- ggplot(predLD.plot,
                       aes(x = estimates.covdata,
                           y = estimates.estimate,
-                          groups = estimates.Group)) +
+                          groups = estimates.Group,
+                          fill = estimates.Group)) +
   geom_line(size = 1.5,
-            aes(linetype = estimates.Group)) +
+            aes(color = estimates.Group)) +
   geom_ribbon(aes(ymin = estimates.lcl, 
                   ymax = estimates.ucl), 
-              alpha = 0.05)  +
+              alpha = 0.20,
+              show.legend = FALSE)  +
+  scale_color_manual(values = c("#C9D5E0","#999395", "#DAB27F")) +
+  scale_fill_manual(values = c("#C9D5E0","#999395", "#DAB27F")) +
   theme(plot.title = element_text(family="my_font",                             # select the font for the title
                                   size=16,
                                   hjust=.5),
@@ -343,15 +356,15 @@ litdep.plot <- ggplot(predLD.plot,
         axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
         axis.text.x = element_text(size=12, colour = "black"),
         axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-        text=element_text(size=12,                                              # change the size of the axis titles
+        text=element_text(size=16,                                              # change the size of the axis titles
                           colour = "black"),                                    # change the color of the axis titles
         legend.background = element_rect(fill=NA),
-        legend.position = c(.85, .1),
+        legend.position = c(.9, .1),
         legend.box = "horizontal") +
   labs(title = "Litter Depth",
        x = "Litter Depth (mm)",
        y = "Estimated DSR",
-       linetype = "Species") +
+       color = "Species") +
   xlim(0, 100) +
   ylim(.85, 1)
 
@@ -381,12 +394,16 @@ NOPI.predV$estimates$Group <- "NOPI"
 lit.plot <- ggplot(NOPI.predV$estimates,
                    aes(x = covdata,
                        y = estimate,
-                       groups = Group)) +
+                       groups = Group,
+                       fill = Group)) +
   geom_line(size = 1.5,
-            aes(linetype = Group)) +
+            aes(color = Group)) +
   geom_ribbon(aes(ymin = lcl, 
                   ymax = ucl), 
-              alpha = 0.05)  +
+              alpha = 0.20,
+              show.legend = FALSE)  +
+  scale_color_manual(values = "#5E3028")  +
+  scale_fill_manual(values = "#5E3028") +
   theme(plot.title = element_text(family="my_font",                             # select the font for the title
                                   size=16,
                                   hjust=.5),
@@ -400,15 +417,15 @@ lit.plot <- ggplot(NOPI.predV$estimates,
         axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
         axis.text.x = element_text(size=12, colour = "black"),
         axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-        text=element_text(size=12,                                              # change the size of the axis titles
+        text=element_text(size=16,                                              # change the size of the axis titles
                           colour = "black"),                                    # change the color of the axis titles
         legend.background = element_rect(fill=NA),
-        legend.position = c(.85, .1),
+        legend.position = c(.9, .1),
         legend.box = "horizontal") +
   labs(title = "Litter Cover",
        x = "Litter Cover (%)",
        y = "Estimated DSR",
-       linetype = "Species") +
+       color = "Species") +
   ylim(.4, 1)
 
 lit.plot
