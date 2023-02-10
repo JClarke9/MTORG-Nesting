@@ -436,7 +436,7 @@ lit.plot <- ggplot(NOPI.predL$estimates,
         text=element_text(size=16,                                              # change the size of the axis titles
                           colour = "black"),                                    # change the color of the axis titles
         legend.background = element_rect(fill=NA),
-        legend.position = c(.9, .1),
+        legend.position = c(.8, .1),
         legend.box = "horizontal") +
   labs(title = "Litter Cover",
        x = "Litter Cover (%)",
