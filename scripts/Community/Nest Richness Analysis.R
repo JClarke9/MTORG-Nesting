@@ -262,10 +262,12 @@ tot.rich <- rbind(past.rich21,
 
 tot.rich$Year <- as.factor(tot.rich$Year)
 
-tot.aov <- aov(Richness ~ Treat/Year, tot.rich)
+tot.aov <- glm(Richness ~ Treat, 
+               tot.rich,
+               family = Gamma(link = "inverse"))
 summary(tot.aov)
 
-TukeyHSD(tot.aov)
+emmeans(tot.aov)
 
 write.csv(tot.rich, "working/TotalRichness.csv")
 

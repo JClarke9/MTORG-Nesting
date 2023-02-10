@@ -102,11 +102,13 @@ qqnorm(simp.total$simpson)
 qqline(simp.total$simpson)
 hist(simp.total$simpson)
 
-simp.aov <- glm(simpson~ Year, 
+simp.aov <- glm(simpson~Treat + Year, 
                 simp.total,
                 family = Gamma(link = "inverse"))
 
 summary(simp.aov)
+emmeans(simp.aov,
+        pairwise~Treat + Year)
 
 simp.div <- full_join(simpson.group21, 
                       simpson.group22, 
