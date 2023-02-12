@@ -264,6 +264,92 @@ past.rich22 <- replace(past.rich22, is.na(past.rich22), 0)
 write.csv(past.rich21, file = "working/richness21.csv")
 write.csv(past.rich22, file = "working/richness22.csv")
 
+
+obl.rich21 <- data.frame("Richness"=specnumber(past.rich21[3:10],
+                                                past.rich21$Pasture,
+                                                MARGIN=1),
+                          Treat = past.rich21$cTreat,
+                          Year=2021,
+                          Pasture = past.rich21$Pasture)
+
+obl.aov21 <- glm(Richness ~ Treat, 
+                 obl.rich21,
+                 family = poisson(link = "log"))
+summary(obl.aov21)
+
+emmeans(obl.aov21,
+        pairwise~Treat)
+
+fac.rich21 <- data.frame("Richness"=specnumber(past.rich21[10:23],
+                                                past.rich21$Pasture,
+                                                MARGIN=1),
+                          Treat = past.rich21$cTreat,
+                          Year=2021,
+                          Pasture = past.rich21$Pasture)
+
+fac.aov21 <- glm(Richness ~ Treat, 
+               fac.rich21,
+               family = poisson(link = "log"))
+summary(fac.aov21)
+
+emmeans(fac.aov21,
+        pairwise~Treat)
+
+obl.rich22 <- data.frame("Richness"=specnumber(past.rich22[3:10],
+                                               past.rich22$Pasture,
+                                               MARGIN=1),
+                         Treat = past.rich22$cTreat,
+                         Year=2022,
+                         Pasture = past.rich22$Pasture)
+
+obl.aov22 <- glm(Richness ~ Treat, 
+                obl.rich22,
+                family = poisson(link = "log"))
+summary(obl.aov22)
+
+emmeans(obl.aov22,
+        pairwise~Treat)
+
+fac.rich22 <- data.frame("Richness"=specnumber(past.rich22[10:23],
+                                               past.rich22$Pasture,
+                                               MARGIN=1),
+                         Treat = past.rich22$cTreat,
+                         Year=2022,
+                         Pasture = past.rich22$Pasture)
+
+fac.aov22 <- glm(Richness ~ Treat, 
+                 fac.rich22,
+                 family = poisson(link = "log"))
+summary(fac.aov22)
+
+emmeans(fac.aov22,
+        pairwise~Treat)
+
+obl.rich <- rbind(obl.rich21,
+                  obl.rich22) |> 
+  ungroup()
+
+fac.rich <- rbind(fac.rich21,
+                  fac.rich22) |> 
+  ungroup()
+
+obl.aov <- glm(Richness ~ Treat,
+               obl.rich,
+               family = poisson(link = "log"))
+summary(obl.aov)
+
+emmeans(obl.aov,
+        pairwise~Year)
+
+fac.aov <- glm(Richness ~ Treat,
+               fac.rich,
+               family = poisson(link = "log"))
+summary(fac.aov)
+
+emmeans(fac.aov,
+        pairwise~Treat)
+
+
 past.rich21 <- data.frame("Richness"=specnumber(past.rich21[3:23],
                                                 past.rich21$Pasture,
                                                 MARGIN=1),
@@ -286,11 +372,11 @@ tot.rich$Year <- as.factor(tot.rich$Year)
 
 tot.aov <- glm(Richness ~ Treat, 
                tot.rich,
-               family = Gamma(link = "inverse"))
+               family = poisson(link = "log"))
 summary(tot.aov)
 
 emmeans(tot.aov,
-        pairwise~Treat)
+        pairwise~Year)
 
 write.csv(tot.rich, "working/TotalRichness.csv")
 
