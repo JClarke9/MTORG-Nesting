@@ -93,6 +93,8 @@ birds.viol <- plot_grid(rich.viol,
                         nrow = 2, 
                         ncol = 1)
 
+birds.viol
+
 ggsave(birds.viol, 
        filename = "outputs/figs/AvianDiversityViolin.png",  
        dpi = 600,
