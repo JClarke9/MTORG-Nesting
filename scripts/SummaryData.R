@@ -19,6 +19,14 @@ totals22 <- read.csv("working/totals22.csv",
 
 totals <- bind_rows(totals21, totals22)
 
+groups <- totals |> 
+  group_by(Group, Spec) |> 
+  summarise()
+
+groups <- groups |> 
+  group_by(Group) |> 
+  summarise(count = n())
+
 totals <- totals |> 
   group_by(Spec, cTreat) |> 
   summarise(Abundance = sum(Abundance))
