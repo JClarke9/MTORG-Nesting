@@ -237,19 +237,41 @@ write.csv(rich, file = "working/richness.csv")
 
 # Manipulating data -------------------------------------------------------
 
-past.rich21 <- rownames_to_column(birds21, 
-                                  var = "Pasture")
-past.rich22 <- rownames_to_column(birds22, 
-                                  var = "Pasture")
+past.obl21 <- obl.birds21 |> 
+  rownames_to_column(var = "Pasture") |> 
+  select(-Group)
 
-past.rich21 <- data.frame("Richness"=specnumber(past.rich21[3:26],
+past.fac21 <- fac.birds21 |> 
+  rownames_to_column(var = "Pasture") |> 
+  select(-Group)
+
+past.rich21 <- full_join(past.obl21, past.fac21)
+
+past.rich21 <- replace(past.rich21, is.na(past.rich21), 0)
+
+past.obl22 <- obl.birds22 |> 
+  rownames_to_column(var = "Pasture") |> 
+  select(-Group)
+
+past.fac22 <- fac.birds22 |> 
+  rownames_to_column(var = "Pasture") |> 
+  select(-Group)
+
+past.rich22 <- full_join(past.obl22, past.fac22)
+
+past.rich22 <- replace(past.rich22, is.na(past.rich22), 0)
+
+write.csv(past.rich21, file = "working/richness21.csv")
+write.csv(past.rich22, file = "working/richness22.csv")
+
+past.rich21 <- data.frame("Richness"=specnumber(past.rich21[3:23],
                                                 past.rich21$Pasture,
                                                 MARGIN=1),
                           Treat = past.rich21$cTreat,
                           Year=2021,
                           Pasture = past.rich21$Pasture)
 
-past.rich22 <- data.frame("Richness"=specnumber(past.rich22[3:29],
+past.rich22 <- data.frame("Richness"=specnumber(past.rich22[3:23],
                                                 past.rich22$Pasture,
                                                 MARGIN=1),
                           Treat=past.rich22$cTreat,
@@ -267,7 +289,8 @@ tot.aov <- glm(Richness ~ Treat,
                family = Gamma(link = "inverse"))
 summary(tot.aov)
 
-emmeans(tot.aov)
+emmeans(tot.aov,
+        pairwise~Treat)
 
 write.csv(tot.rich, "working/TotalRichness.csv")
 

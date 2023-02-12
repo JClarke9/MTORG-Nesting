@@ -6,11 +6,11 @@ library(wesanderson)
 
 # Data import -------------------------------------------------------------
 
-birds21 <- read.csv("working/birds21.csv", 
+birds21 <- read.csv("working/richness21.csv", 
                     header = TRUE, 
                     row.names =1)
 
-birds22 <- read.csv("working/birds22.csv", 
+birds22 <- read.csv("working/richness22.csv", 
                     header = TRUE, 
                     row.names =1)
 
@@ -18,13 +18,13 @@ windowsFonts(my_font = windowsFont("Gandhi Sans"))                          # do
 
 # Data wrangling ----------------------------------------------------------
 
-species21 <- aggregate(birds21[2:25],                                           # select the data frame for the analysis (I excluded the row with treatments) 
+species21 <- aggregate(birds21[3:23],                                           # select the data frame for the analysis (I excluded the row with treatments) 
                        by=list(birds21$cTreat),                               # select values to group by
                        FUN=sum)                                               # add together abundances for each species
 
 # I wanted to get the simpson diversity for each of the
 # grazing intensities for 2021
-simpson.group21 <- diversity(species21[2:25],                                   # select the data frame for the analysis (I excluded the row with treatments) 
+simpson.group21 <- diversity(species21[2:22],                                   # select the data frame for the analysis (I excluded the row with treatments) 
                              index="simpson",                                           # using the simpson index
                              MARGIN = 1)                                                # not positive what this does
 
@@ -37,7 +37,7 @@ simpson.group21                                                                 
 # determine whether diversity was significantly different
 # between grazing intensities
 
-simpson21 <- diversity(birds21[2:25],                                           # select the data frame for the analysis (I excluded the row with treatments) 
+simpson21 <- diversity(birds21[3:23],                                           # select the data frame for the analysis (I excluded the row with treatments) 
                        index="simpson",                                           # using the simpson index
                        MARGIN = 1)                                                # not positive what this does
 
@@ -53,13 +53,13 @@ summary(aov.simp21)                                                             
 
 # Calculate species diversity ---------------------------------------------
 
-species22 <- aggregate(birds22[2:28],                                           # select the data frame for the analysis (I excluded the row with treatments) 
+species22 <- aggregate(birds22[3:23],                                           # select the data frame for the analysis (I excluded the row with treatments) 
                        by=list(birds22$cTreat),                               # select values to group by
                        FUN=sum)                                               # add together abundances for each species
 
 # I wanted to get the simpson diversity for each of the
 # grazing intensities for 2022
-simpson.group22 <- diversity(species22[2:28],                                   # select the data frame for the analysis (I excluded the row with treatments) 
+simpson.group22 <- diversity(species22[2:22],                                   # select the data frame for the analysis (I excluded the row with treatments) 
                              index="simpson",                                           # using the simpson index
                              MARGIN = 1)                                                # not positive what this does
 
@@ -72,7 +72,7 @@ simpson.group22                                                                 
 # determine whether diversity was significantly different
 # between grazing intensities
 
-simpson22 <- diversity(birds22[2:28],                                           # select the data frame for the analysis (I excluded the row with treatments) 
+simpson22 <- diversity(birds22[3:23],                                           # select the data frame for the analysis (I excluded the row with treatments) 
                        index="simpson",                                           # using the simpson index
                        MARGIN = 1)                                                # not positive what this does
 
@@ -102,13 +102,14 @@ qqnorm(simp.total$simpson)
 qqline(simp.total$simpson)
 hist(simp.total$simpson)
 
-simp.aov <- glm(simpson~Treat + Year, 
+simp.aov <- glm(simpson~Year, 
                 simp.total,
                 family = Gamma(link = "inverse"))
 
 summary(simp.aov)
+
 emmeans(simp.aov,
-        pairwise~Treat + Year)
+        pairwise~Year)
 
 simp.div <- full_join(simpson.group21, 
                       simpson.group22, 
