@@ -467,21 +467,6 @@ for(i in 1:length(DSR_pred)) {
   DSR_range <- bind_rows(DSR_range, x)
 }
 
-DSR_range <- data.frame(max = max(CCSP.predH$estimates$estimate,
-                                  WEME.predH$estimates$estimate,
-                                  BRBL.predV$estimates$estimate,
-                                  GADW.predLD$estimates$estimate,
-                                  BWTE.predLD$estimates$estimate,
-                                  MODO.predLD$estimates$estimate,
-                                  NOPI.predL$estimates$estimate),
-                        min = min(CCSP.predH$estimates$estimate,
-                                  WEME.predH$estimates$estimate,
-                                  BRBL.predV$estimates$estimate,
-                                  GADW.predLD$estimates$estimate,
-                                  BWTE.predLD$estimates$estimate,
-                                  MODO.predLD$estimates$estimate,
-                                  NOPI.predL$estimates$estimate))
-
 ggsave(height.plot,
        filename = "outputs/figs/heightDSR_pred.png",
        dpi = "retina",
