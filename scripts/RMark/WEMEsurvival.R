@@ -3,6 +3,7 @@
 library(ggplot2)
 library(tidyverse)
 library(RMark)
+library(cowplot)
 
 
 # Data import -------------------------------------------------------------
@@ -12,7 +13,7 @@ nest <- read.csv("working/RMarknesting.csv",
                  row.names=1)
 
 
-windowsFonts(my_font = windowsFont("Gandhi Sans"))
+windowsFonts(my_font = windowsFont("Times New Roman"))
 
 
 # Subsetting data ---------------------------------------------------------
@@ -280,27 +281,27 @@ WEME.plot
 # Creating predictive plots -----------------------------------------------
 
 
-plotdata <- WEME4.results$S.bare
+WEME.pr <- process.data(WEME.surv,
+                        nocc=max(WEME.surv$LastChecked),
+                        model="Nest")
 
 WEME.ddl <- make.design.data(WEME.pr)
 WEME.ddl <- as.data.frame(WEME.ddl)
 
-minbare <- min(WEME.surv$Bare)
-maxbare <- max(WEME.surv$Bare)
-Bare.values = seq(from = minbare, 
-                  to = maxbare, 
+WEME.height = seq(from = min(WEME.surv$Veg.Height), 
+                  to = max(WEME.surv$Veg.Height), 
                   length = 100)
 
-bare.pred <- covariate.predictions(plotdata,
-                                   data=data.frame(Bare=Bare.values),
-                                   indices = 1)
+WEME.predH <- covariate.predictions(WEME.mod,
+                                    data=data.frame(Veg.Height = WEME.height),
+                                    indices = 1)
 
-bare.pred$estimates$Group <- "WEME"
+WEME.predH$estimates$Group <- "WEME"
 
-WEMEbare.plot <- ggplot(bare.pred$estimates,
-                        aes(x = covdata,
-                            y = estimate,
-                            fill = Group)) +
+WEMEheight.plot <- ggplot(WEME.predH$estimates,
+                          aes(x = covdata,
+                              y = estimate,
+                              fill = Group)) +
   geom_line(size = 1.5,
             aes(colour = Group)) +
   geom_ribbon(aes(ymin = lcl, 
@@ -308,29 +309,89 @@ WEMEbare.plot <- ggplot(bare.pred$estimates,
               alpha = 0.1) +
   scale_colour_manual(values = c('black')) +
   scale_fill_manual(values = c('black')) +
-  xlab("Bare Cover") +
-  ylab("Estimated DSR") +
-  ylim(0, 1) + 
+  ylim(.65, 1) + 
   theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                  size=16,
+                                  size=14,
                                   hjust=.5),
-        panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-        panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-        panel.background = element_rect(fill=NA,                     # make the interior background transparent
-                                        colour = NA),                           # remove any other colors
-        plot.background = element_rect(fill=NA,                      # make the outer background transparent
-                                       colour=NA),                              # remove any other colors
+        panel.grid = element_blank(),
+        panel.background = element_blank(),
+        plot.background = element_blank(),
         axis.line = element_line(colour = "black"),                             # color the x and y axis
-        axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-        axis.text.x = element_text(size=12, colour = "black"),
+        axis.text = element_text(size=12, colour = "black"),                    # color the axis text
         axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
         text=element_text(size=12,                                              # change the size of the axis titles
-                          colour = "black"),                                    # change the color of the axis titles
+                          colour = "black",
+                          family = "my_font"),                                    # change the color of the axis titles
         legend.position = "none") +                                             # remove the legend
-  labs(title = "Western Meadowlark")
+  labs(title = "Vegetation Height",
+       x = "Centimeters",
+       y = "Daily Survival Rate")
+
+
+WEME.KBG = seq(from = min(WEME.surv$KBG),
+               to = max(WEME.surv$KBG),
+               length = 100)
+
+WEME.predKBG <- covariate.predictions(WEME.mod,
+                                      data=data.frame(KBG = WEME.KBG),
+                                      indices = 1)
+
+WEME.predKBG$estimates$Group <- "WEME"
+
+WEMEkbg.plot <- ggplot(WEME.predKBG$estimates,
+                       aes(x = covdata,
+                           y = estimate,
+                           fill = Group)) +
+  geom_line(size = 1.5,
+            aes(colour = Group)) +
+  geom_ribbon(aes(ymin = lcl, 
+                  ymax = ucl), 
+              alpha = 0.1) +
+  scale_colour_manual(values = c('black')) +
+  scale_fill_manual(values = c('black')) +
+  ylim(.65, 1) + 
+  theme(plot.title = element_text(family="my_font",                             # select the font for the title
+                                  size=14,
+                                  hjust=.5),
+        panel.grid = element_blank(),
+        panel.background = element_blank(),
+        plot.background = element_blank(),
+        axis.line = element_line(colour = "black"),                             # color the x and y axis
+        axis.text = element_text(size=12, colour = "black"),                    # color the axis text
+        axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+        text=element_text(size=12,                                              # change the size of the axis titles
+                          colour = "black",
+                          family = "my_font"),                                    # change the color of the axis titles
+        legend.position = "none") +                                             # remove the legend
+  labs(title = "Kentucky Bluegrass",
+       x = "Percent Cover",
+       y = "Daily Survival Rate")
+
+max(WEME.predH$estimates$estimate)
+min(WEME.predH$estimates$estimate)
+
+max(WEME.predKBG$estimates$estimate)
+min(WEME.predKBG$estimates$estimate)
 
 WEME.plot
-WEMEbare.plot
+WEMEheight.plot
+WEMEkbg.plot
+
+WEMEpred.plot <- plot_grid(WEMEheight.plot, 
+                           WEMEkbg.plot + theme(axis.text.y = element_blank()) + labs(y = NULL))
+
+title <- ggdraw() +
+  draw_label("Western Meadowlark Daily Nest Survival",
+             fontface = "bold",
+             fontfamily = "my_font",
+             size = 14) +
+  theme(plot.margin = margin(0,0,7))
+
+WEMEveg.plot <- plot_grid(title,
+                           WEMEpred.plot,
+                           ncol = 1,
+                          rel_heights = c(0.1, 1))
+WEMEveg.plot
 
 ggsave(WEME.plot,
        filename = "outputs/figs/WEMEbeta.png",
@@ -339,12 +400,11 @@ ggsave(WEME.plot,
        height = 6,
        width = 6)
 
-ggsave(WEMEbare.plot,
-       filename = "outputs/figs/WEMEbare.png",
+ggsave(WEMEveg.plot,
+       filename = "outputs/figs/WEMEveg.png",
        dpi = "print",
-       bg = "white",
-       height = 6,
-       width = 6)
+       height = 3,
+       width = 5)
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,
