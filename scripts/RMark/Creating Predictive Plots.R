@@ -184,7 +184,7 @@ height.plot <- ggplot(predH.plot,
                           y = estimates.estimate,
                           groups = estimates.Group,
                           fill = estimates.Group)) +
-  geom_line(size = 1.5,
+  geom_line(linewidth = 1.5,
             aes(color = estimates.Group)) +
   geom_ribbon(aes(ymin = estimates.lcl, 
                   ymax = estimates.ucl), 
@@ -246,7 +246,7 @@ VOR.plot <- ggplot(BRBL.predV$estimates,
                           y = estimate,
                           groups = Group,
                           fill = Group)) +
-  geom_line(size = 1.5,
+  geom_line(linewidth = 1.5,
             aes(color = Group)) +
   geom_ribbon(aes(ymin = lcl, 
                   ymax = ucl), 
@@ -351,7 +351,7 @@ litdep.plot <- ggplot(predLD.plot,
                           y = estimates.estimate,
                           groups = estimates.Group,
                           fill = estimates.Group)) +
-  geom_line(size = 1.5,
+  geom_line(linewidth = 1.5,
             aes(color = estimates.Group)) +
   geom_ribbon(aes(ymin = estimates.lcl, 
                   ymax = estimates.ucl), 
@@ -412,7 +412,7 @@ lit.plot <- ggplot(NOPI.predL$estimates,
                        y = estimate,
                        groups = Group,
                        fill = Group)) +
-  geom_line(size = 1.5,
+  geom_line(linewidth = 1.5,
             aes(color = Group)) +
   geom_ribbon(aes(ymin = lcl, 
                   ymax = ucl), 
@@ -494,6 +494,11 @@ ggsave(lit.plot,
        bg = "white",
        height = 6.5,
        width = 6.5)
+
+rm(list = ls()[!ls() %in% c("height.plot",
+                            "VOR.plot",
+                            "litdep.plot",
+                            "lit.plot")])
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 # and .tmp files created by RMark in the working directory,
