@@ -1,0 +1,649 @@
+##################################################################################
+##ground nesting community nest survival code from Shew et al. 2018 (Journal of Applied Ecology)
+#################################################################################
+## Logistic exposure link function from (https://rpubs.com/bbolker/logregexp)
+
+library(MASS)
+logexp <- function(exposure = 1)
+{
+    linkfun <- function(mu) qlogis(mu^(1/exposure))
+    ## FIXME: is there some trick we can play here to allow
+    ##   evaluation in the context of the 'data' argument?
+    linkinv <- function(eta)  plogis(eta)^exposure
+    logit_mu_eta <- function(eta) {
+        ifelse(abs(eta)>30,.Machine$double.eps,
+               exp(eta)/(1+exp(eta))^2)
+        ## OR .Call(stats:::C_logit_mu_eta, eta, PACKAGE = "stats")
+    }
+    mu.eta <- function(eta) {       
+        exposure * plogis(eta)^(exposure-1) *
+            logit_mu_eta(eta)
+    }
+    valideta <- function(eta) TRUE
+    link <- paste("logexp(", deparse(substitute(exposure)), ")",
+                   sep="")
+    structure(list(linkfun = linkfun, linkinv = linkinv,
+                   mu.eta = mu.eta, valideta = valideta, 
+                   name = link),
+              class = "link-glm")
+}
+
+## Import CSV data from proper folder using R-studio
+##install and load “lme4”, “MuMIn”, and “AICcmodavg” packages before proceeding
+
+##STEP 1
+
+R1 <-glmer(survive/trials ~  (1|Nest.ID)+(1|Spec), family = binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+R1n <-glmer(survive/trials ~  (1|Nest.ID), family = binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+R2 <-glmer(survive/trials ~  ( 1|Field/Nest.ID)+(1|Spec), family=binomial(logexp(exposure=GRND$expos))     ,data=GRND)
+R3<-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) + (1|Year), family=binomial(logexp(exposure=GRND$expos))     ,data=GRND)
+R4<-glmer(survive/trials ~  (1| Field/Nest.ID)+(1|Spec), family=binomial(logexp(exposure=GRND$expos))     ,data=GRND)
+R5 <-glmer(survive/trials ~  ( 1| Field/Nest.ID)+(1|Spec) +(1|Year), family=binomial(logexp(exposure=GRND$expos))     ,data=GRND)
+
+Cand.Rand.mods <- list(
+"Nest.ID-R1+Spec – R1" = R1,
+"Nest.ID-R1– R1n" = R1n,
+
+"Field/Nest.ID-R2" = R2, 
+"Field/Nest.ID+Year-R3" = R3, 
+"Field/Nest.ID-R4" = R4,
+" Field/Nest.ID+Year-R5" = R5)
+
+aictab(cand.set = Cand.Rand.mods, second.ord = TRUE)
+
+### summary of best model to investigate beta’s and SE
+
+R2
+summary(R2)
+coeffs(R2)
+confint(R2 ,method = c("Wald"))
+
+Cp(R1)
+Cp(R2)
+Cp(R3)
+Cp(R4)
+Cp(R5)
+
+## pseudo R-squared calculations
+r.squaredLR(R1, R1)
+r.squaredLR(R2, R1)
+r.squaredLR(R3, R1)
+r.squaredLR(R4, R1)
+r.squaredLR(R5, R1)
+
+##STEP 2
+
+T1 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) + Julian , family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+T2 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) + Egg, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+T3 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)  +Julian+ Egg, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+
+Cand.Temp.mods <- list(
+"Nest.ID + Spec - Null" = R1, 
+"Field/Nest.ID + Spec – R2" = R2, 
+"Julian  T1" = T1, 
+"Egg  T2" = T2, 
+"Julian+Egg  T3" = T3)
+
+aictab(cand.set = Cand.Temp.mods, second.ord = TRUE)
+
+## summary of best model to investigate beta’s and SE
+
+summary(T2)
+T2
+
+coeffs(T2)
+confint(T2 ,method = c("Wald"))
+
+Cp(T1)
+Cp(T2)
+Cp(T3)
+
+## R-squared calculations
+
+r.squaredLR(T1,R1)
+r.squaredLR(T2,R1)
+r.squaredLR(T3,R1)
+
+
+##STEP 3a
+
+N2 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)  +Forb, family=binomial(logexp(exposure=GRND$expos)),data=GRND)
+N3 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)  +Robel, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+N4 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)  +DeadVeg, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+N5 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)  +Dist.Edge, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+N7 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)  +Forb+Robel, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+N8 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)+Robel+DeadVeg, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+N11 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)+Forb+DeadVeg, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+N13 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)  +Forb+Dist.Edge, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+N14 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)  +Robel+Dist.Edge, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+N15 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)  +DeadVeg+Dist.Edge
+, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+
+Cand.Nest.mods <- list(
+"Nest.ID + Spec - Null" = R1, 
+"Field/Nest.ID + Spec – R2" = R2, 
+"Egg  T2" = T2, 
+"Forb" = N2,
+ "Robel" = N3,
+ "DeadVeg" = N4,
+ "Dist.Edge" = N5,
+"Forb+Robel" = N7,
+ "Robel+DeadVeg" = N8,
+"Forb+DeadVeg" = N11,
+ ##"Nht+Dist.Edge" = N12 ,
+ "Forb+Dist.Edge" = N13,
+ "Robel+Dist.Edge" = N14)
+ "DeadVeg+Dist.Edge" = N15)
+
+aictab(cand.set = Cand.Nest.mods, second.ord = TRUE)
+
+## summary of best model to investigate beta’s and SE
+
+summary(N5)
+N5
+
+coeffs(N5)
+confint(N5 ,method = c("Wald"))
+
+Cp(N2)
+Cp(N3)
+Cp(N4)
+Cp(N5)
+Cp(N7)
+Cp(N8)
+Cp(N11)
+Cp(N13)
+Cp(N14)
+Cp(N15)
+
+## R-squared calculations
+r.squaredLR(N2,R1)
+r.squaredLR(N3,R1)
+r.squaredLR(N4,R1)
+r.squaredLR(N5,R1)
+r.squaredLR(N7,R1)
+r.squaredLR(N8,R1)
+r.squaredLR(N11,R1)
+r.squaredLR(N13,R1)
+r.squaredLR(N14,R1)
+r.squaredLR(N15,R1)
+
+##STEP 3b
+
+M1 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)  +MeanPC1, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+M2 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)+MeanPC2, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+M3 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) +SDPC1, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+M4 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)  +MeanPC1+MeanPC2,  family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+M5 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)  +MeanPC1+SDPC1,  family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+M6 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)  +MeanPC2+SDPC1,  family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+
+Cand.Micro.mods <- list(
+"Nest.ID + Spec - Null" = R1, 
+"Field/Nest.ID + Spec – R2" = R2, 
+"Egg  T2" = T2, 
+"MeanPC1"= M1,
+"MeanPC2" = M2,
+ "SDPC1" = M3,
+"MeanPC1+MeanPC2"= M4,
+"MeanPC1+SDPC1" = M5,
+ "MeanPC2+SDPC1" = M6)
+
+aictab(cand.set = Cand.Micro.mods, second.ord = TRUE)
+
+## summarize best model for microhabitat scale and check beta and SE
+
+summary(M3)
+M3
+
+coeffs(M3)
+confint(M3 ,method = c("Wald"))
+
+Cp(M1)
+Cp(M2)
+Cp(M3)
+Cp(M4)
+Cp(M5)
+Cp(M6)
+
+## R-squared calculations
+r.squaredLR(M1,R1)
+r.squaredLR(M2,R1)
+r.squaredLR(M3,R1)
+r.squaredLR(M4,R1)
+r.squaredLR(M5,R1)
+r.squaredLR(M6,R1)
+
+##STEP 3c
+
+P1 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) +Area, family=binomial(logexp(exposure=GRND$expos)) ,data=GRND)
+P2 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) +For.Edge, family=binomial(logexp(exposure=GRND$expos)) ,data=GRND)
+P3 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) +Ag.Edge, family=binomial(logexp(exposure=GRND$expos)) ,data=GRND)
+P4 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) +Grass.100, family=binomial(logexp(exposure=GRND$expos)) ,data=GRND)
+P5 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) +PeriAreaR, family=binomial(logexp(exposure=GRND$expos)) ,data=GRND)
+
+Cand.Patch.mods <- list(
+"Nest.ID + Spec - Null" = R1, 
+"Field/Nest.ID + Spec – R2" = R2, 
+"Egg  T2" = T2, 
+"Area" = P1,
+"For.Edge" = P2,
+"Ag.Edge" = P3,
+"Grass.100" = P4,
+"PeriAreaR" = P5)
+
+aictab(cand.set = Cand.Patch.mods, second.ord = TRUE)
+
+## summarize best model for patch scale and check beta and SE
+summary(P4)
+P4
+
+coeffs(P4)
+confint(P4 ,method = c("Wald"))
+
+Cp(P1)
+Cp(P2)
+Cp(P3)
+Cp(P4)
+Cp(P5)
+
+## R-squared calculations
+r.squaredLR(P1,R1)
+r.squaredLR(P2,R1)
+r.squaredLR(P3,R1)
+r.squaredLR(P4,R1)
+r.squaredLR(P5,R1)
+
+##STEP 3d
+L1 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) +For.1600, family=binomial(logexp(exposure=GRND$expos)) ,data=GRND)
+L2 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) +Grass.1600, family=binomial(logexp(exposure=GRND$expos)) ,data=GRND)
+L3 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) +TE.1600, family=binomial(logexp(exposure=GRND$expos)) ,data=GRND)
+
+Cand.Land.mods <- list(
+"Nest.ID + Spec - Null" = R1, 
+"Field/Nest.ID + Spec – R2" = R2, 
+"Egg  T2" = T2, 
+
+"For.1600" = L1,
+"Grass.1600" = L2,
+"TE.1600" = L3)
+aictab(cand.set = Cand.Land.mods, second.ord = TRUE)
+
+summary(L2)
+L2
+
+coeffs(L2)
+confint(L2 ,method = c("Wald"))
+
+Cp(L1)
+Cp(L2)
+Cp(L3)
+
+## R-squared calculations
+r.squaredLR(L1,R1)
+r.squaredLR(L2,R1)
+r.squaredLR(L3,R1)
+
+##Run all top models together with rephrased model name to determine how they compare
+
+Cand.Best.mods <- list(
+"Nest.ID + Spec - Null" = R1, 
+"Field/Nest.ID + Spec – R2" = R2, 
+"Egg  T2" = T2, 
+"Dist.Edge N5" = N5,
+"SDPC1 M3" = M3,
+"Grass.100 P4" = P4,
+"Grass.1600 L2" = L2)
+
+aictab(cand.set = Cand.Best.mods, second.ord = TRUE)
+
+##STEP 4
+##Multi-scale analysis models
+##Run combined models, not including models that fall below temporal models
+##Nest = Forb
+##Micro = MeanPC1
+##Patch = PAR
+##Land = TE.1600 but below Step 2
+
+##Multi-scale model combinations
+##  Forb+MeanPC1+PAR
+##  Forb+MeanPC1
+##  Forb+PAR
+##  MeanPC1+PAR
+
+C1 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)+ Forb+MeanPC1+ PeriAreaR, family=binomial(logexp(exposure=GRND$expos)) ,data=GRND)
+C2 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)+ Forb+MeanPC1, family=binomial(logexp(exposure=GRND$expos)) ,data=GRND)
+C3 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)+ Forb+ PeriAreaR, family=binomial(logexp(exposure=GRND$expos)) ,data=GRND)
+C4 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)+ MeanPC1+ PeriAreaR, family=binomial(logexp(exposure=GRND$expos)) ,data=GRND)
+
+Cand.Comb.mods <- list (
+"Nest.ID + Spec – R1" = R1, 
+"Field/Nest + Spec – R4" = R4, 
+"Field/Nest + Julian – T1" = T1, 
+"Forb N2" = N2,
+"MeanPC1 M1" = M1,
+"PAR P5" = P5,
+"TE.1600 L3" = L3,
+
+"Nest+Micro+Patch" = C1,
+"Nest+Micro" = C2,
+"Nest+Patch" = C3,
+"Micro+Patch" = C4)
+
+aictab(cand.set = Cand.Comb.mods, second.ord = TRUE)
+
+summary(C1)
+C1
+
+coeffs(C1)
+confint(C1 ,method = c("Wald"))
+
+Cp(C1)
+Cp(C2)
+Cp(C3)
+Cp(C4)
+
+## R-squared calculations
+r.squaredLR(C1,R1)
+r.squaredLR(C2,R1)
+r.squaredLR(C3,R1)
+r.squaredLR(C4,R1)
+
+## STEP 5
+
+MA4 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) +Y.Man, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA4rs <-glmer(survive/trials ~  (Y.Man|Field/Nest.ID)+(1|Spec) +Y.Man, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA5 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) +C.Man, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA5rs <-glmer(survive/trials ~  (C.Man|Field/Nest.ID)+(1|Spec) +C.Man, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA6 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) +GRASS, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA7 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) +MCM, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA8 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) +Dist, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA8a <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) +Dist*GRASS, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA8ars <-glmer(survive/trials ~  (GRASS|Field/Nest.ID)+(1|Spec) +Dist*GRASS, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA9 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)  +C.Man*GRASS,family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA10 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)  +C.Man*MCM, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA10a <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)  +C.Man*MCM*GRASS, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA9rs <-glmer(survive/trials ~  (C.Man|Field/Nest.ID)+(1|Spec)  +C.Man*GRASS,family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA10rs <-glmer(survive/trials ~  (C.Man|Field/Nest.ID)+(1|Spec)  +C.Man*MCM, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA10ars <-glmer(survive/trials ~  (C.Man|Field/Nest.ID)+(1|Spec)  +C.Man*MCM*GRASS, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA11 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) +Y.Man*GRASS, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA12 <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)  +Y.Man*MCM,  family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA12a <-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec)  +Y.Man*MCM*GRASS,  family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA11rs <-glmer(survive/trials ~  (Y.Man|Field/Nest.ID)+(1|Spec) +Y.Man*GRASS, family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA12rs <-glmer(survive/trials ~  (Y.Man|Field/Nest.ID)+(1|Spec)  +Y.Man*MCM,  family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+MA12ars <-glmer(survive/trials ~  (Y.Man|Field/Nest.ID)+(1|Spec)  +Y.Man*MCM*GRASS,  family=binomial(logexp(exposure=GRND$expos)) 	,data=GRND)
+
+Cand.Macro.mods <- list(
+"Nest.ID + Spec - Null" = R1, 
+"Field/Nest.ID + Spec – R2" = R2, 
+"Egg  T2" = T2, 
+
+"Y.Man" = MA4,
+ "C.Man" = MA5,
+"rsY.Man" = MA4rs,
+ "rsC.Man" = MA5rs,
+
+"GRASS" = MA6,
+ "MCM" = MA7,
+ "Dist" = MA8,
+"Dist*GRASS" = MA8a,
+"rsDist*GRASS" = MA8ars,
+
+ "C.Man*GRASS" = MA9,
+"C.Man*MCM" = MA10,
+"C.Man*MCM*GRASS" = MA10a,
+"Y.Man*GRASS" = MA11,
+"Y.Man*MCM" = MA12,
+"Y.Man*MCM*GRASS" = MA12a,
+"rsC.Man*GRASS" = MA9rs,
+"rsC.Man*MCM" = MA10rs,
+"rsC.Man*MCM*GRASS" = MA10ars,
+"rsY.Man*GRASS" = MA11rs,
+"rsY.Man*MCM" = MA12rs,
+"rsY.Man*MCM*GRASS" = MA12ars)
+
+aictab(cand.set = Cand.Macro.mods, second.ord = TRUE)
+
+## summarize best model and check beta and SE
+
+summary(MA6)
+MA6
+
+coeffs(MA6)
+
+confint(MA6 ,method = c("Wald"))
+
+Cp(MA4)
+Cp(MA4rs)
+Cp(MA5)
+Cp(MA5rs)
+Cp(MA6)
+Cp(MA7)
+Cp(MA8)
+Cp(MA8a)
+Cp(MA8ars)
+Cp(MA9)
+Cp(MA9rs)
+Cp(MA10)
+Cp(MA10a)
+Cp(MA10rs)
+Cp(MA10ars)
+Cp(MA11)
+Cp(MA11rs)
+Cp(MA12)
+Cp(MA12a)
+Cp(MA12ars)
+Cp(MA12rs)
+
+## R-squared calculations
+
+r.squaredLR(MA4,R1)
+r.squaredLR(MA5,R1)
+r.squaredLR(MA4rs,R1)
+r.squaredLR(MA5rs,R1)
+r.squaredLR(MA6,R1)
+r.squaredLR(MA7,R1)
+r.squaredLR(MA8,R1)
+r.squaredLR(MA8a,R1)
+r.squaredLR(MA8ars,R1)
+r.squaredLR(MA9,R1)
+r.squaredLR(MA9rs,R1)
+r.squaredLR(MA10,R1)
+r.squaredLR(MA10a,R1)
+r.squaredLR(MA10rs,R1)
+r.squaredLR(MA10ars,R1)
+r.squaredLR(MA11,R1)
+r.squaredLR(MA11rs,R1)
+r.squaredLR(MA12,R1)
+r.squaredLR(MA12a,R1)
+r.squaredLR(MA12rs,R1)
+r.squaredLR(MA12ars,R1)
+
+ranef(MA8)
+ranef(MA5)
+ranef(MA4)
+
+##STEP 6
+##Not conducted because temporal and null models perform better than best management model.
+
+##STEP 7
+##reset confidence set to <2delta AIC
+Cand.Best.mods <- list(
+"Nest.ID + Spec - Null" = R1, 
+"Field/Nest.ID + Spec – R2" = R2, 
+"Egg  T2" = T2, 
+"Dist.Edge N5" = N5,
+"SDPC1 M3" = M3,
+"Grass.100 P4" = P4,
+"Grass.1600 L2" = L2,
+"GRASS" = MA6)
+
+aictab(cand.set = Cand.Best.mods, second.ord = TRUE)
+importance(Conf.set.mods)
+
+##r2 and PCV table results
+
+##(Base Null) Nest.ID + Spec – R1
+VarF <- var(as.vector(fixef(R1) %*% t(model.matrix(R1))))
+##mR2
+100*(VarF/(VarF + VarCorr(R1)$Nest.ID[1] + VarCorr(R1)$Field[1] + VarCorr(R1)$Spec[1]+  pi^2/3))
+##cR2
+100*((VarF + VarCorr(R1)$Nest.ID[1] + VarCorr(R1)$Field[1]+ VarCorr(R1)$Spec[1])/(VarF + VarCorr(R1)$Nest.ID[1] + VarCorr(R1)$Field[1] + VarCorr(R1)$Spec[1]   + pi^2/3))
+##Field PCV
+100*(1 - (VarCorr(R1)$Field[1])/(VarCorr(R2)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(R1)$Nest.ID[1])/(VarCorr(R2)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(R1)$Spec[1])/(VarCorr(R2)$Spec[1]))
+
+## (#2) Stage + Field/Nest.ID + Spec – T2
+VarF <- var(as.vector(fixef(T2) %*% t(model.matrix(T2))))
+##mR2
+100*(VarF/(VarF + VarCorr(T2)$Nest.ID[1] + VarCorr(T2)$Field[1] + VarCorr(T2)$Spec[1] + pi^2/3))
+##cR2
+100*((VarF + VarCorr(T2)$Nest.ID[1] + VarCorr(T2)$Field[1]+ VarCorr(T2)$Spec[1])/(VarF + VarCorr(T2)$Nest.ID[1] + VarCorr(T2)$Field[1] + VarCorr(T2)$Spec[1]   + pi^2/3))
+##Field PCV
+100*(1 - (VarCorr(T2)$Field[1])/(VarCorr(R2)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(T2)$Nest.ID[1])/(VarCorr(R2)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(T2)$Spec[1])/(VarCorr(R2)$Spec[1]))
+
+##GRASS + Stage + Field/Nest.ID + Spec – MA6
+VarF <- var(as.vector(fixef(MA6) %*% t(model.matrix(MA6))))
+##mR2
+100*(VarF/(VarF + VarCorr(MA6)$Nest.ID[1] + VarCorr(MA6)$Field[1] + VarCorr(MA6)$Spec[1]+  pi^2/3))
+##cR2
+100*((VarF + VarCorr(MA6)$Nest.ID[1] + VarCorr(MA6)$Field[1]+ VarCorr(MA6)$Spec[1])/(VarF + VarCorr(MA6)$Nest.ID[1] + VarCorr(MA6)$Field[1] + VarCorr(MA6)$Spec[1]   + pi^2/3))
+##Field PCV
+100*(1 - (VarCorr(MA6)$Field[1])/(VarCorr(R2)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(MA6)$Nest.ID[1])/(VarCorr(R2)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(MA6)$Spec[1])/(VarCorr(R2)$Spec[1]))
+
+## (#1) Field/Nest.ID + Spec – R2
+VarF <- var(as.vector(fixef(R2) %*% t(model.matrix(R2))))
+##mR2
+100*(VarF/(VarF + VarCorr(R2)$Nest.ID[1] + VarCorr(R2)$Field[1] + VarCorr(R2)$Spec[1]  +pi^2/3))
+##cR2
+100*((VarF + VarCorr(R2)$Nest.ID[1] + VarCorr(R2)$Field[1]+ VarCorr(R2)$Spec[1])/(VarF + VarCorr(R2)$Nest.ID[1] + VarCorr(R2)$Field[1] + VarCorr(R2)$Spec[1]   + pi^2/3))
+##Field PCV
+100*(1 - (VarCorr(R2)$Field[1])/(VarCorr(R2)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(R2)$Nest.ID[1])/(VarCorr(R2)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(R2)$Spec[1])/(VarCorr(R2)$Spec[1]))
+
+###################################################
+## (Base Null) Nest.ID + Spec – R1
+
+VarF <- var(as.vector(fixef(R1) %*% t(model.matrix(R1))))
+##mR2
+100*(VarF/(VarF + VarCorr(R1)$Nest.ID[1] + VarCorr(R1)$Field[1] + VarCorr(R1)$Spec[1]+  pi^2/3))
+##cR2
+100*((VarF + VarCorr(R1)$Nest.ID[1] + VarCorr(R1)$Field[1]+ VarCorr(R1)$Spec[1])/(VarF + VarCorr(R1)$Nest.ID[1] + VarCorr(R1)$Field[1] + VarCorr(R1)$Spec[1]   + pi^2/3))
+##Field PCV
+100*(1 - (VarCorr(R1)$Field[1])/(VarCorr(R2)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(R1)$Nest.ID[1])/(VarCorr(R2)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(R1)$Spec[1])/(VarCorr(R2)$Spec[1]))
+
+## (#3c) GRASS.100 + Field/Nest.ID + Spec  - P4
+VarF <- var(as.vector(fixef(P4) %*% t(model.matrix(P4))))
+##mR2
+100*(VarF/(VarF + VarCorr(P4)$Nest.ID[1] + VarCorr(P4)$Field[1] + VarCorr(P4)$Spec[1]  +pi^2/3))
+##cR2
+100*((VarF + VarCorr(P4)$Nest.ID[1] + VarCorr(P4)$Field[1]+ VarCorr(P4)$Spec[1])/(VarF + VarCorr(P4)$Nest.ID[1] + VarCorr(P4)$Field[1] + VarCorr(P4)$Spec[1]   + pi^2/3))
+##Field PCV
+100*(1 - (VarCorr(P4)$Field[1])/(VarCorr(R2)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(P4)$Nest.ID[1])/(VarCorr(R2)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(P4)$Spec[1])/(VarCorr(R2)$Spec[1]))
+
+## (#2) Stage + Field/Nest.ID + Spec – T2
+VarF <- var(as.vector(fixef(T2) %*% t(model.matrix(T2))))
+##mR2
+100*(VarF/(VarF + VarCorr(T2)$Nest.ID[1] + VarCorr(T2)$Field[1] + VarCorr(T2)$Spec[1]  +pi^2/3))
+##cR2
+100*((VarF + VarCorr(T2)$Nest.ID[1] + VarCorr(T2)$Field[1]+ VarCorr(T2)$Spec[1])/(VarF + VarCorr(T2)$Nest.ID[1] + VarCorr(T2)$Field[1] + VarCorr(T2)$Spec[1]   + pi^2/3))
+##Field PCV
+100*(1 - (VarCorr(T2)$Field[1])/(VarCorr(R2)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(T2)$Nest.ID[1])/(VarCorr(R2)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(T2)$Spec[1])/(VarCorr(R2)$Spec[1]))
+
+## (#5) GRASS + Field/Nest.ID + Spec – MA6
+VarF <- var(as.vector(fixef(MA6) %*% t(model.matrix(MA6))))
+##mR2
+100*(VarF/(VarF + VarCorr(MA6)$Nest.ID[1] + VarCorr(MA6)$Field[1] + VarCorr(MA6)$Spec[1]+  pi^2/3))
+##cR2
+100*((VarF + VarCorr(MA6)$Nest.ID[1] + VarCorr(MA6)$Field[1]+ VarCorr(MA6)$Spec[1])/(VarF + VarCorr(MA6)$Nest.ID[1] + VarCorr(MA6)$Field[1] + VarCorr(MA6)$Spec[1]   + pi^2/3))
+##Field PCV
+100*(1 - (VarCorr(MA6)$Field[1])/(VarCorr(R2)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(MA6)$Nest.ID[1])/(VarCorr(R2)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(MA6)$Spec[1])/(VarCorr(R2)$Spec[1]))
+
+
+## (#1) Field/Nest.ID + Spec – R2
+VarF <- var(as.vector(fixef(R2) %*% t(model.matrix(R2))))
+##mR2
+100*(VarF/(VarF + VarCorr(R2)$Nest.ID[1] + VarCorr(R2)$Field[1] + VarCorr(R2)$Spec[1]  + pi^2/3))
+##cR2
+100*((VarF + VarCorr(R2)$Nest.ID[1] + VarCorr(R2)$Field[1]+ VarCorr(R2)$Spec[1])/(VarF + VarCorr(R2)$Nest.ID[1] + VarCorr(R2)$Field[1] + VarCorr(R2)$Spec[1]   + pi^2/3))
+##Field PCV
+100*(1 - (VarCorr(R2)$Field[1])/(VarCorr(R2)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(R2)$Nest.ID[1])/(VarCorr(R2)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(R2)$Spec[1])/(VarCorr(R2)$Spec[1]))
+
+
+## (#3d) GRASS.1600 + Field/Nest.ID + Spec – L2
+VarF <- var(as.vector(fixef(L2) %*% t(model.matrix(L2))))
+##mR2
+100*(VarF/(VarF + VarCorr(L2)$Nest.ID[1] + VarCorr(L2)$Field[1] + VarCorr(L2)$Spec[1]  +pi^2/3))
+##cR2
+100*((VarF + VarCorr(L2)$Nest.ID[1] + VarCorr(L2)$Field[1]+ VarCorr(L2)$Spec[1])/(VarF + VarCorr(L2)$Nest.ID[1] + VarCorr(L2)$Field[1] + VarCorr(L2)$Spec[1]   + pi^2/3))
+##Field PCV
+100*(1 - (VarCorr(L2)$Field[1])/(VarCorr(R2)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(L2)$Nest.ID[1])/(VarCorr(R2)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(L2)$Spec[1])/(VarCorr(R2)$Spec[1]))
+
+
+## (#3a) Dist.Edge + Field/Nest.ID + Spec – N5
+VarF <- var(as.vector(fixef(N5) %*% t(model.matrix(N5))))
+##mR2
+100*(VarF/(VarF + VarCorr(N5)$Nest.ID[1] + VarCorr(N5)$Field[1] + VarCorr(N5)$Spec[1] + pi^2/3))
+##cR2
+100*((VarF + VarCorr(N5)$Nest.ID[1] + VarCorr(N5)$Field[1]+ VarCorr(N5)$Spec[1])/(VarF + VarCorr(N5)$Nest.ID[1] + VarCorr(N5)$Field[1] + VarCorr(N5)$Spec[1]   + pi^2/3))
+##Field PCV
+100*(1 - (VarCorr(N5)$Field[1])/(VarCorr(R2)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(N5)$Nest.ID[1])/(VarCorr(R2)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(N5)$Spec[1])/(VarCorr(R2)$Spec[1]))
+
+
+## (#3b) SDPC1 + Field/Nest.ID + Spec – M3
+VarF <- var(as.vector(fixef(M3) %*% t(model.matrix(M3))))
+##mR2
+100*(VarF/(VarF + VarCorr(M3)$Nest.ID[1] + VarCorr(M3)$Field[1] + VarCorr(M3)$Spec[1]+  pi^2/3))
+##cR2
+100*((VarF + VarCorr(M3)$Nest.ID[1] + VarCorr(M3)$Field[1]+ VarCorr(M3)$Spec[1])/(VarF + VarCorr(M3)$Nest.ID[1] + VarCorr(M3)$Field[1] + VarCorr(M3)$Spec[1]   + pi^2/3))
+##Field PCV
+100*(1 - (VarCorr(M3)$Field[1])/(VarCorr(R2)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(M3)$Nest.ID[1])/(VarCorr(R2)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(M3)$Spec[1])/(VarCorr(R2)$Spec[1]))
+
+
+
+

@@ -1,0 +1,948 @@
+##################################################################################
+## Above-ground nesting community nest survival code from Shew et al. 2018 (Journal of Applied Ecology) 
+################################################################################
+
+## Logistic exposure link function from (https://rpubs.com/bbolker/logregexp)
+
+library(MASS)
+logexp <- function(exposure = 1)
+{
+    linkfun <- function(mu) qlogis(mu^(1/exposure))
+    ## FIXME: is there some trick we can play here to allow
+    ##   evaluation in the context of the 'data' argument?
+    linkinv <- function(eta)  plogis(eta)^exposure
+    logit_mu_eta <- function(eta) {
+        ifelse(abs(eta)>30,.Machine$double.eps,
+               exp(eta)/(1+exp(eta))^2)
+        ## OR .Call(stats:::C_logit_mu_eta, eta, PACKAGE = "stats")
+    }
+    mu.eta <- function(eta) {       
+        exposure * plogis(eta)^(exposure-1) *
+            logit_mu_eta(eta)
+    }
+    valideta <- function(eta) TRUE
+    link <- paste("logexp(", deparse(substitute(exposure)), ")",
+                   sep="")
+    structure(list(linkfun = linkfun, linkinv = linkinv,
+                   mu.eta = mu.eta, valideta = valideta, 
+                   name = link),
+              class = "link-glm")
+}
+
+
+## Import data from proper folder using R-studio and CSV file
+##install and load “lme4”, “MuMIn”, and “AICcmodavg” packages before proceeding
+
+##STEP 1
+
+R1 <-glmer(survive/trials ~  (1|Nest.ID)+(1|Spec), family = binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+R2 <-glmer(survive/trials ~  ( 1|Field/Nest.ID)+(1|Spec), family=binomial(logexp(exposure=ABOVE$expos))     ,data=ABOVE)
+R3<-glmer(survive/trials ~  (1|Field/Nest.ID)+(1|Spec) + (1|Year), family=binomial(logexp(exposure=ABOVE$expos))     ,data=ABOVE)
+R4<-glmer(survive/trials ~  (1| Landscape/Field/Nest.ID)+(1|Spec), family=binomial(logexp(exposure=ABOVE$expos))     ,data=ABOVE)
+R5 <-glmer(survive/trials ~  ( 1|Landscape/ Field/Nest.ID)+(1|Spec) +(1|Year), family=binomial(logexp(exposure=ABOVE$expos))     ,data=ABOVE)
+
+
+
+
+Cand.Rand.mods <- list(
+"Nest.ID-R1+Spec – R1" = R1,
+
+"Field/Nest.ID-R2" = R2, 
+"Field/Nest.ID+Year-R3" = R3, 
+"Landscape/Field/Nest.ID-R4" = R4,
+"Landscape/ Field/Nest.ID+Year-R5" = R5)
+
+aictab(cand.set = Cand.Rand.mods, second.ord = TRUE)
+
+### summary of best model to investigate beta’s and SE
+
+R4
+summary(R4)
+coeffs(R4)
+confint(R4 ,method = c("Wald"))
+
+Cp(R1)
+Cp(R2)
+Cp(R3)
+Cp(R4)
+Cp(R5)
+
+
+## pseudo R-squared calculations
+r.squaredLR(R1, R1)
+r.squaredLR(R2, R1)
+r.squaredLR(R3, R1)
+r.squaredLR(R4, R1)
+r.squaredLR(R5, R1)
+
+
+
+##STEP 2
+
+T1 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) + Julian , family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+T2 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) + Egg, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+T3 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +Julian+ Egg, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+
+Cand.Temp.mods <- list(
+"Nest.ID + Spec - Null" = R1, 
+
+"Landscape/Field/Nest – R4" = R4, 
+"Julian  T1" = T1, 
+"Egg  T2" = T2, 
+"Julian+Egg  T3" = T3)
+
+aictab(cand.set = Cand.Temp.mods, second.ord = TRUE)
+
+
+### summary of best model to investigate beta’s and SE
+
+summary(T1)
+T1
+
+coeffs(T1)
+confint(T1 ,method = c("Wald"))
+
+Cp(T1)
+Cp(T2)
+Cp(T3)
+
+## R-squared calculations
+
+r.squaredLR(T1,R1)
+r.squaredLR(T2,R1)
+r.squaredLR(T3,R1)
+
+
+##STEP 3a
+
+N1 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+Nht, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+N2 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +Forb, family=binomial(logexp(exposure=ABOVE$expos)),data=ABOVE)
+N3 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +Robel, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+N4 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +DeadVeg, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+N5 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +Dist.Edge, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+N6 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +Nht+Forb, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+N7 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +Forb+Robel, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+N8 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+Robel+DeadVeg, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+N9 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +Nht+DeadVeg, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+N10<-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +Nht+Robel, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+N11 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+Forb+DeadVeg, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+N12 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +Nht+Dist.Edge, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+N13 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +Forb+Dist.Edge, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+N14 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +Robel+Dist.Edge, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+N15 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +DeadVeg+Dist.Edge
+, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+
+
+Cand.Nest.mods <- list(
+"Nest.ID + Spec – R1" = R1, 
+"Landscape/Field/Nest + Spec – R4" = R4, 
+"Landscape/Field/Nest + Julian – T1" = T1, 
+" Nht" = N1,
+ "Forb" = N2,
+ "Robel" = N3,
+ "DeadVeg" = N4,
+ "Dist.Edge" = N5,
+ "Nht+Forb" = N6,
+ "Forb+Robel" = N7,
+ "Robel+DeadVeg" = N8,
+"Nht+DeadVeg" = N9,
+ "Nht+Robel" = N10,
+ "Forb+DeadVeg" = N11,
+ "Nht+Dist.Edge" = N12 ,
+ "Forb+Dist.Edge" = N13,
+ "Robel+Dist.Edge" = N14)
+
+
+aictab(cand.set = Cand.Nest.mods, second.ord = TRUE)
+
+
+## summary of best model to investigate beta’s and SE
+
+summary(N2)
+N2
+
+coeffs(N2)
+confint(N2 ,method = c("Wald"))
+
+Cp(N1)
+Cp(N2)
+Cp(N3)
+Cp(N4)
+Cp(N5)
+Cp(N6)
+Cp(N7)
+Cp(N8)
+Cp(N9)
+Cp(N10)
+Cp(N11)
+Cp(N12)
+Cp(N13)
+Cp(N14)
+Cp(N15)
+
+## R-squared calculations
+r.squaredLR(N1,R1)
+r.squaredLR(N2,R1)
+r.squaredLR(N3,R1)
+r.squaredLR(N4,R1)
+r.squaredLR(N5,R1)
+r.squaredLR(N6,R1)
+r.squaredLR(N7,R1)
+r.squaredLR(N8,R1)
+r.squaredLR(N9,R1)
+r.squaredLR(N10,R1)
+r.squaredLR(N11,R1)
+r.squaredLR(N12,R1)
+r.squaredLR(N13,R1)
+r.squaredLR(N14,R1)
+r.squaredLR(N15,R1)
+
+##STEP 3b
+
+M1 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +MeanPC1, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+M2 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+MeanPC2, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+M3 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +SDPC1, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+M4 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +MeanPC1+MeanPC2,  family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+M5 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +MeanPC1+SDPC1,  family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+M6 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +MeanPC2+SDPC1,  family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+
+Cand.Micro.mods <- list(
+"Nest.ID + Spec – R1" = R1, 
+"Landscape/Field/Nest + Spec – R4" = R4, 
+"Landscape/Field/Nest + Julian – T1" = T1, 
+"MeanPC1"= M1,
+"MeanPC2" = M2,
+ "SDPC1" = M3,
+"MeanPC1+MeanPC2"= M4,
+"MeanPC1+SDPC1" = M5,
+ "MeanPC2+SDPC1" = M6)
+
+aictab(cand.set = Cand.Micro.mods, second.ord = TRUE)
+
+## summarize best model for microhabitat scale and check beta and SE
+
+summary(M1)
+M1
+
+coeffs(M1)
+confint(M1 ,method = c("Wald"))
+
+Cp(M1)
+Cp(M2)
+Cp(M3)
+Cp(M4)
+Cp(M5)
+Cp(M6)
+
+## R-squared calculations
+r.squaredLR(M1,R1)
+r.squaredLR(M2,R1)
+r.squaredLR(M3,R1)
+r.squaredLR(M4,R1)
+r.squaredLR(M5,R1)
+r.squaredLR(M6,R1)
+
+##STEP 3c
+
+P1 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +Area, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+P2 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +For.Edge, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+P3 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +Ag.Edge, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+P4 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +Grass.100, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+P5 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +PeriAreaR, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+
+Cand.Patch.mods <- list(
+"Nest.ID + Spec – R1" = R1, 
+"Landscape/Field/Nest + Spec – R4" = R4, 
+"Landscape/Field/Nest + Julian – T1" = T1, 
+"Area" = P1,
+"For.Edge" = P2,
+"Ag.Edge" = P3,
+"Grass.100" = P4,
+"PeriAreaR" = P5)
+
+aictab(cand.set = Cand.Patch.mods, second.ord = TRUE)
+
+## summarize best model for patch scale and check beta and SE
+summary(P5)
+P5
+
+coeffs(P5)
+confint(P5 ,method = c("Wald"))
+
+Cp(P1)
+Cp(P2)
+Cp(P3)
+Cp(P4)
+Cp(P5)
+
+## R-squared calculations
+r.squaredLR(P1,R1)
+r.squaredLR(P2,R1)
+r.squaredLR(P3,R1)
+r.squaredLR(P4,R1)
+r.squaredLR(P5,R1)
+
+
+##STEP 3d
+
+L1 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +For.1600, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+L2 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +Grass.1600, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+L3 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +TE.1600, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+
+Cand.Land.mods <- list(
+"Nest.ID + Spec – R1" = R1, 
+"Landscape/Field/Nest + Spec – R4" = R4, 
+"Landscape/Field/Nest + Julian – T1" = T1, 
+
+"For.1600" = L1,
+"Grass.1600" = L2,
+"TE.1600" = L3)
+aictab(cand.set = Cand.Land.mods, second.ord = TRUE)
+
+summary(L3)
+L3
+
+coeffs(L3)
+confint(L3 ,method = c("Wald"))
+
+Cp(L1)
+Cp(L2)
+Cp(L3)
+
+## R-squared calculations
+r.squaredLR(L1,R1)
+r.squaredLR(L2,R1)
+r.squaredLR(L3,R1)
+
+
+
+
+##Run all top models together with rephrased model name to determine how they compare
+
+Cand.Best.mods <- list(
+"Nest.ID + Spec – R1" = R1, 
+"Landscape/Field/Nest + Spec – R4" = R4, 
+"Landscape/Field/Nest + Julian – T1" = T1, 
+"Forb N2" = N2,
+"MeanPC1 M1" = M1,
+"PAR P5" = P5,
+"TE.1600 L3" = L3)
+
+
+aictab(cand.set = Cand.Best.mods, second.ord = TRUE)
+
+
+##STEP 4
+##Multi-scale analysis models
+##Run combined models, not including models that fall below temporal models
+##Nest = Forb
+##Micro = MeanPC1
+##Patch = PAR
+##Land = TE.1600 but below Step 2
+
+##Multi-scale model combinations
+##  Forb+MeanPC1+PAR
+##  Forb+MeanPC1
+##  Forb+PAR
+##  MeanPC1+PAR
+
+C1 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+ Forb+MeanPC1+ PeriAreaR, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+C2 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+ Forb+MeanPC1, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+C3 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+ Forb+ PeriAreaR, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+C4 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+ MeanPC1+ PeriAreaR, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+
+Cand.Comb.mods <- list (
+"Nest.ID + Spec – R1" = R1, 
+"Landscape/Field/Nest + Spec – R4" = R4, 
+"Landscape/Field/Nest + Julian – T1" = T1, 
+"Forb N2" = N2,
+"MeanPC1 M1" = M1,
+"PAR P5" = P5,
+"TE.1600 L3" = L3,
+
+"Nest+Micro+Patch" = C1,
+"Nest+Micro" = C2,
+"Nest+Patch" = C3,
+"Micro+Patch" = C4)
+
+aictab(cand.set = Cand.Comb.mods, second.ord = TRUE)
+
+summary(C1)
+C1
+
+coeffs(C1)
+confint(C1 ,method = c("Wald"))
+
+
+Cp(C1)
+Cp(C2)
+Cp(C3)
+Cp(C4)
+
+
+## R-squared calculations
+r.squaredLR(C1,R1)
+r.squaredLR(C2,R1)
+r.squaredLR(C3,R1)
+r.squaredLR(C4,R1)
+
+
+## STEP 5
+
+MA4 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +Y.Man, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA4rs <-glmer(survive/trials ~  (Y.Man|Landscape/Field/Nest.ID)+(1|Spec) +Y.Man, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA5 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +C.Man, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA5rs <-glmer(survive/trials ~  (C.Man|Landscape/Field/Nest.ID)+(1|Spec) +C.Man, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA6 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +GRASS, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA7 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +MCM, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA8 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +Dist, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA8a <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +Dist*GRASS, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA8ars <-glmer(survive/trials ~  (GRASS|Landscape/Field/Nest.ID)+(1|Spec) +Dist*GRASS, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA9 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +C.Man*GRASS,family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA10 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +C.Man*MCM, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA10a <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +C.Man*MCM*GRASS, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA9rs <-glmer(survive/trials ~  (C.Man|Landscape/Field/Nest.ID)+(1|Spec)  +C.Man*GRASS,family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA10rs <-glmer(survive/trials ~  (C.Man|Landscape/Field/Nest.ID)+(1|Spec)  +C.Man*MCM, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA10ars <-glmer(survive/trials ~  (C.Man|Landscape/Field/Nest.ID)+(1|Spec)  +C.Man*MCM*GRASS, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA11 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +Y.Man*GRASS, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA12 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +Y.Man*MCM,  family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA12a <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)  +Y.Man*MCM*GRASS,  family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA11rs <-glmer(survive/trials ~  (Y.Man|Landscape/Field/Nest.ID)+(1|Spec) +Y.Man*GRASS, family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA12rs <-glmer(survive/trials ~  (Y.Man|Landscape/Field/Nest.ID)+(1|Spec)  +Y.Man*MCM,  family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+MA12ars <-glmer(survive/trials ~  (Y.Man|Landscape/Field/Nest.ID)+(1|Spec)  +Y.Man*MCM*GRASS,  family=binomial(logexp(exposure=ABOVE$expos)) 	,data=ABOVE)
+
+
+Cand.Macro.mods <- list(
+"Nest.ID + Spec – R1" = R1, 
+"Landscape/Field/Nest + Spec – R4" = R4, 
+"Landscape/Field/Nest + Julian – T1" = T1, 
+"Y.Man" = MA4,
+ "C.Man" = MA5,
+"rsY.Man" = MA4rs,
+ "rsC.Man" = MA5rs,
+
+"GRASS" = MA6,
+ "MCM" = MA7,
+ "Dist" = MA8,
+"Dist*GRASS" = MA8a,
+"rsDist*GRASS" = MA8ars,
+
+ "C.Man*GRASS" = MA9,
+"C.Man*MCM" = MA10,
+"C.Man*MCM*GRASS" = MA10a,
+"Y.Man*GRASS" = MA11,
+"Y.Man*MCM" = MA12,
+"Y.Man*MCM*GRASS" = MA12a,
+"rsC.Man*GRASS" = MA9rs,
+"rsC.Man*MCM" = MA10rs,
+"rsC.Man*MCM*GRASS" = MA10ars,
+"rsY.Man*GRASS" = MA11rs,
+"rsY.Man*MCM" = MA12rs,
+"rsY.Man*MCM*GRASS" = MA12ars)
+
+aictab(cand.set = Cand.Macro.mods, second.ord = TRUE)
+
+### summarize best model for microhabitat scale and check betas and SE
+summary(MA8)
+MA8
+
+summary(MA4)
+MA4
+
+summary(MA5)
+MA5
+
+coeffs(MA8)
+coeffs(MA5)
+coeffs(MA4)
+
+
+confint(MA8 ,method = c("Wald"))
+confint(MA5 ,method = c("Wald"))
+confint(MA4 ,method = c("Wald"))
+
+Cp(MA4)
+Cp(MA4rs)
+Cp(MA5)
+Cp(MA5rs)
+Cp(MA6)
+Cp(MA7)
+Cp(MA8)
+Cp(MA8a)
+Cp(MA8ars)
+Cp(MA9)
+Cp(MA9rs)
+Cp(MA10)
+Cp(MA10a)
+Cp(MA10rs)
+Cp(MA10ars)
+Cp(MA11)
+Cp(MA11rs)
+Cp(MA12)
+Cp(MA12a)
+Cp(MA12ars)
+Cp(MA12rs)
+
+## R-squared calculations
+
+r.squaredLR(MA4,R1)
+r.squaredLR(MA5,R1)
+r.squaredLR(MA4rs,R1)
+r.squaredLR(MA5rs,R1)
+r.squaredLR(MA6,R1)
+r.squaredLR(MA7,R1)
+r.squaredLR(MA8,R1)
+r.squaredLR(MA8a,R1)
+r.squaredLR(MA8ars,R1)
+r.squaredLR(MA9,R1)
+r.squaredLR(MA9rs,R1)
+r.squaredLR(MA10,R1)
+r.squaredLR(MA10a,R1)
+r.squaredLR(MA10rs,R1)
+r.squaredLR(MA10ars,R1)
+r.squaredLR(MA11,R1)
+r.squaredLR(MA11rs,R1)
+r.squaredLR(MA12,R1)
+r.squaredLR(MA12a,R1)
+r.squaredLR(MA12rs,R1)
+r.squaredLR(MA12ars,R1)
+
+ranef(MA8)
+ranef(MA5)
+ranef(MA4)
+
+##STEP 6
+##Management and best single scale models combinations and interactions
+##Run competitive model covariates (< 2delta AIC) from Management analysis and better performing that Step 2, with ##all possible combinations using top covariates from multi-scale model.
+
+##Management  –  Dist, Y.Man, C.Man 
+##Single Scale – Forb, PeriAreaR, (MeanPC1 not used due to relationship with management variables)
+
+##1 Dist+Forb+PeriAreaR
+##2 Dist*Forb+PeriAreaR
+##3 Dist*Forb
+##4 Dist+Forb
+##5 Dist+PeriAreaR
+##6 Dist*PeriAreaR
+##7 Dist*PeriAreaR+Forb
+
+##8 Y.Man+Forb+PeriAreaR
+##9 Y.Man*Forb+PeriAreaR
+##10 Y.Man*Forb
+##11 Y.Man+Forb
+##12 Y.Man+PeriAreaR
+##13 Y.Man*PeriAreaR
+##14 Y.Man*PeriAreaR+Forb
+
+##15 C.Man+Forb+PeriAreaR
+##16C.Man*Forb+PeriAreaR
+##17 C.Man*Forb
+##18 C.Man+Forb
+##19 C.Man+PeriAreaR
+##20 C.Man*PeriAreaR
+##21 C.Man*PeriAreaR+Forb
+
+MAI1 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +Dist+ Forb+PeriAreaR, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+MAI2 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +Dist*Forb+PeriAreaR, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+MAI3 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +Dist* Forb, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+MAI4 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +Dist+ Forb, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+MAI5 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +Dist+PeriAreaR, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+MAI6 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec) +Dist+Dist*PeriAreaR, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+MAI7 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+Dist*PeriAreaR+Forb, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+
+MAI8 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+Y.Man+ Forb+PeriAreaR, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+MAI9 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+Y.Man*Forb+PeriAreaR, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+MAI10 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+Y.Man*Forb, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+MAI11 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+Y.Man+Forb, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+MAI12 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+Y.Man+PeriAreaR, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+MAI13 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+Y.Man*PeriAreaR, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+MAI14 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+Y.Man*PeriAreaR+Forb, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+
+MAI15 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+C.Man+ Forb+PeriAreaR, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+MAI16 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+C.Man*Forb+PeriAreaR, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+MAI17 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+C.Man*Forb, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+MAI18 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+C.Man+Forb, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+MAI19 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+C.Man+PeriAreaR, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+MAI20 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+C.Man*PeriAreaR, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+MAI21 <-glmer(survive/trials ~  (1|Landscape/Field/Nest.ID)+(1|Spec)+C.Man*PeriAreaR+Forb, family=binomial(logexp(exposure=ABOVE$expos)) ,data=ABOVE)
+
+Cand.Int.mods <- list(
+"Nest.ID + Spec – R1" = R1, 
+"Landscape/Field/Nest + Spec – R4" = R4, 
+"Landscape/Field/Nest + Julian – T1" = T1, 
+"Dist+Forb+PeriAreaR" = MAI1,
+"Dist*Forb+PeriAreaR" = MAI2,
+"Dist*Forb" = MAI3,
+"Dist+Forb" = MAI4,
+"Dist+PeriAreaR" = MAI5,
+" Dist*PeriAreaR" = MAI6,
+"Dist*PeriAreaR+Forb" = MAI7,
+
+"Y.Man+Forb+PeriAreaR" = MAI8,
+"Y.Man*Forb+PeriAreaR" = MAI9,
+" Y.Man*Forb" = MAI10,
+"Y.Man+Forb" = MAI11,
+"Y.Man+PeriAreaR" = MAI12,
+"Y.Man*PeriAreaR" = MAI13,
+"Y.Man*PeriAreaR+Forb" = MAI14,
+
+"C.Man+Forb+PeriAreaR" = MAI15,
+"C.Man*Forb+PeriAreaR" = MAI16,
+" C.Man*Forb" = MAI17,
+"C.Man+Forb" = MAI18,
+"C.Man+PeriAreaR" = MAI19,
+"C.Man*PeriAreaR" = MAI20,
+"C.Man*PeriAreaR+Forb" = MAI21)
+
+aictab(cand.set = Cand.Int.mods, second.ord = TRUE)
+
+##investigate summary info for best models betas and SE make sense <2delta AIC
+14 Y.Man*PeriAreaR+Forb
+21 C.Man*PeriAreaR+Forb
+13 Y.Man*PeriAreaR
+8 Y.Man+Forb+PeriAreaR
+15 C.Man+Forb+PeriAreaR
+
+
+summary(MAI14)
+summary(MAI21)
+summary(MAI13)
+summary(MAI8)
+summary(MAI15)
+
+coeffs(MAI14)
+coeffs(MAI21)
+coeffs(MAI13)
+coeffs(MAI8)
+coeffs(MAI15)
+
+confint(MAI14 ,method = c("Wald"))
+confint(MAI21 ,method = c("Wald"))
+confint(MAI13 ,method = c("Wald"))
+confint(MAI8 ,method = c("Wald"))
+confint(MAI15 ,method = c("Wald"))
+
+##CPs for and R2 for all models
+
+Cp(MAI1)
+Cp(MAI2)
+Cp(MAI3)
+Cp(MAI4)
+Cp(MAI5)
+Cp(MAI6)
+Cp(MAI7)
+Cp(MAI8)
+Cp(MAI9)
+Cp(MAI10)
+Cp(MAI11)
+Cp(MAI12)
+Cp(MAI13)
+Cp(MAI14)
+Cp(MAI15)
+Cp(MAI16)
+Cp(MAI17)
+Cp(MAI18)
+Cp(MAI19)
+Cp(MAI20)
+Cp(MAI21)
+
+r.squaredLR(MAI1,R1)
+r.squaredLR(MAI2,R1)
+r.squaredLR(MAI3,R1)
+r.squaredLR(MAI4,R1)
+r.squaredLR(MAI5,R1)
+r.squaredLR(MAI6,R1)
+r.squaredLR(MAI7,R1)
+r.squaredLR(MAI8,R1)
+r.squaredLR(MAI9,R1)
+r.squaredLR(MAI10,R1)
+r.squaredLR(MAI11,R1)
+r.squaredLR(MAI12,R1)
+r.squaredLR(MAI13,R1)
+r.squaredLR(MAI14,R1)
+r.squaredLR(MAI15,R1)
+r.squaredLR(MAI16,R1)
+r.squaredLR(MAI17,R1)
+r.squaredLR(MAI18,R1)
+r.squaredLR(MAI19,R1)
+r.squaredLR(MAI20,R1)
+r.squaredLR(MAI21,R1)
+
+
+##STEP 7
+Conf.set.mods <- list (
+"Nest.ID + Spec – R1" = R1, 
+"Landscape/Field/Nest + Spec – R4" = R4, 
+"Landscape/Field/Nest + Julian – T1" = T1, 
+"Forb N2" = N2,
+"MeanPC1 M1" = M1,
+"PAR P5" = P5,
+"TE.1600 L3" = L3,
+"Forb+MeanPC1+PAR – C1" = C1,
+"Dist – MA8" = MA8,
+"Y.Man*PeriAreaR+Forb – MAI14" = MAI14)
+
+
+ 
+aictab(cand.set = Conf.set.mods, second.ord = TRUE)
+
+importance(Conf.set.mods)
+
+
+
+##R2 and PCV 
+##DIST + Geo. Clust./Field/Nest.ID + Spec – MA8
+VarF <- var(as.vector(fixef(MA8) %*% t(model.matrix(MA8))))
+##mR2
+100*(VarF/(VarF + VarCorr(MA8)$Nest.ID[1] + VarCorr(MA8)$Field[1] + VarCorr(MA8)$Landscape[1] +  VarCorr(MA8)$Spec[1]  + pi^2/3))
+##cR2
+100*((VarF + VarCorr(MA8)$Nest.ID[1] + VarCorr(MA8)$Field[1]+  VarCorr(MA8)$Landscape[1]  +VarCorr(MA8)$Spec[1])/(VarF + VarCorr(MA8)$Nest.ID[1] + VarCorr(MA8)$Field[1] +  VarCorr(MA8)$Landscape[1] +VarCorr(MA8)$Spec[1]   + pi^2/3))
+##Landscape PCV
+100*(1 - (VarCorr(MA8)$Landscape[1])/(VarCorr(R4)$Landscape[1]))
+##Field PCV
+100*(1 - (VarCorr(MA8)$Field[1])/(VarCorr(R4)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(MA8)$Nest.ID[1])/(VarCorr(R4)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(MA8)$Spec[1])/(VarCorr(R4)$Spec[1]))
+
+##%TREAT + Geo. Clust./Field/Nest.ID + Spec – MA4
+VarF <- var(as.vector(fixef(MA4) %*% t(model.matrix(MA4))))
+##mR2
+100*(VarF/(VarF + VarCorr(MA4)$Nest.ID[1] + VarCorr(MA4)$Field[1] + VarCorr(MA4)$Landscape[1] +  VarCorr(MA4)$Spec[1]  + pi^2/3))
+##cR2
+100*((VarF + VarCorr(MA4)$Nest.ID[1] + VarCorr(MA4)$Field[1]+  VarCorr(MA4)$Landscape[1]  +VarCorr(MA4)$Spec[1])/(VarF + VarCorr(MA4)$Nest.ID[1] + VarCorr(MA4)$Field[1] +  VarCorr(MA4)$Landscape[1] +VarCorr(MA4)$Spec[1]   + pi^2/3))
+##Landscape PCV
+100*(1 - (VarCorr(MA4)$Landscape[1])/(VarCorr(R4)$Landscape[1]))
+##Field PCV
+100*(1 - (VarCorr(MA4)$Field[1])/(VarCorr(R4)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(MA4)$Nest.ID[1])/(VarCorr(R4)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(MA4)$Spec[1])/(VarCorr(R4)$Spec[1]))
+
+
+##%TOTAL.TR + Geo. Clust./Field/Nest.ID + Spec –MA5
+VarF <- var(as.vector(fixef(MA5) %*% t(model.matrix(MA5))))
+##mR2
+100*(VarF/(VarF + VarCorr(MA5)$Nest.ID[1] + VarCorr(MA5)$Field[1] + VarCorr(MA5)$Landscape[1] +  VarCorr(MA5)$Spec[1]  + pi^2/3))
+##cR2
+100*((VarF + VarCorr(MA5)$Nest.ID[1] + VarCorr(MA5)$Field[1]+  VarCorr(MA5)$Landscape[1]  +VarCorr(MA5)$Spec[1])/(VarF + VarCorr(MA5)$Nest.ID[1] + VarCorr(MA5)$Field[1] +  VarCorr(MA5)$Landscape[1] +VarCorr(MA5)$Spec[1]   + pi^2/3))
+##Landscape PCV
+100*(1 - (VarCorr(MA5)$Landscape[1])/(VarCorr(R4)$Landscape[1]))
+##Field PCV
+100*(1 - (VarCorr(MA5)$Field[1])/(VarCorr(R4)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(MA5)$Nest.ID[1])/(VarCorr(R4)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(MA5)$Spec[1])/(VarCorr(R4)$Spec[1]))
+
+
+##(#1) Geo. Clust./Field/Nest.ID + Spec – R4
+VarF <- var(as.vector(fixef(R4) %*% t(model.matrix(R4))))
+##mR2
+100*(VarF/(VarF + VarCorr(R4)$Nest.ID[1] + VarCorr(R4)$Field[1] + VarCorr(R4)$Landscape[1] +  VarCorr(R4)$Spec[1]  + pi^2/3))
+##cR2
+100*((VarF + VarCorr(R4)$Nest.ID[1] + VarCorr(R4)$Field[1]+  VarCorr(R4)$Landscape[1] +  VarCorr(R4)$Spec[1])/(VarF + VarCorr(R4)$Nest.ID[1] + VarCorr(R4)$Field[1] +  VarCorr(R4)$Landscape[1] +VarCorr(R4)$Spec[1]   + pi^2/3))
+##Landscape PCV
+100*(1 - (VarCorr(R4)$Landscape[1])/(VarCorr(R4)$Landscape[1]))
+##Field PCV
+100*(1 - (VarCorr(R4)$Field[1])/(VarCorr(R4)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(R4)$Nest.ID[1])/(VarCorr(R4)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(R4)$Spec[1])/(VarCorr(R4)$Spec[1]))
+
+
+##(Base Null) Nest.ID + Spec – R1
+VarF <- var(as.vector(fixef(R1) %*% t(model.matrix(R1))))
+##mR2
+100*(VarF/(VarF + VarCorr(R1)$Nest.ID[1] + VarCorr(R1)$Field[1] + VarCorr(R1)$Landscape[1] +  VarCorr(R1)$Spec[1]  + pi^2/3))
+##cR2
+100*((VarF + VarCorr(R1)$Nest.ID[1] + VarCorr(R1)$Field[1]+  VarCorr(R1)$Landscape[1] + VarCorr(R1)$Spec[1])/(VarF + VarCorr(R1)$Nest.ID[1] + VarCorr(R1)$Field[1] +  VarCorr(R1)$Landscape[1] +VarCorr(R1)$Spec[1]   + pi^2/3))
+##Landscape PCV
+100*(1 - (VarCorr(R1)$Landscape[1])/(VarCorr(R4)$Landscape[1]))
+##Field PCV
+100*(1 - (VarCorr(R1)$Field[1])/(VarCorr(R4)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(R1)$Nest.ID[1])/(VarCorr(R4)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(R1)$Spec[1])/(VarCorr(R4)$Spec[1]))
+
+
+##(#2) Julian + Geo. Clust./Field/Nest.ID + Spec – T1
+VarF <- var(as.vector(fixef(T1) %*% t(model.matrix(T1))))
+##mR2
+100*(VarF/(VarF + VarCorr(T1)$Nest.ID[1] + VarCorr(T1)$Field[1] + VarCorr(T1)$Landscape[1] +  VarCorr(T1)$Spec[1]  + pi^2/3))
+##cR2
+100*((VarF + VarCorr(T1)$Nest.ID[1] + VarCorr(T1)$Field[1]+  VarCorr(T1)$Landscape[1] + VarCorr(T1)$Spec[1])/(VarF + VarCorr(T1)$Nest.ID[1] + VarCorr(T1)$Field[1] +  VarCorr(T1)$Landscape[1] +VarCorr(T1)$Spec[1]   + pi^2/3))
+##Landscape PCV
+100*(1 - (VarCorr(T1)$Landscape[1])/(VarCorr(R4)$Landscape[1]))
+##Field PCV
+100*(1 - (VarCorr(T1)$Field[1])/(VarCorr(R4)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(T1)$Nest.ID[1])/(VarCorr(R4)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(T1)$Spec[1])/(VarCorr(R4)$Spec[1]))
+
+
+
+##2nd table results
+##(#4) Forb% + MeanPC1 + PAR + Geo. Clust./Field/Nest.ID + Spec – C1
+VarF <- var(as.vector(fixef(C1) %*% t(model.matrix(C1))))
+##mR2
+100*(VarF/(VarF + VarCorr(C1)$Nest.ID[1] + VarCorr(C1)$Field[1] + VarCorr(C1)$Landscape[1] +  VarCorr(C1)$Spec[1]  + pi^2/3))
+##cR2
+100*((VarF + VarCorr(C1)$Nest.ID[1] + VarCorr(C1)$Field[1]+  VarCorr(C1)$Landscape[1] +  VarCorr(C1)$Spec[1])/(VarF + VarCorr(C1)$Nest.ID[1] + VarCorr(C1)$Field[1] +  VarCorr(C1)$Landscape[1] +VarCorr(C1)$Spec[1]   + pi^2/3))
+##Landscape PCV
+100*(1 - (VarCorr(C1)$Landscape[1])/(VarCorr(R4)$Landscape[1]))
+##Field PCV
+100*(1 - (VarCorr(C1)$Field[1])/(VarCorr(R4)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(C1)$Nest.ID[1])/(VarCorr(R4)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(C1)$Spec[1])/(VarCorr(R4)$Spec[1]))
+
+
+##(#6) %TREAT * PAR + Forb% + Geo. Clust./Field/Nest.ID + Spec – MAI14
+VarF <- var(as.vector(fixef(MAI14) %*% t(model.matrix(MAI14))))
+##mR2
+100*(VarF/(VarF + VarCorr(MAI14)$Nest.ID[1] + VarCorr(MAI14)$Field[1] + VarCorr(MAI14)$Landscape[1] +  VarCorr(MAI14)$Spec[1]  + pi^2/3))
+##cR2
+100*((VarF + VarCorr(MAI14)$Nest.ID[1] + VarCorr(MAI14)$Field[1]+  VarCorr(MAI14)$Landscape[1]  +VarCorr(MAI14)$Spec[1])/(VarF + VarCorr(MAI14)$Nest.ID[1] + VarCorr(MAI14)$Field[1] +  VarCorr(MAI14)$Landscape[1] +VarCorr(MAI14)$Spec[1]   + pi^2/3))
+##Landscape PCV
+100*(1 - (VarCorr(MAI14)$Landscape[1])/(VarCorr(R4)$Landscape[1]))
+##Field PCV
+100*(1 - (VarCorr(MAI14)$Field[1])/(VarCorr(R4)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(MAI14)$Nest.ID[1])/(VarCorr(R4)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(MAI14)$Spec[1])/(VarCorr(R4)$Spec[1]))
+
+
+##(#3a) Forb% + Geo. Clust./Field/Nest.ID + Spec – N2
+VarF <- var(as.vector(fixef(N2) %*% t(model.matrix(N2))))
+##mR2
+100*(VarF/(VarF + VarCorr(N2)$Nest.ID[1] + VarCorr(N2)$Field[1] + VarCorr(N2)$Landscape[1] +  VarCorr(N2)$Spec[1]  + pi^2/3))
+##cR2
+100*((VarF + VarCorr(N2)$Nest.ID[1] + VarCorr(N2)$Field[1]+  VarCorr(N2)$Landscape[1] + VarCorr(N2)$Spec[1])/(VarF + VarCorr(N2)$Nest.ID[1] + VarCorr(N2)$Field[1] +  VarCorr(N2)$Landscape[1] +VarCorr(N2)$Spec[1]   + pi^2/3))
+##Landscape PCV
+100*(1 - (VarCorr(N2)$Landscape[1])/(VarCorr(R4)$Landscape[1]))
+##Field PCV
+100*(1 - (VarCorr(N2)$Field[1])/(VarCorr(R4)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(N2)$Nest.ID[1])/(VarCorr(R4)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(N2)$Spec[1])/(VarCorr(R4)$Spec[1]))
+
+
+##(#3c) PAR + Geo. Clust./Field/Nest.ID + Spec – P5
+VarF <- var(as.vector(fixef(P5) %*% t(model.matrix(P5))))
+##mR2
+100*(VarF/(VarF + VarCorr(P5)$Nest.ID[1] + VarCorr(P5)$Field[1] + VarCorr(P5)$Landscape[1] +  VarCorr(P5)$Spec[1]  + pi^2/3))
+##cR2
+100*((VarF + VarCorr(P5)$Nest.ID[1] + VarCorr(P5)$Field[1]+  VarCorr(P5)$Landscape[1] +  VarCorr(P5)$Spec[1])/(VarF + VarCorr(P5)$Nest.ID[1] + VarCorr(P5)$Field[1] +  VarCorr(P5)$Landscape[1] +VarCorr(P5)$Spec[1]   + pi^2/3))
+##Landscape PCV
+100*(1 - (VarCorr(P5)$Landscape[1])/(VarCorr(R4)$Landscape[1]))
+##Field PCV
+100*(1 - (VarCorr(P5)$Field[1])/(VarCorr(R4)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(P5)$Nest.ID[1])/(VarCorr(R4)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(P5)$Spec[1])/(VarCorr(R4)$Spec[1]))
+
+
+##(#3b) MeanPC1 + Geo. Clust./Field/Nest.ID + Spec – M1
+VarF <- var(as.vector(fixef(M1) %*% t(model.matrix(M1))))
+##mR2
+100*(VarF/(VarF + VarCorr(M1)$Nest.ID[1] + VarCorr(M1)$Field[1] + VarCorr(M1)$Landscape[1] +  VarCorr(M1)$Spec[1]  + pi^2/3))
+##cR2
+100*((VarF + VarCorr(M1)$Nest.ID[1] + VarCorr(M1)$Field[1]+  VarCorr(M1)$Landscape[1] +  VarCorr(M1)$Spec[1])/(VarF + VarCorr(M1)$Nest.ID[1] + VarCorr(M1)$Field[1] +  VarCorr(M1)$Landscape[1] +VarCorr(M1)$Spec[1]   + pi^2/3))
+##Landscape PCV
+100*(1 - (VarCorr(M1)$Landscape[1])/(VarCorr(R4)$Landscape[1]))
+##Field PCV
+100*(1 - (VarCorr(M1)$Field[1])/(VarCorr(R4)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(M1)$Nest.ID[1])/(VarCorr(R4)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(M1)$Spec[1])/(VarCorr(R4)$Spec[1]))
+
+
+##(#5) DIST + Geo. Clust./Field/Nest.ID + Spec – MA8
+VarF <- var(as.vector(fixef(MA8) %*% t(model.matrix(MA8))))
+##mR2
+100*(VarF/(VarF + VarCorr(MA8)$Nest.ID[1] + VarCorr(MA8)$Field[1] + VarCorr(MA8)$Landscape[1] +  VarCorr(MA8)$Spec[1]  + pi^2/3))
+##cR2
+100*((VarF + VarCorr(MA8)$Nest.ID[1] + VarCorr(MA8)$Field[1]+  VarCorr(MA8)$Landscape[1]  +VarCorr(MA8)$Spec[1])/(VarF + VarCorr(MA8)$Nest.ID[1] + VarCorr(MA8)$Field[1] +  VarCorr(MA8)$Landscape[1] +VarCorr(MA8)$Spec[1]   + pi^2/3))
+##Landscape PCV
+100*(1 - (VarCorr(MA8)$Landscape[1])/(VarCorr(R4)$Landscape[1]))
+##Field PCV
+100*(1 - (VarCorr(MA8)$Field[1])/(VarCorr(R4)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(MA8)$Nest.ID[1])/(VarCorr(R4)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(MA8)$Spec[1])/(VarCorr(R4)$Spec[1]))
+
+
+##(#1) Geo. Clust./Field/Nest.ID + Spec – R4
+VarF <- var(as.vector(fixef(R4) %*% t(model.matrix(R4))))
+##mR2
+100*(VarF/(VarF + VarCorr(R4)$Nest.ID[1] + VarCorr(R4)$Field[1] + VarCorr(R4)$Landscape[1] +  VarCorr(R4)$Spec[1]  + pi^2/3))
+##cR2
+100*((VarF + VarCorr(R4)$Nest.ID[1] + VarCorr(R4)$Field[1]+  VarCorr(R4)$Landscape[1]  VarCorr(R4)$Spec[1])/(VarF + VarCorr(R4)$Nest.ID[1] + VarCorr(R4)$Field[1] +  VarCorr(R4)$Landscape[1] +VarCorr(R4)$Spec[1]   + pi^2/3))
+##Landscape PCV
+100*(1 - (VarCorr(R4)$Landscape[1])/(VarCorr(R4)$Landscape[1]))
+##Field PCV
+100*(1 - (VarCorr(R4)$Field[1])/(VarCorr(R4)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(R4)$Nest.ID[1])/(VarCorr(R4)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(R4)$Spec[1])/(VarCorr(R4)$Spec[1]))
+
+##(Base Null) Nest.ID + Spec - R1
+VarF <- var(as.vector(fixef(R1) %*% t(model.matrix(R1))))
+##mR2
+100*(VarF/(VarF + VarCorr(R1)$Nest.ID[1] + VarCorr(R1)$Field[1] + VarCorr(R1)$Landscape[1] +  VarCorr(R1)$Spec[1]  + pi^2/3))
+##cR2
+100*((VarF + VarCorr(R1)$Nest.ID[1] + VarCorr(R1)$Field[1]+  VarCorr(R1)$Landscape[1] + VarCorr(R1)$Spec[1])/(VarF + VarCorr(R1)$Nest.ID[1] + VarCorr(R1)$Field[1] +  VarCorr(R1)$Landscape[1] +VarCorr(R1)$Spec[1]   + pi^2/3))
+##Landscape PCV
+100*(1 - (VarCorr(R1)$Landscape[1])/(VarCorr(R4)$Landscape[1]))
+##Field PCV
+100*(1 - (VarCorr(R1)$Field[1])/(VarCorr(R4)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(R1)$Nest.ID[1])/(VarCorr(R4)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(R1)$Spec[1])/(VarCorr(R4)$Spec[1]))
+
+##(#2) Julian + Geo. Clust./Field/Nest.ID + Spec – T1
+VarF <- var(as.vector(fixef(T1) %*% t(model.matrix(T1))))
+##mR2
+100*(VarF/(VarF + VarCorr(T1)$Nest.ID[1] + VarCorr(T1)$Field[1] + VarCorr(T1)$Landscape[1] +  VarCorr(T1)$Spec[1]  + pi^2/3))
+##cR2
+100*((VarF + VarCorr(T1)$Nest.ID[1] + VarCorr(T1)$Field[1]+  VarCorr(T1)$Landscape[1] +  VarCorr(T1)$Spec[1])/(VarF + VarCorr(T1)$Nest.ID[1] + VarCorr(T1)$Field[1] +  VarCorr(T1)$Landscape[1] +VarCorr(T1)$Spec[1]   + pi^2/3))
+##Landscape PCV
+100*(1 - (VarCorr(T1)$Landscape[1])/(VarCorr(R4)$Landscape[1]))
+##Field PCV
+100*(1 - (VarCorr(T1)$Field[1])/(VarCorr(R4)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(T1)$Nest.ID[1])/(VarCorr(R4)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(T1)$Spec[1])/(VarCorr(R4)$Spec[1]))
+
+##(#3d) EDGE.1600 + Geo. Clust./Field/Nest.ID + Spec – L3
+VarF <- var(as.vector(fixef(L3) %*% t(model.matrix(L3))))
+##mR2
+100*(VarF/(VarF + VarCorr(L3)$Nest.ID[1] + VarCorr(L3)$Field[1] + VarCorr(L3)$Landscape[1] +  VarCorr(L3)$Spec[1]  + pi^2/3))
+##cR2
+100*((VarF + VarCorr(L3)$Nest.ID[1] + VarCorr(L3)$Field[1]+  VarCorr(L3)$Landscape[1] + VarCorr(L3)$Spec[1])/(VarF + VarCorr(L3)$Nest.ID[1] + VarCorr(L3)$Field[1] +  VarCorr(L3)$Landscape[1] +VarCorr(L3)$Spec[1]   + pi^2/3))
+##Landscape PCV
+100*(1 - (VarCorr(L3)$Landscape[1])/(VarCorr(R4)$Landscape[1]))
+##Field PCV
+100*(1 - (VarCorr(L3)$Field[1])/(VarCorr(R4)$Field[1]))
+##Nest.ID PCV
+100*(1 - (VarCorr(L3)$Nest.ID[1])/(VarCorr(R4)$Nest.ID[1]))
+##Spec PCV
+100*(1 - (VarCorr(L3)$Spec[1])/(VarCorr(R4)$Spec[1]))
+
+
+
