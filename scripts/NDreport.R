@@ -56,14 +56,14 @@ y23 <- filter(raw,
 
 unique(y23$Spec)
 
-NDreport <- y23 |> 
+NDreport23 <- y23 |> 
   group_by(id) |> 
   mutate(Exposure = sum(Expos)) |> 
   filter(Visit.Interval == max(Visit.Interval)) |> 
   select(Year, id, Spec, X, Y, FirstFound, AgeFound, Exposure, Fate, InitBHCO, 
          Clutch, InitClutch, Treatment)
 
-write.csv(NDreport23, "doc/NDreport.csv")
+write.csv(NDreport23, "doc/NestDragging23.csv")
 
 Fate_survive <- filter(NDreport,
                   Fate == "Survive")
