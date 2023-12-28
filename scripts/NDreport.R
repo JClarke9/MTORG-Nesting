@@ -61,15 +61,20 @@ NDreport23 <- y23 |>
   mutate(Exposure = sum(Expos)) |> 
   filter(Visit.Interval == max(Visit.Interval)) |> 
   select(Year, id, Spec, X, Y, FirstFound, AgeFound, Exposure, Fate, InitBHCO, 
-         Clutch, InitClutch, Treatment)
+         Clutch, InitClutch)
+
+NDreport23$Fate <- ifelse(NDreport23$Fate != "Survive", "Failed", "Survive")
 
 write.csv(NDreport23, "doc/NestDragging23.csv")
 
-Fate_survive <- filter(NDreport,
-                  Fate == "Survive")
+Fate_survive <- filter(NDreport23,
+                       Fate == "Survive")
 
-Fate_failed <- filter(NDreport,
-                 Fate != "Survive")
+Fate_failed <- filter(NDreport23,
+                      Fate != "Survive")
+
+length(unique(Fate_survive$id))
+length(unique(Fate_failed$id))
 
 species <- y23 |> 
   distinct(id, Spec) |> 
