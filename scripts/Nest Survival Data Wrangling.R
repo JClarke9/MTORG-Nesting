@@ -28,6 +28,20 @@ raw$FirstFound <- as.POSIXct(raw$FirstFound,                                    
                              format = "%m/%d/%Y") |>                            # show the format of the existing dates
   yday()                                                                        # convert dates a nest was found to julian days
 
+raw$cTreat <- ifelse(raw$Paddock == 1 | raw$Paddock == 5 | raw$Paddock == 12 | raw$Paddock == 16 & raw$Year == 2021, "Heavy",
+                     ifelse(raw$Paddock == 2 | raw$Paddock == 6 | raw$Paddock == 9 | raw$Paddock == 13 & raw$Year == 2021, "Full",
+                            ifelse(raw$Paddock == 3 | raw$Paddock == 7 | raw$Paddock == 10 | raw$Paddock == 14 & raw$Year == 2021, "Moderate",
+                                   ifelse(raw$Paddock == 4 | raw$Paddock == 8 | raw$Paddock == 11 | raw$Paddock == 15 & raw$Year == 2021, "Rest",
+                                          ifelse(raw$Paddock == 1 | raw$Paddock == 5 | raw$Paddock == 12 | raw$Paddock == 16 & raw$Year == 2022, "Rest",
+                                                 ifelse(raw$Paddock == 2 | raw$Paddock == 6 | raw$Paddock == 9 | raw$Paddock == 13 & raw$Year == 2022, "Heavy",
+                                                        ifelse(raw$Paddock == 3 | raw$Paddock == 7 | raw$Paddock == 10 | raw$Paddock == 14 & raw$Year == 2022, "Full",
+                                                               ifelse(raw$Paddock == 4 | raw$Paddock == 8 | raw$Paddock == 11 | raw$Paddock == 15 & raw$Year == 2022, "Moderate",
+                                                                      ifelse(raw$Paddock == 1 | raw$Paddock == 5 | raw$Paddock == 12 | raw$Paddock == 16 & raw$Year == 2023, "Moderate",
+                                                                             ifelse(raw$Paddock == 2 | raw$Paddock == 6 | raw$Paddock == 9 | raw$Paddock == 13 & raw$Year == 2023, "Rest",
+                                                                                    ifelse(raw$Paddock == 3 | raw$Paddock == 7 | raw$Paddock == 10 | raw$Paddock == 14 & raw$Year == 2023, "Heavy",
+                                                                                           ifelse(raw$Paddock == 4 | raw$Paddock == 8 | raw$Paddock == 11 | raw$Paddock == 15 & raw$Year == 2023, "Full",
+                                                                                                  NA))))))))))))
+
 raw <- full_join(raw, sched, by = c("Year", "cTreat"="Intensity"))
 
 raw$grazep <- ifelse(raw$cTreat == "Moderate" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, 1,
