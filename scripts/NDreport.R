@@ -60,12 +60,16 @@ NDreport23 <- y23 |>
   group_by(id) |> 
   mutate(Exposure = sum(Expos)) |> 
   filter(Visit.Interval == max(Visit.Interval)) |> 
-  select(Year, id, Spec, X, Y, FirstFound, AgeFound, Exposure, Fate, InitBHCO, 
-         Clutch, InitClutch)
+  select(Year, Spec, X, Y, FirstFound, AgeFound, Exposure, Fate, InitBHCO, 
+         Clutch, InitClutch) |> 
+  ungroup()
+
+NDreport23 <- select(NDreport23, -id)
 
 NDreport23$Fate <- ifelse(NDreport23$Fate != "Survive", "Failed", "Survive")
 
-write.csv(NDreport23, "doc/NestDragging23.csv")
+write.csv(NDreport23, "doc/NestDragging23.csv",
+          row.names = F)
 
 Fate_survive <- filter(NDreport23,
                        Fate == "Survive")
