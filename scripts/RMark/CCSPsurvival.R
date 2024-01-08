@@ -4,6 +4,7 @@ library(ggplot2)
 library(vegan)
 library(tidyverse)
 library(RMark)
+source("scripts/Functions/RMark_Stage_Code.R")
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
@@ -17,22 +18,18 @@ nest <- read.csv("working/RMarknesting.csv",
 CCSP.surv <- filter(nest, 
                     Spec=="CCSP")                                         # select out only CCSP nests
 
+MISSING <- is.na(CCSP.surv$AgeFound)
+
+sum(MISSING)
+
+CCSP.surv <- subset(CCSP.surv, 
+                    subset = !MISSING)
+
 CCSP.surv$AgeDay1 <- CCSP.surv$AgeFound - CCSP.surv$FirstFound + 1
 CCSP.surv$Year <- as.factor(CCSP.surv$Year)
 CCSP.surv$cTreat <- as.factor(CCSP.surv$cTreat)
 
 # Creating stage variable -------------------------------------------------
-
-create.stage.var=function(data,agevar.name,stagevar.name,time.intervals,cutoff)
-{
-  nocc=length(time.intervals)
-  age.mat=matrix(data[,agevar.name],nrow=dim(data)[1],ncol=nocc-1)
-  age.mat=t(t(age.mat)+cumsum(c(0,time.intervals[1:(nocc-2)])))
-  stage.mat=t(apply(age.mat,1,function(x) as.numeric(x<=cutoff)))
-  stage.mat=data.frame(stage.mat)
-  names(stage.mat)=paste(stagevar.name,1:(nocc-1),sep="")
-  return(stage.mat)
-}
 
 x <- create.stage.var(CCSP.surv, 
                       "AgeDay1", 
@@ -48,7 +45,7 @@ rm(list = ls()[!ls() %in% c("CCSP.surv")])
 
 CCSP.pr <- process.data(CCSP.surv,
                         nocc=max(CCSP.surv$LastChecked),
-                        groups = c("cTreat", 
+                        groups = c("cTreat",
                                    "Year"),
                         model="Nest")
 
@@ -58,14 +55,23 @@ CCSP1.run <- function()
   # 1. a model for constant daily survival rate
   S.Dot = list(formula =  ~1)
   
-  # 2. DSR varies with current treatment
-  S.cTreat = list(formula = ~1 + cTreat)
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + grazed)
   
-  # 3. DSR varies with year
+  # 3. DSR varies with the previous years grazing intensity
+  S.pTreat = list(formula = ~1 + pTreat)
+  
+  # 4. DSR varies with year
   S.year = list(formula = ~1 + Year)
   
-  # 4. DSR varies With year interacting with treatment (treatment identity varies by year)
-  S.treatyear = list(formula = ~1 + cTreat:Year)
+  # 5. DSR varies With year and days grazed
+  S.grazedyear = list(formula = ~1 + Year + grazed)
+  
+  # 6. DSR varies With year and past treatment
+  S.ptreatyear = list(formula = ~1 + Year + pTreat)
+  
+  # 7. DSR varies With past treatment and days grazed
+  S.ptreatgrazed = list(formula = ~1 + pTreat + grazed)
   
   CCSP.model.list = create.model.list("Nest")
   CCSP1.results = mark.wrapper(CCSP.model.list,
@@ -79,29 +85,30 @@ CCSP1.run <- function()
 CCSP1.results <- CCSP1.run()
 CCSP1.results
 
+CCSP1.results$S.grazedyear$results$beta
 CCSP1.results$S.year$results$beta
-CCSP1.results$S.treatyear$results$beta
+CCSP1.results$S.grazed$results$beta
 
 #candidate model set for time trends
 CCSP2.run <- function()
 {
   # 1. DSR varies with time
-  S.time = list(formula = ~1 + Year + Time)
+  S.time = list(formula = ~1 + Year + grazed + Time)
   
-  # 3. DSR varies with quadratic effect of date
-  S.quad = list(formula = ~1 + Year+ Time + I(Time^2))
+  # 2. DSR varies with quadratic effect of date
+  S.quad = list(formula = ~1 + Year + grazed + Time + I(Time^2))
   
-  # 4. DSR varies across stages
-  S.stage = list(formula = ~1 + Year + Incub)
+  # 3. DSR varies with nest age
+  S.age = list(formula = ~1 + Year + grazed + NestAge)
   
-  # 2. DSR varies with current treatment
-  S.year = list(formula = ~1 + Year)
+  # 5. DSR varies With year and days grazed
+  S.grazedyear = list(formula = ~1 + Year + grazed)
   
   CCSP.model.list = create.model.list("Nest")
   CCSP2.results = mark.wrapper(CCSP.model.list,
                                data = CCSP.pr,
                                adjust = FALSE,
-                               delete = TRUE)
+                               delete = FALSE)
 }
 
 #results of candidate model set 
@@ -110,24 +117,20 @@ CCSP2.results <- CCSP2.run()
 CCSP2.results
 
 CCSP2.results$S.time$results$beta
-CCSP2.results$S.stage$results$beta
-CCSP2.results$S.year$results$beta
 CCSP2.results$S.quad$results$beta
+CCSP2.results$S.grazedyear$results$beta
 
 #candidate model set for parasitism and nest stage
 CCSP3.run <- function()
 {
   # 1. DSR varies with BHCO number
-  S.bhco = list(formula = ~1 + Year + Time + BHCONum)
+  S.bhcon = list(formula = ~1 + Year + grazed + BHCONum)
+
+  # 2. DSR varies with BHCO number
+  S.bhcop = list(formula = ~1 + Year + grazed + BHCOPres)
   
-  S.grazed = list(formula = ~1 + Year + Time + grazed)
-  
-  S.bhcop = list(formula = ~1 + Year + Time + BHCOpres)
-  
-  S.grazep = list(formula = ~1 + Year + Time + grazep)
-  
-  # 2. DSR varies with quadratic effect of date
-  S.time = list(formula = ~1 + Year + Time)
+  # 5. DSR varies With year and days grazed
+  S.grazedyear = list(formula = ~1 + Year + grazed)
   
   CCSP.model.list = create.model.list("Nest")
   CCSP3.results = mark.wrapper(CCSP.model.list,
@@ -141,59 +144,43 @@ CCSP3.run <- function()
 CCSP3.results <- CCSP3.run()
 CCSP3.results
 
-CCSP3.results$S.bhco$results$beta
-CCSP3.results$S.time$results$beta
+CCSP3.results$S.bhcon$results$beta
 
 #candidate model set for vegetation data
 CCSP4.run <- function()
 {
   # 1. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + Year + Time + BHCOpres + KBG)
+  S.kbg = list(formula =  ~1 + Year + grazed + BHCONum + KBG)
   
   # 2. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.smooth.brome = list(formula = ~1 + Year + Time + BHCOpres + SmoothB)
+  S.sb = list(formula = ~1 + Year + grazed + BHCONum + SmoothB)
   
   # 3. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + Year + Time + BHCOpres + Litter)
+  S.lit = list(formula =  ~1 + Year + grazed + BHCONum + Litter)
   
   # 4. DSR varies with Bare
-  S.bare = list(formula =  ~1 + Year + Time + BHCOpres + Bare)
+  S.bare = list(formula =  ~1 + Year + grazed + BHCONum + Bare)
   
   # 5. DSR varies with Forb
-  S.forb = list(formula =  ~1 + Year + Time + BHCOpres + Forb)
+  S.forb = list(formula =  ~1 + Year + grazed + BHCONum + Forb)
   
   # 6. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + Year + Time + BHCOpres + Grasslike)
+  S.grass = list(formula =  ~1 + Year + grazed + BHCONum + Grasslike)
   
   # 7. DSR varies with Woody
-  S.woody = list(formula =  ~1 + Year + Time + BHCOpres + Woody)
+  S.woody = list(formula =  ~1 + Year + grazed + BHCONum + Woody)
   
   # 8. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + Year + Time + BHCOpres + LitterD)
+  S.litdep = list(formula =  ~1 + Year + grazed + BHCONum + LitterD)
   
   # 9. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Year + Time + BHCOpres + Veg.Height)
+  S.height = list(formula =  ~1 + Year + grazed + BHCONum + Veg.Height)
   
   # 10. DSR varies with VOR
-  S.vor = list(formula =  ~1 + Year + Time + BHCOpres + VOR)
-  
-  # 11. DSR varies with litter and Veg Height
-  S.litheight = list(formula = ~1 + Year + Time + BHCOpres + Litter + Veg.Height)
-  
-  # 12. DSR varies with woody and litter depth
-  S.woodylitdep = list(formula = ~1 + Year + Time + BHCOpres + Woody + LitterD)
-  
-  # 13. DSR varies with KBG and litter depth
-  S.kbglitdep = list(formula = ~1 + Year + Time + BHCOpres + KBG + LitterD)
-  
-  # 14. DSR varies with KBG and Veg.Height
-  S.kbgheight = list(formula = ~1 + Year + Time + BHCOpres + KBG + Veg.Height)
-  
-  # 15. DSR varies with woody and Veg Height
-  S.woodyheight = list(formula = ~1 + Year + Time + BHCOpres + Woody + Veg.Height)
+  S.vor = list(formula =  ~1 + Year + grazed + BHCONum + VOR)
   
   # 1. DSR varies with BHCO number
-  S.bhcop = list(formula =  ~1 + Year + Time + BHCOpres)
+  S.bhcon = list(formula = ~1 + Year + grazed + BHCONum)
   
   CCSP.model.list = create.model.list("Nest")
   CCSP4.results = mark.wrapper(CCSP.model.list,
@@ -207,41 +194,35 @@ CCSP4.run <- function()
 CCSP4.results <- CCSP4.run()
 CCSP4.results
 
-CCSP4.results$S.height$results$beta
-CCSP4.results$S.litheight$results$beta
-CCSP4.results$S.woodyheight$results$beta
-CCSP4.results$S.kbgheight$results$beta
+CCSP4.results$S.vor$results$beta
 
-CCSP.real <- as.data.frame(CCSP4.results$S.height$results$real)
+CCSP.real <- as.data.frame(CCSP4.results$S.vor$results$real)
 CCSP.real <- rownames_to_column(CCSP.real, var = "Group")
-CCSP.real[,1] <- gsub("S g0", "", CCSP.real[,1])
+CCSP.real[,1] <- gsub("S g", "", CCSP.real[,1])
 
 CCSP.real <- CCSP.real |> 
   mutate(Year = case_when(
-    startsWith(Group, "2021") ~ "2021",
-    startsWith(Group, "2022") ~ "2022"
+    grepl("2021", Group) ~ "2021",
+    grepl("2022", Group) ~ "2022",
+    grepl("2023", Group) ~ "2023"
   ))
 
-CCSP.avgDSR <- CCSP.real |> 
-  group_by(Year) |> 
-  summarize(estimate = mean(estimate))
+(CCSP.avgDSR <- CCSP.real |> 
+    group_by(Year) |> 
+    summarize(estimate = mean(estimate),
+              se = mean(se),
+              lcl = mean(lcl),
+              ucl = mean(ucl)))
 
 # Plotting beta coefficients ----------------------------------------------
 
-CCSP.mod <- mark(CCSP.surv, 
-                 nocc=max(CCSP.surv$LastChecked), 
-                 model = "Nest", 
-                 groups = c("Year"), 
-                 model.parameters = list(S = list(formula =  ~1 + Year + Time + BHCOpres + Veg.Height)))
 
-CCSP4.results$S.height$results$real
-CCSP.mod$results$beta
-
-CCSP4.beta <- CCSP4.results$S.height$results$beta
+CCSP4.beta <- CCSP4.results$S.vor$results$beta
 CCSP4.beta
 
 CCSP.top <- rownames_to_column(CCSP4.beta, 
                                "Variable")
+
 CCSP.top <- rename(CCSP.top, 
                    "Coefficient"="estimate")
 
@@ -251,271 +232,257 @@ str(CCSP.top)
 CCSP.top$SEup <- CCSP.top$Coefficient + CCSP.top$se
 CCSP.top$SElow <- CCSP.top$Coefficient - CCSP.top$se
 
-CCSP.plot <- ggplot(CCSP.top, 
-                    aes(x = Variable,
-                        y = Coefficient)) +
-  geom_hline(yintercept = 0,
-             colour = gray(1/2), 
-             lty = 2) +
-  geom_point(aes(x = Variable,
-                 y = Coefficient),
-             size = 4) +
-  geom_errorbar(aes(x = Variable,
-                    ymin = lcl,
-                    ymax = ucl),
-                width = .5,
-                size = 1) +
-  ggtitle("CCSP Beta Coefficient") +
-  theme(panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-        panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-        panel.background = element_rect(fill="white",                     # make the interior background transparent
-                                        colour = NA),                           # remove any other colors
-        plot.background = element_rect(fill="white",                      # make the outer background transparent
-                                       colour=NA),                              # remove any other colors
-        axis.line = element_line(colour = "black"),                             # color the x and y axis
-        axis.text = element_text(size=12, 
-                                 colour = "black"),                    # color the axis text
-        axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-        text=element_text(size=12,                                              # change the size of the axis titles
-                          colour = "black")) +                                    # change the color of the axis titles
-  coord_flip()
+(CCSP.plot <- ggplot(CCSP.top, 
+                     aes(x = Variable,
+                         y = Coefficient)) +
+    geom_hline(yintercept = 0,
+               colour = gray(1/2), 
+               lty = 2) +
+    geom_point(aes(x = Variable,
+                   y = Coefficient),
+               size = 4) +
+    geom_errorbar(aes(x = Variable,
+                      ymin = lcl,
+                      ymax = ucl),
+                  width = .5,
+                  linewidth = 1) +
+    ggtitle("CCSP Beta Coefficient") +
+    theme(panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+          panel.background = element_rect(fill="white",                     # make the interior background transparent
+                                          colour = NA),                           # remove any other colors
+          plot.background = element_rect(fill="white",                      # make the outer background transparent
+                                         colour=NA),                              # remove any other colors
+          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.text = element_text(size=12, 
+                                   colour = "black"),                    # color the axis text
+          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          text=element_text(size=12,                                              # change the size of the axis titles
+                            colour = "black")) +                                    # change the color of the axis titles
+    coord_flip())
 
 # Creating predictive plots -----------------------------------------------
 
 CCSP.ddl <- make.design.data(CCSP.pr)
 CCSP.ddl <- as.data.frame(CCSP.ddl)
 
-plotdata <- CCSP.mod <- CCSP4.results$S.height
+plotdata <- CCSP4.results$S.vor
 
-minheight <- min(CCSP.surv$Veg.Height)
-maxheight <- max(CCSP.surv$Veg.Height)
-Veg.Heightvalues = seq(from = minheight,
-                       to = maxheight,
-                       length = 100)
+VORvalues = seq(from = quantile(CCSP.surv$VOR, 0.05),
+                to = quantile(CCSP.surv$VOR, 0.95),
+                length = 100)
 
-minbhco <- min(CCSP.surv$BHCONum)
-maxbhco <- max(CCSP.surv$BHCONum)
-BHCONum.values = seq(from = minbhco,
-                     to = maxbhco,
+BHCONum.values = seq(from = quantile(CCSP.surv$BHCONum, 0.05),
+                     to = max(CCSP.surv$BHCONum, 0.95),
                      length = 100)
 
-height.pred <- covariate.predictions(plotdata,
-                                     data=data.frame(Veg.Height=Veg.Heightvalues,
-                                                     BHCONum=mean(BHCONum.values)),
-                                     indices = c(6, 41, 81, 346, 381, 421))
+vor.pred <- covariate.predictions(plotdata,
+                                  data = data.frame(VOR = VORvalues,
+                                                    BHCONum = mean(BHCONum.values)),
+                                  indices = c(1, 88, 175, 262,
+                                              349, 436, 523, 610,
+                                              697, 784, 871, 958))
 
-Day5.21 <- which(height.pred$estimates$par.index == 6)
-Day40.21 <- which(height.pred$estimates$par.index == 41)
-Day80.21 <- which(height.pred$estimates$par.index == 81)
-Day5.22 <- which(height.pred$estimates$par.index == 346)
-Day40.22 <- which(height.pred$estimates$par.index == 381)
-Day80.22 <- which(height.pred$estimates$par.index == 421)
+Rest.21 <- which(vor.pred$estimates$par.index == 1)
+Moderate.21 <- which(vor.pred$estimates$par.index == 88)
+Full.21 <- which(vor.pred$estimates$par.index == 175)
+Heavy.21 <- which(vor.pred$estimates$par.index == 262)
+Rest.22 <- which(vor.pred$estimates$par.index == 349)
+Moderate.22 <- which(vor.pred$estimates$par.index == 436)
+Full.22 <- which(vor.pred$estimates$par.index == 523)
+Heavy.22 <- which(vor.pred$estimates$par.index == 610)
+Rest.23 <- which(vor.pred$estimates$par.index == 697)
+Moderate.23 <- which(vor.pred$estimates$par.index == 784)
+Full.23 <- which(vor.pred$estimates$par.index == 871)
+Heavy.23 <- which(vor.pred$estimates$par.index == 958)
 
-height.pred$estimates$Group <- NA
-height.pred$estimates$Group[Day5.21] <- "Early 2021"
-height.pred$estimates$Group[Day40.21] <- "Mid 2021"
-height.pred$estimates$Group[Day80.21] <- "Late 2021"
-height.pred$estimates$Group[Day5.22] <- "Early 2022"
-height.pred$estimates$Group[Day40.22] <- "Mid 2022"
-height.pred$estimates$Group[Day80.22] <- "Late 2022"
-head(height.pred$estimates)
+vor.pred$estimates$Group <- NA
+vor.pred$estimates$Group[Rest.21] <- "Rest 2021"
+vor.pred$estimates$Group[Moderate.21] <- "Moderate 2021"
+vor.pred$estimates$Group[Full.21] <- "Full 2021"
+vor.pred$estimates$Group[Heavy.21] <- "Heavy 2022"
+vor.pred$estimates$Group[Rest.22] <- "Rest 2022"
+vor.pred$estimates$Group[Moderate.22] <- "Moderate 2022"
+vor.pred$estimates$Group[Full.22] <- "Full 2022"
+vor.pred$estimates$Group[Heavy.22] <- "Heavy 2022"
+vor.pred$estimates$Group[Rest.23] <- "Rest 2023"
+vor.pred$estimates$Group[Moderate.23] <- "Moderate 2023"
+vor.pred$estimates$Group[Full.23] <- "Full 2023"
+vor.pred$estimates$Group[Heavy.23] <- "Heavy 2023"
 
-height.pred$estimates$Date <- NA
-height.pred$estimates$Date[Day5.21] <- "Early"
-height.pred$estimates$Date[Day40.21] <- "Mid"
-height.pred$estimates$Date[Day80.21] <- "Late"
-height.pred$estimates$Date[Day5.22] <- "Early"
-height.pred$estimates$Date[Day40.22] <- "Mid"
-height.pred$estimates$Date[Day80.22] <- "Late"
-head(height.pred$estimates)
+vor.pred$estimates$Treat <- NA
+vor.pred$estimates$Treat[Rest.21] <- "Rest"
+vor.pred$estimates$Treat[Moderate.21] <- "Moderate"
+vor.pred$estimates$Treat[Full.21] <- "Full"
+vor.pred$estimates$Treat[Heavy.21] <- "Heavy"
+vor.pred$estimates$Treat[Rest.22] <- "Rest"
+vor.pred$estimates$Treat[Moderate.22] <- "Moderate"
+vor.pred$estimates$Treat[Full.22] <- "Full"
+vor.pred$estimates$Treat[Heavy.22] <- "Heavy"
+vor.pred$estimates$Treat[Rest.23] <- "Rest"
+vor.pred$estimates$Treat[Moderate.23] <- "Moderate"
+vor.pred$estimates$Treat[Full.23] <- "Full"
+vor.pred$estimates$Treat[Heavy.23] <- "Heavy"
 
-height.pred$estimates$Year <- NA
-height.pred$estimates$Year[Day5.21] <- "2021"
-height.pred$estimates$Year[Day40.21] <- "2021"
-height.pred$estimates$Year[Day80.21] <- "2021"
-height.pred$estimates$Year[Day5.22] <- "2022"
-height.pred$estimates$Year[Day40.22] <- "2022"
-height.pred$estimates$Year[Day80.22] <- "2022"
-head(height.pred$estimates)
+vor.pred$estimates$Year <- NA
+vor.pred$estimates$Year[Rest.21] <- "2021"
+vor.pred$estimates$Year[Moderate.21] <- "2021"
+vor.pred$estimates$Year[Full.21] <- "2021"
+vor.pred$estimates$Year[Heavy.21] <- "2021"
+vor.pred$estimates$Year[Rest.22] <- "2022"
+vor.pred$estimates$Year[Moderate.22] <- "2022"
+vor.pred$estimates$Year[Full.22] <- "2022"
+vor.pred$estimates$Year[Heavy.22] <- "2022"
+vor.pred$estimates$Year[Rest.23] <- "2023"
+vor.pred$estimates$Year[Moderate.23] <- "2023"
+vor.pred$estimates$Year[Full.23] <- "2023"
+vor.pred$estimates$Year[Heavy.23] <- "2023"
+head(vor.pred$estimates)
 
-CCSPheight.plot <- ggplot(transform(height.pred$estimates,
-                                    Year = factor(Year, levels=c("2021", "2022")),
-                                    Date = factor(Date, levels=c("Early", "Mid", "Late"))), 
-                          aes(x = Veg.Height, 
-                              y = estimate,
-                              groups = Group,
-                              fill = Year)) +
-  geom_line(size = 1.5,
-            aes(linetype = Date,
-                colour = Year)) +
-  geom_ribbon(aes(ymin = lcl, 
-                  ymax = ucl), 
-              alpha = 0.1) +
-  facet_grid(Date~.) +
-  scale_colour_manual(values = c('#56B4E9',
-                                          '#D55E00')) +
-                                            scale_fill_manual(values = c('#56B4E9',
-                                                                                  '#D55E00')) +
-                                                                                    xlab("Veg Height (mm)") +
-  ylab("Estimated DSR") +
-  ylim(0.7, 1) + 
-  theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                  size=16,
-                                  hjust=.5),
-        panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-        panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-        panel.background = element_rect(fill=NA,                                # make the interior background transparent
-                                        colour = NA),                           # remove any other colors
-        plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                       colour=NA),                              # remove any other colors
-        axis.line = element_line(colour = "black"),                             # color the x and y axis
-        axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-        axis.text.x = element_text(size=12, colour = "black"),
-        axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-        text=element_text(size=12,                                              # change the size of the axis titles
-                          colour = "black"),                                    # change the color of the axis titles
-        legend.background = element_rect(fill=NA),
-        legend.position = c(.85, .1),
-        legend.box = "horizontal") +
-  labs(title = "Clay-colored Sparrow")
-
-CCSPheight.plot
+(CCSPvor.plot <- ggplot(transform(vor.pred$estimates,
+                                  Year = factor(Year, levels=c("2021", "2022", "2023"))), 
+                        aes(x = VOR, 
+                            y = estimate,
+                            groups = Year,
+                            fill = Year)) +
+    geom_line(linewidth = 1.5,
+              aes(color = Year)) +
+    scale_linetype_manual(values = c(1, 3, 2)) +
+    scale_colour_manual(values = c('#A2A4A2',
+                                   '#717F5B',
+                                   '#D4A634')) +
+    scale_fill_manual(values = c('black',
+                                 '#717F5B',
+                                 '#D4A634')) +
+    xlab("VOR (dm)") +
+    ylab("Daily Survival Rate") +
+    ylim(0.7, 1) + 
+    theme(plot.title = element_text(family="my_font",                             # select the font for the title
+                                    size=16,
+                                    hjust=.5),
+          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+          panel.background = element_rect(fill=NA,                                # make the interior background transparent
+                                          colour = NA),                           # remove any other colors
+          plot.background = element_rect(fill=NA,                                 # make the outer background transparent
+                                         colour=NA),                              # remove any other colors
+          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size=12, colour = "black"),
+          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          text=element_text(size=12,                                              # change the size of the axis titles
+                            colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill=NA),
+          legend.position = c(.85, .1),
+          legend.box = "horizontal") +
+    labs(title = "Clay-colored Sparrow",
+         color = "Year"))
 
 bhco.pred <- covariate.predictions(plotdata,
-                                   data=data.frame(Veg.Height=mean(Veg.Heightvalues),
-                                                   BHCONum=BHCONum.values),
-                                   indices = c(6, 41, 81, 346, 481, 421))
+                                   data=data.frame(VOR = mean(VORvalues),
+                                                   BHCONum = BHCONum.values),
+                                   indices = c(1, 88, 175, 262,
+                                               349, 436, 523, 610,
+                                               697, 784, 871, 958))
 
-Day5.21 <- which(bhco.pred$estimates$par.index == 6)
-Day40.21 <- which(bhco.pred$estimates$par.index == 41)
-Day80.21 <- which(bhco.pred$estimates$par.index == 81)
-Day5.22 <- which(bhco.pred$estimates$par.index == 346)
-Day40.22 <- which(bhco.pred$estimates$par.index == 481)
-Day80.22 <- which(bhco.pred$estimates$par.index == 421)
+Rest.21 <- which(bhco.pred$estimates$par.index == 1)
+Moderate.21 <- which(bhco.pred$estimates$par.index == 88)
+Full.21 <- which(bhco.pred$estimates$par.index == 175)
+Heavy.21 <- which(bhco.pred$estimates$par.index == 262)
+Rest.22 <- which(bhco.pred$estimates$par.index == 349)
+Moderate.22 <- which(bhco.pred$estimates$par.index == 436)
+Full.22 <- which(bhco.pred$estimates$par.index == 523)
+Heavy.22 <- which(bhco.pred$estimates$par.index == 610)
+Rest.23 <- which(bhco.pred$estimates$par.index == 697)
+Moderate.23 <- which(bhco.pred$estimates$par.index == 784)
+Full.23 <- which(bhco.pred$estimates$par.index == 871)
+Heavy.23 <- which(bhco.pred$estimates$par.index == 958)
 
 bhco.pred$estimates$Group <- NA
-bhco.pred$estimates$Group[Day5.21] <- "Early 2021"
-bhco.pred$estimates$Group[Day40.21] <- "Mid 2021"
-bhco.pred$estimates$Group[Day80.21] <- "Late 2021"
-bhco.pred$estimates$Group[Day5.22] <- "Early 2022"
-bhco.pred$estimates$Group[Day40.22] <- "Mid 2022"
-bhco.pred$estimates$Group[Day80.22] <- "Late 2022"
-head(height.pred$estimates)
+bhco.pred$estimates$Group[Rest.21] <- "Rest 2021"
+bhco.pred$estimates$Group[Moderate.21] <- "Moderate 2021"
+bhco.pred$estimates$Group[Full.21] <- "Full 2021"
+bhco.pred$estimates$Group[Heavy.21] <- "Heavy 2022"
+bhco.pred$estimates$Group[Rest.22] <- "Rest 2022"
+bhco.pred$estimates$Group[Moderate.22] <- "Moderate 2022"
+bhco.pred$estimates$Group[Full.22] <- "Full 2022"
+bhco.pred$estimates$Group[Heavy.22] <- "Heavy 2022"
+bhco.pred$estimates$Group[Rest.23] <- "Rest 2023"
+bhco.pred$estimates$Group[Moderate.23] <- "Moderate 2023"
+bhco.pred$estimates$Group[Full.23] <- "Full 2023"
+bhco.pred$estimates$Group[Heavy.23] <- "Heavy 2023"
 
-bhco.pred$estimates$Date <- NA
-bhco.pred$estimates$Date[Day5.21] <- "Early"
-bhco.pred$estimates$Date[Day40.21] <- "Mid"
-bhco.pred$estimates$Date[Day80.21] <- "Late"
-bhco.pred$estimates$Date[Day5.22] <- "Early"
-bhco.pred$estimates$Date[Day40.22] <- "Mid"
-bhco.pred$estimates$Date[Day80.22] <- "Late"
-head(bhco.pred$estimates)
+bhco.pred$estimates$Treat <- NA
+bhco.pred$estimates$Treat[Rest.21] <- "Rest"
+bhco.pred$estimates$Treat[Moderate.21] <- "Moderate"
+bhco.pred$estimates$Treat[Full.21] <- "Full"
+bhco.pred$estimates$Treat[Heavy.21] <- "Heavy"
+bhco.pred$estimates$Treat[Rest.22] <- "Rest"
+bhco.pred$estimates$Treat[Moderate.22] <- "Moderate"
+bhco.pred$estimates$Treat[Full.22] <- "Full"
+bhco.pred$estimates$Treat[Heavy.22] <- "Heavy"
+bhco.pred$estimates$Treat[Rest.23] <- "Rest"
+bhco.pred$estimates$Treat[Moderate.23] <- "Moderate"
+bhco.pred$estimates$Treat[Full.23] <- "Full"
+bhco.pred$estimates$Treat[Heavy.23] <- "Heavy"
 
 bhco.pred$estimates$Year <- NA
-bhco.pred$estimates$Year[Day5.21] <- "2021"
-bhco.pred$estimates$Year[Day40.21] <- "2021"
-bhco.pred$estimates$Year[Day80.21] <- "2021"
-bhco.pred$estimates$Year[Day5.22] <- "2022"
-bhco.pred$estimates$Year[Day40.22] <- "2022"
-bhco.pred$estimates$Year[Day80.22] <- "2022"
+bhco.pred$estimates$Year[Rest.21] <- "2021"
+bhco.pred$estimates$Year[Moderate.21] <- "2021"
+bhco.pred$estimates$Year[Full.21] <- "2021"
+bhco.pred$estimates$Year[Heavy.21] <- "2021"
+bhco.pred$estimates$Year[Rest.22] <- "2022"
+bhco.pred$estimates$Year[Moderate.22] <- "2022"
+bhco.pred$estimates$Year[Full.22] <- "2022"
+bhco.pred$estimates$Year[Heavy.22] <- "2022"
+bhco.pred$estimates$Year[Rest.23] <- "2023"
+bhco.pred$estimates$Year[Moderate.23] <- "2023"
+bhco.pred$estimates$Year[Full.23] <- "2023"
+bhco.pred$estimates$Year[Heavy.23] <- "2023"
 head(bhco.pred$estimates)
 
-CCSPbhco.plot <- ggplot(transform(bhco.pred$estimates,
-                                  Year = factor(Year, levels=c("2021", "2022")),
-                                  Date = factor(Date, levels=c("Early", "Mid", "Late"))),
-                        aes(x = BHCONum,
-                            y = estimate,
-                            groups = Group,
-                            fill = Year)) +
-  geom_line(size = 1.5,
-            aes(linetype = Date,
-                colour=Year)) +
-  geom_ribbon(aes(ymin = lcl, 
-                  ymax = ucl), 
-              alpha = 0.1) +
-  facet_grid(Date~.) +
-  scale_colour_manual(values = c('#56B4E9',
-                                          '#D55E00')) +
-                                            scale_fill_manual(values = c('#56B4E9',
-                                                                                  '#D55E00')) +
-                                                                                    xlab("Julian Day") +
-  ylab("Estimated DSR") +
-  ylim(.6, 1.0) +
-  theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                  size=16,
-                                  hjust=.5),
-        panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-        panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-        panel.background = element_rect(fill=NA,                                # make the interior background transparent
-                                        colour = NA),                           # remove any other colors
-        plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                       colour=NA),                              # remove any other colors
-        axis.line = element_line(colour = "black"),                             # color the x and y axis
-        axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-        axis.text.x = element_text(size=12, colour = "black"),
-        axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-        text=element_text(size=12,                                              # change the size of the axis titles
-                          colour = "black"),                                    # change the color of the axis titles
-        legend.background = element_rect(fill=NA),
-        legend.position = c(.15, .1),
-        legend.box = "horizontal") +
-  labs(title = "Clay-colored Sparrow")
-
-julian.pred <- covariate.predictions(plotdata,
-                                     data=data.frame(Veg.Height=mean(Veg.Heightvalues),
-                                                     BHCONum=mean(BHCONum.values)),
-                                     indices=c(1:85, 341:425))
-
-Year21 <- which(julian.pred$estimates$par.index == c(1:85))
-Year22 <- which(julian.pred$estimates$par.index == c(341:425))
-
-julian.pred$estimates$Year[Year21] <- "2021"
-julian.pred$estimates$Year[Year22] <- "2022"
-
-julian.pred$estimates$Julian[Year21] <- c(1:85)
-julian.pred$estimates$Julian[Year22] <- c(1:85)
-
-CCSPjulian.plot <- ggplot(transform(julian.pred$estimates,
-                                    Year = factor(Year, levels=c("2021", "2022"))),
-                          aes(x = Julian,
-                              y = estimate,
-                              fill = Year)) +
-  geom_line(size = 1.5,
-            aes(colour=Year)) +
-  geom_ribbon(aes(ymin = lcl, 
-                  ymax = ucl), 
-              alpha = 0.3) +
-  scale_colour_manual(values = c('#56B4E9',
-                                          '#D55E00')) +
-                                            scale_fill_manual(values = c('#56B4E9',
-                                                                                  '#D55E00')) +
-                                                                                    xlab("Julian Day") +
-  ylab("Estimated DSR") +
-  ylim(0, 1.0) +
-  theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                  size=16,
-                                  hjust=.5),
-        panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-        panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-        panel.background = element_rect(fill=NA,                                # make the interior background transparent
-                                        colour = NA),                           # remove any other colors
-        plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                       colour=NA),                              # remove any other colors
-        axis.line = element_line(colour = "black"),                             # color the x and y axis
-        axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-        axis.text.x = element_text(size=12, colour = "black"),
-        axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-        text=element_text(size=12,                                              # change the size of the axis titles
-                          colour = "black"),                                    # change the color of the axis titles
-        legend.background = element_rect(fill=NA),
-        legend.position = c(.1, .1),
-        legend.box = "horizontal") +
-  labs(title = "Clay-colored Sparrow")
+(CCSPbhco.plot <- ggplot(transform(bhco.pred$estimates,
+                                   Year = factor(Year, levels=c("2021", "2022", "2023"))), 
+                         aes(x = BHCONum, 
+                             y = estimate,
+                             groups = Year,
+                             fill = Year)) +
+    geom_line(linewidth = 1.5,
+              aes(color = Year)) +
+    scale_linetype_manual(values = c(1, 3, 2)) +
+    scale_colour_manual(values = c('#A2A4A2',
+                                   '#717F5B',
+                                   '#D4A634')) +
+    scale_fill_manual(values = c('#A2A4A2',
+                                 '#717F5B',
+                                 '#D4A634')) +
+    xlab("BHCO Eggs") +
+    ylab("Daily Survival Rate") +
+    ylim(0.7, 1) + 
+    theme(plot.title = element_text(family="my_font",                             # select the font for the title
+                                    size=16,
+                                    hjust=.5),
+          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+          panel.background = element_rect(fill=NA,                                # make the interior background transparent
+                                          colour = NA),                           # remove any other colors
+          plot.background = element_rect(fill=NA,                                 # make the outer background transparent
+                                         colour=NA),                              # remove any other colors
+          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size=12, colour = "black"),
+          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          text=element_text(size=12,                                              # change the size of the axis titles
+                            colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill=NA),
+          legend.position = c(.85, .1),
+          legend.box = "horizontal") +
+    labs(title = "Clay-colored Sparrow",
+         color = "Year"))
 
 CCSP.plot
-CCSPheight.plot
+CCSPvor.plot
 CCSPbhco.plot
-CCSPjulian.plot
 
 ggsave(CCSP.plot,
        filename = "outputs/figs/CCSPbeta.png",
@@ -524,8 +491,8 @@ ggsave(CCSP.plot,
        height = 6,
        width = 6)
 
-ggsave(CCSPheight.plot,
-       filename = "outputs/figs/CCSPheight.png",
+ggsave(CCSPvor.plot,
+       filename = "outputs/figs/CCSPvor.png",
        dpi = "print",
        bg = "white",
        height = 6,
@@ -533,13 +500,6 @@ ggsave(CCSPheight.plot,
 
 ggsave(CCSPbhco.plot,
        filename = "outputs/figs/CCSPbhco.png",
-       dpi = "print",
-       bg = "white",
-       height = 6,
-       width = 6)
-
-ggsave(CCSPjulian.plot,
-       filename = "outputs/figs/CCSPjulian.png",
        dpi = "print",
        bg = "white",
        height = 6,

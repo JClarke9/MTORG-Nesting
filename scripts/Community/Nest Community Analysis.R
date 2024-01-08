@@ -1,5 +1,6 @@
 # Load libraries ----------------------------------------------------------
 
+
 library(ggord)
 library(tidyverse)
 library(vegan)
@@ -8,33 +9,64 @@ library(indicspecies)
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
-#This set of code downloads the ggord package
-#
-#options(repos = c(
+# # This set of code downloads the ggord package
+# 
+# options(repos = c(
 #  fawda123 = 'https://fawda123.r-universe.dev',
 #  CRAN = 'https://cloud.r-project.org'))
-#
-#install.packages('ggord')
+# 
+# install.packages('ggord')
+
 
 # Data import -------------------------------------------------------------
+
 
 totals21 <- read.csv("working/totals21.csv", 
                      row.names = 1)
 totals22 <- read.csv("working/totals22.csv", 
                      row.names = 1)
-birds21 <- read.csv("working/birds21.csv", 
-                    header = TRUE, 
-                    row.names = 1)
-birds22 <- read.csv("working/birds22.csv", 
-                    header = TRUE, 
-                    row.names = 1)
+totals23 <- read.csv("working/totals23.csv",
+                     row.names = 1)
+
+
+# Creating site x species matrix ------------------------------------------
+
+
+birds21 <- pivot_wider(totals21[c(1:3,5)],                                      # select the data frame to turn into a matrix
+                       names_from = Spec,                                       # select the column names
+                       values_from = Abundance,                                 # select the abundance values for each species
+                       values_fill = list(Abundance = 0)) |>                    # fill all NA with 0
+  column_to_rownames("Paddock")                                                 # set column names as the pasture ID
+
+write.csv(birds21, 
+          file = "working/birds21.csv")
+
+
+birds22 <- pivot_wider(totals22[c(1:3,5)],                                      # select the data frame to turn into a matrix
+                       names_from = Spec,                                       # select the column names
+                       values_from = Abundance,                                 # select the abundance values for each species
+                       values_fill = list(Abundance = 0)) |>                    # fill all NA with 0
+  column_to_rownames("Paddock")                                                 # set column names as the pasture ID
+
+write.csv(birds21, 
+          file = "working/birds22.csv")
+
+
+birds23 <- pivot_wider(totals23[c(1:3,5)],                                      # select the data frame to turn into a matrix
+                       names_from = Spec,                                       # select the column names
+                       values_from = Abundance,                                 # select the abundance values for each species
+                       values_fill = list(Abundance = 0)) |>                    # fill all NA with 0
+  column_to_rownames("Paddock")                                                 # set column names as the pasture ID
+
+write.csv(birds21, 
+          file = "working/birds23.csv")
 
 
 # Defining Theme ----------------------------------------------------------
 
-my_theme <-  theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                             size=30,
-                                             hjust=.5),
+my_theme <-  theme(plot.title = element_text(family = "my_font",                             # select the font for the title
+                                             size = 30,
+                                             hjust = .5),
                    panel.grid = element_blank(),                                     # remove the horizontal grid lines
                    panel.background = element_blank(),
                    plot.background = element_blank(),
@@ -46,7 +78,7 @@ my_theme <-  theme(plot.title = element_text(family="my_font",                  
                                               size = 20),
                    axis.ticks = element_line(colour = "black"),                            # set axis tick color
                    text=element_text(family = "my_font",
-                                     size=24,                                              # change the size of the axis titles
+                                     size = 24,                                              # change the size of the axis titles
                                      colour = "black"),                                    # change the color of the
                    legend.position="none") 
 
@@ -58,7 +90,7 @@ my_theme <-  theme(plot.title = element_text(family="my_font",                  
 birds.b21 <- as.data.frame(colSums(birds21[2:25]>0))                            # create a new data frame that counts the number of occurrences (i.e. columns where it was observed)
 
 birds.b21 <- birds.b21 |>                                                       # select the data frame
-  rownames_to_column(var="Spec") |>                                             # convert the built in row names to be a column called Spec
+  rownames_to_column(var = "Spec") |>                                             # convert the built in row names to be a column called Spec
   filter(colSums(birds21[2:25]>0)>1)                                            # retain only rows where the number of occurrence is greater than 1 in the original data frame
 
 # create a new data frame and filter the original data set 
@@ -72,13 +104,13 @@ birds.c21 <- semi_join(totals21,                                                
 birds.perm21 <- pivot_wider(birds.c21[c(1:3,5)],                                            # select the data frame
                             names_from = Spec,                                    # select the column names
                             values_from = Abundance,                              # select the values to fill the table with
-                            values_fill=0) |>                                     # fill all NA with 0
-  column_to_rownames(var="Pasture")                                             # convert the column names to row names
+                            values_fill = 0) |>                                     # fill all NA with 0
+  column_to_rownames(var = "Paddock")                                             # convert the column names to row names
 
 ord.birds21 <- metaMDS(birds.perm21[2:18],                                      # run the ordination
-                       distance="bray",                                         # using bray-curtis dissimilarity matrix
-                       k=3,                                                     # use 3 dimensions to reduce stress
-                       trymax=9999)                                             # run test max of 1000 times to reach a solution
+                       distance = "bray",                                         # using bray-curtis dissimilarity matrix
+                       k = 3,                                                     # use 3 dimensions to reduce stress
+                       trymax = 9999)                                             # run test max of 1000 times to reach a solution
 
 stressplot(ord.birds21)                                                         # plot the ordination to determine fit
 
@@ -86,27 +118,27 @@ stressplot(ord.birds21)                                                         
 
 avian.ordination21 <- ggord(ord.birds21,                                        # plot the ordination
                             cols = c('#A2A4A2',                                                       # color for group 1
-                                              'lightgoldenrod2',                                               # color for group 2
-                                              '#D4A634',                                                       # color for group 3
-                                              '#717F5B'),                                                      # color for group 4
+                                     'lightgoldenrod2',                                               # color for group 2
+                                     '#D4A634',                                                       # color for group 3
+                                     '#717F5B'),                                                      # color for group 4
                                               grp_in = birds21$cTreat,                                                  # choose the groupings the communities will be placed in
-                            ellipse_pro=0.95,                                                         # set confidence intervals to 95%
+                            ellipse_pro = 0.95,                                                         # set confidence intervals to 95%
                             arrow = NULL,                                                             # remove the arrow
-                            size=3,                                                                  # change the size of the points
+                            size = 3,                                                                  # change the size of the points
                             alpha_el = .4,                                                            # change the transparency of the ellipses
-                            txt=NULL,                                                                 # change the size of the text
-                            repel=TRUE,                                                               # prevent overlap of labels
-                            xlim= c(-2, 2.5),                                                           # set the limits of the x axis
-                            ylim= c(-2, 2),                                                         # set the limits of the y axis
+                            txt = NULL,                                                                 # change the size of the text
+                            repel = TRUE,                                                               # prevent overlap of labels
+                            xlim = c(-2.5, 2.5),                                                           # set the limits of the x axis
+                            ylim = c(-2.5, 2.5),                                                         # set the limits of the y axis
                             grp_title = "Grazing Intensity") +
   geom_text(aes(x = -1.2,
                 y = 1.85,
-                label = c("Stress = 0.12")),
+                label = c("Stress = 0.11")),
             family = "my_font",
             size = 5) +
   geom_text(aes(x = -1.2,
                 y = 1.7,
-                label = c("p = 0.06")),
+                label = c("p = 0.38")),
             family = "my_font",
             size = 5) +
   my_theme +
@@ -122,7 +154,7 @@ ggsave(avian.ordination21,                                                      
        height = 6.5)
 
 birds.PMr21 <- vegdist(birds.perm21[2:18],                                          # create a resemblance matrix from the filtered data matrix
-                       method='bray')                                             # create a new resemblance matrix
+                       method = 'bray')                                             # create a new resemblance matrix
 
 birds.dSe21 <- betadisper(birds.PMr21,                                              # create an object that tests the dispersion of factors
                           group = birds.perm21$cTreat,                          # test the dispersion of the treatments
@@ -148,7 +180,7 @@ perm21                                                                          
 birds.b22 <- as.data.frame(colSums(birds22[2:28]>0))                            # create a new data frame that counts the number of occurrences (i.e. columns where it was observed)
 
 birds.b22 <- birds.b22 |>                                                       # select the data frame
-  rownames_to_column(var="Spec") |>                                             # convert the built in row names to be a column called Spec
+  rownames_to_column(var = "Spec") |>                                             # convert the built in row names to be a column called Spec
   filter(colSums(birds22[2:28]>0)>1)                                            # retain only rows where the number of occurrence is greater than 1 in the original data frame
 
 # create a new data frame and filter the original data set 
@@ -163,12 +195,12 @@ birds.perm22 <- pivot_wider(birds.c22[c(1:3, 5)],                               
                             names_from = Spec,                                    # select the column names
                             values_from = Abundance,                              # select the values to fill the table with
                             values_fill=0) |>                                     # fill all NA with 0
-  column_to_rownames(var="Pasture")                                             # convert the column names to row names
+  column_to_rownames(var = "Paddock")                                             # convert the column names to row names
 
 ord.birds22 <- metaMDS(birds.perm22[2:21],                                          # run the ordination
-                       distance="bray",                                         # using bray-curtis dissimilarity matrix
-                       k=3,                                                     # use 3 dimensions to reduce stress
-                       trymax=9999)                                             # run test max of 1000 times to reach a solution
+                       distance = "bray",                                         # using bray-curtis dissimilarity matrix
+                       k = 2,                                                     # use 3 dimensions to reduce stress
+                       trymax = 9999)                                             # run test max of 1000 times to reach a solution
 
 stressplot(ord.birds22)                                                           # plot the ordination to determine fit
 
@@ -180,14 +212,14 @@ avian.ordination22 <- ggord(ord.birds22,                                        
                                               '#D4A634',                                                       # color for group 3
                                               '#717F5B'),                                                      # color for group 4
                                               grp_in = birds22$cTreat,                                                  # choose the groupings the communities will be placed in
-                            ellipse_pro=0.95,                                                         # set confidence intervals to 95%
+                            ellipse_pro = 0.95,                                                         # set confidence intervals to 95%
                             arrow = NULL,                                                             # remove the arrow
-                            size=3,                                                                  # change the size of the points
+                            size = 3,                                                                  # change the size of the points
                             alpha_el = .4,                                                            # change the transparency of the ellipses
-                            txt=NULL,                                                                 # change the size of the text
-                            repel=TRUE,                                                               # prevent overlap of labels
-                            xlim= c(-2, 2.5),                                                           # set the limits of the x axis
-                            ylim= c(-2, 2),                                                         # set the limits of the y axis
+                            txt = NULL,                                                                 # change the size of the text
+                            repel = TRUE,                                                               # prevent overlap of labels
+                            xlim = c(-2, 2.5),                                                           # set the limits of the x axis
+                            ylim = c(-2, 2),                                                         # set the limits of the y axis
                             grp_title = "Grazing Intensity") +
   geom_text(aes(x = -1.2,
                 y = 1.85,
@@ -196,7 +228,7 @@ avian.ordination22 <- ggord(ord.birds22,                                        
             size = 5) +
   geom_text(aes(x = -1.2,
                 y = 1.7,
-                label = c("p = 0.10")),
+                label = c("p = 0.737")),
             family = "my_font",
             size = 5) +
   my_theme +
@@ -212,7 +244,7 @@ ggsave(avian.ordination22,
        height = 6.5)
 
 birds.PMr22 <- vegdist(birds.perm22[2:21],                                          # create a resemblance matrix from the filtered data matrix
-                       method='bray')                                             # create a new resemblance matrix
+                       method = 'bray')                                             # create a new resemblance matrix
 
 birds.dSe22 <- betadisper(birds.PMr22,                                              # create an object that tests the dispersion of factors
                           group = birds.perm22$cTreat,                          # test the dispersion of the treatments

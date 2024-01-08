@@ -10,7 +10,18 @@ library(tidyverse)
 raw <- read_csv("raw/Nesting.csv")
 sched <- read_csv("raw/MTORGschedule.csv")
 
+totals <- raw |> 
+  group_by(Year, id) |> 
+  summarise()
+
+totals <- totals |> 
+  group_by(Year) |> 
+  summarise(count = n())
+
 # Data Wrangling ----------------------------------------------------------
+
+raw <- filter(raw, Treatment == "MTORG")
+raw <- filter(raw, Spec != "DUCK" & Spec != "UNKN")
 
 sched$start <- as.POSIXct(sched$start,
                     format = "%m/%d/%Y") |> 
@@ -28,54 +39,52 @@ raw$FirstFound <- as.POSIXct(raw$FirstFound,                                    
                              format = "%m/%d/%Y") |>                            # show the format of the existing dates
   yday()                                                                        # convert dates a nest was found to julian days
 
-raw$cTreat <- ifelse(raw$Paddock == 1 | raw$Paddock == 5 | raw$Paddock == 12 | raw$Paddock == 16 & raw$Year == 2021, "Heavy",
-                     ifelse(raw$Paddock == 2 | raw$Paddock == 6 | raw$Paddock == 9 | raw$Paddock == 13 & raw$Year == 2021, "Full",
-                            ifelse(raw$Paddock == 3 | raw$Paddock == 7 | raw$Paddock == 10 | raw$Paddock == 14 & raw$Year == 2021, "Moderate",
-                                   ifelse(raw$Paddock == 4 | raw$Paddock == 8 | raw$Paddock == 11 | raw$Paddock == 15 & raw$Year == 2021, "Rest",
-                                          ifelse(raw$Paddock == 1 | raw$Paddock == 5 | raw$Paddock == 12 | raw$Paddock == 16 & raw$Year == 2022, "Rest",
-                                                 ifelse(raw$Paddock == 2 | raw$Paddock == 6 | raw$Paddock == 9 | raw$Paddock == 13 & raw$Year == 2022, "Heavy",
-                                                        ifelse(raw$Paddock == 3 | raw$Paddock == 7 | raw$Paddock == 10 | raw$Paddock == 14 & raw$Year == 2022, "Full",
-                                                               ifelse(raw$Paddock == 4 | raw$Paddock == 8 | raw$Paddock == 11 | raw$Paddock == 15 & raw$Year == 2022, "Moderate",
-                                                                      ifelse(raw$Paddock == 1 | raw$Paddock == 5 | raw$Paddock == 12 | raw$Paddock == 16 & raw$Year == 2023, "Moderate",
-                                                                             ifelse(raw$Paddock == 2 | raw$Paddock == 6 | raw$Paddock == 9 | raw$Paddock == 13 & raw$Year == 2023, "Rest",
-                                                                                    ifelse(raw$Paddock == 3 | raw$Paddock == 7 | raw$Paddock == 10 | raw$Paddock == 14 & raw$Year == 2023, "Heavy",
-                                                                                           ifelse(raw$Paddock == 4 | raw$Paddock == 8 | raw$Paddock == 11 | raw$Paddock == 15 & raw$Year == 2023, "Full",
-                                                                                                  NA))))))))))))
-
-raw <- full_join(raw, sched, by = c("Year", "cTreat"="Intensity"))
-
-raw$grazep <- ifelse(raw$cTreat == "Moderate" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, 1,
-                    ifelse(raw$cTreat == "Full" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, 1,
-                           ifelse(raw$cTreat == "Heavy" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, 1,
-                                  ifelse(raw$cTreat == "Moderate" & raw$Year == "2022" & raw$Date > raw$start & raw$Date < raw$end, 1,
-                                         ifelse(raw$cTreat == "Full" & raw$Year == "2022" & raw$Date > raw$start & raw$Date < raw$end, 1,
-                                                ifelse(raw$cTreat == "Heavy" & raw$Year == "2022" & raw$Date > raw$start & raw$Date < raw$end, 1, 
-                                                       0))))))
-
-raw$grazed <- ifelse(raw$cTreat == "Moderate" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, raw$Date - raw$start,
-                    ifelse(raw$cTreat == "Full" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, raw$Date - raw$start,
-                           ifelse(raw$cTreat == "Heavy" & raw$Year == "2021" & raw$Date > raw$start & raw$Date < raw$end, raw$Date - raw$start,
-                                  ifelse(raw$cTreat == "Moderate" & raw$Year == "2022" & raw$Date > raw$start & raw$Date < raw$end, raw$Date - raw$start,
-                                         ifelse(raw$cTreat == "Full" & raw$Year == "2022" & raw$Date > raw$start & raw$Date < raw$end, raw$Date - raw$start,
-                                                ifelse(raw$cTreat == "Heavy" & raw$Year == "2022" & raw$Date > raw$start & raw$Date < raw$end, raw$Date - raw$start, 
-                                                       0))))))
-
-raw$Survive <- as.factor(raw$Survive)                                           # coerce survival (0-success, 1-fail) to a factor
+# double check dates are entered correctly
+filter(raw, FirstFound > Date)
 
 head(raw$Date)                                                                  # show the first few data frames
 tail(raw$Date)                                                                  # show the last few data frames
 
+raw$cTreat <- ifelse(raw$Paddock == 1 & raw$Year == 2021 | raw$Paddock == 5 & raw$Year == 2021 | raw$Paddock == 12 & raw$Year == 2021 | raw$Paddock == 16 & raw$Year == 2021, "Heavy",
+                     ifelse(raw$Paddock == 2 & raw$Year == 2021 | raw$Paddock == 6 & raw$Year == 2021 | raw$Paddock == 9 & raw$Year == 2021 | raw$Paddock == 13 & raw$Year == 2021, "Full",
+                            ifelse(raw$Paddock == 3 & raw$Year == 2021 | raw$Paddock == 7 & raw$Year == 2021 | raw$Paddock == 10 & raw$Year == 2021 | raw$Paddock == 14 & raw$Year == 2021, "Moderate",
+                                   ifelse(raw$Paddock == 4 & raw$Year == 2021 | raw$Paddock == 8 & raw$Year == 2021 | raw$Paddock == 11 & raw$Year == 2021 | raw$Paddock == 15 & raw$Year == 2021, "Rest",
+                                          ifelse(raw$Paddock == 1 & raw$Year == 2022 | raw$Paddock == 5 & raw$Year == 2022 | raw$Paddock == 12 & raw$Year == 2022 | raw$Paddock == 16 & raw$Year == 2022, "Rest",
+                                                 ifelse(raw$Paddock == 2 & raw$Year == 2022 | raw$Paddock == 6 & raw$Year == 2022 | raw$Paddock == 9 & raw$Year == 2022 | raw$Paddock == 13 & raw$Year == 2022, "Heavy",
+                                                        ifelse(raw$Paddock == 3 & raw$Year == 2022 | raw$Paddock == 7 & raw$Year == 2022 | raw$Paddock == 10 & raw$Year == 2022 | raw$Paddock == 14 & raw$Year == 2022, "Full",
+                                                               ifelse(raw$Paddock == 4 & raw$Year == 2022 | raw$Paddock == 8 & raw$Year == 2022 | raw$Paddock == 11 & raw$Year == 2022 | raw$Paddock == 15 & raw$Year == 2022, "Moderate",
+                                                                      ifelse(raw$Paddock == 1 & raw$Year == 2023 | raw$Paddock == 5 & raw$Year == 2023 | raw$Paddock == 12 & raw$Year == 2023 | raw$Paddock == 16 & raw$Year == 2023, "Moderate",
+                                                                             ifelse(raw$Paddock == 2 & raw$Year == 2023 | raw$Paddock == 6 & raw$Year == 2023 | raw$Paddock == 9 & raw$Year == 2023 | raw$Paddock == 13 & raw$Year == 2023, "Rest",
+                                                                                    ifelse(raw$Paddock == 3 & raw$Year == 2023 | raw$Paddock == 7 & raw$Year == 2023 | raw$Paddock == 10 & raw$Year == 2023 | raw$Paddock == 14 & raw$Year == 2023, "Heavy",
+                                                                                           ifelse(raw$Paddock == 4 & raw$Year == 2023 | raw$Paddock == 8 & raw$Year == 2023 | raw$Paddock == 11 & raw$Year == 2023 | raw$Paddock == 15 & raw$Year == 2023, "Full",
+                                                                                                  NA))))))))))))
+
+raw$pTreat <- ifelse(raw$cTreat == "Rest", "Moderate",
+                     ifelse(raw$cTreat == "Moderate", "Full",
+                            ifelse(raw$cTreat == "Full", "Heavy",
+                                   ifelse(raw$cTreat == "Heavy", "Rest",
+                                          NA))))
+
+raw$Fate <- as.factor(raw$Fate)                                           # coerce survival (0-success, 1-fail) to a factor
+
+raw$R1 <- as.numeric(raw$R1)
+raw$R2 <- as.numeric(raw$R2)
+raw$R3 <- as.numeric(raw$R3)
+raw$R4 <- as.numeric(raw$R4)
+
 raw$VOR <- raw |> 
   select(R1:R4) |> 
-  rowMeans()                                                # create a new column with the robel readings averaged
+  rowMeans()                                                                    # create a new column with the robel readings averaged
 
-unknown <- filter(raw, Survive=="Unknown") |>                                   # sort out nests with an unknown Survive
-  group_by(id, Spec) |>                                                         # group by Nest.ID and Species
-  summarize()                                                                   # remove all unrelevant columns
+write.csv(raw, "working/community.csv")
 
-zero.expo <- filter(raw, Expos=="0") |>                                         # sort out nests without Exposure days
+unknown <- filter(raw, Fate2 == "Unknown") |>                                    # sort out nests with an unknown Fate
   group_by(id, Spec) |>                                                         # group by Nest.ID and Species
-  summarize()                                                                   # remove all unrelevant columns
+  summarise()                                                                   # remove all unrelevant columns
+
+zero.expo <- filter(raw, Expos == "0") |>                                       # sort out nests without Exposure days
+  group_by(id, Spec) |>                                                         # group by Nest.ID and Species
+  summarise()                                                                   # remove all unrelevant columns
 
 raw <- anti_join(raw,                                                           # select data frame 1 to remove rows from
                  unknown,                                                       # select data frame 2 to remove rows with
@@ -89,20 +98,26 @@ raw <- anti_join(raw,                                                           
 
 LastChecked <- raw |>                                                           # select the data frame
   group_by(id) |>                                                               # group data by Nest.ID
-  filter(Visit.Interval == max(Visit.Interval)) |>                              # select the most recent visit interval
-  summarize(id, Date)                                                           # select only the two relevant columns
+  filter(Visit.Interval == max(Visit.Interval)) |>                               # select the most recent visit interval
+  summarise(Date)                                                               # select only the two relevant columns
+
+LastChecked$id[duplicated(LastChecked$id)]
 
 raw <- left_join(raw,                                                           # select data frame 1
                  LastChecked,                                                   # select data frame 2
-                 by= "id",                                                       # join the two data frames by the shared "Nest.ID" column
+                 by= "id",                                                      # join the two data frames by the shared "Nest.ID" column
                  keep=FALSE)                                                    # remove duplicate "Nest.ID" column
 
 raw <- rename(raw, "DateChecked" = "Date.x")
 raw <- rename(raw, "LastChecked" = "Date.y")
 
-raw <- select(raw, Year:Veg.Height, Pasture:Patch, pTreat:cTreat, grazep:LastChecked)
+raw <- select(raw, Year:DateChecked, LastChecked,
+              Visit.Interval:Veg.Height, VOR, Paddock:Replicate, 
+              cTreat:pTreat)
 
-# This is just used to calculate the date a nest was last occupied
+# This is just used to calculate the date a nest last was confirmed occupied
+# its important only for failed nests because successful nests it's the same as 
+# the last checked
 
 LastPresent <- raw |>                                                           # select the data frame
   group_by(id) |>                                                               # group by the Nest.ID column
@@ -116,7 +131,7 @@ LastPresent <- raw |>                                                           
 # I needed to join the two lists together so that 
 # the new list includes the new LastPresent column
 
-LastPresent$LastPresent <- LastPresent$DateChecked - LastPresent$Expos          
+LastPresent$LastPresent <- LastPresent$DateChecked - LastPresent$Expos
 
 raw <- left_join(raw,                                                           # select data frame 1
                  LastPresent,                                                   # select data frame 2
@@ -129,7 +144,9 @@ raw <- left_join(raw,                                                           
 raw <- rename(raw, "DateChecked" = "DateChecked.x")                             # rename the Date a nest was checked column
 raw <- rename(raw, "Expos" = "Expos.x")
 
-raw <- select(raw, Year:LastChecked, LastPresent)
+raw <- select(raw, Year:LastChecked, LastPresent,
+              Visit.Interval:Veg.Height, VOR, Paddock:Replicate, 
+              cTreat:pTreat)
 
 str(raw)                                                                        # show the structure of the raw data
 
@@ -137,32 +154,40 @@ str(raw)                                                                        
 # successful nests because it was counting the last Exposure day
 # as a separate nest for the failed nests since it went from 1 to 0
 
+# I first filted out the failed nest and used an antijoin because otherwise
+# it counted failed nests as successful since they had visits where they were
+# successful
+
 f.sort <- raw |>                                                                # select the data frame
-  filter(Fate=="1") |>                                                          # filter out only failed nests
+  filter(Fate == "1") |>                                                     # filter out only failed nests
   group_by(id,                                                                  # group by Nest.ID
-           Fate) |>                                                             # group by fate
-  summarize() |>                                                                # remove unrelevant columns
+           Fate) |>                                                          # group by Fate2
+  summarise() |>                                                                # remove unrelevant columns
   as.data.frame()                                                               # coerce table into a data frame
+
+f.sort$id[duplicated(f.sort$id)]
 
 # this is to create a list of just the successful nests and 
 # all their associated data
 
 success <- anti_join(raw,                                                       # select data frame 1 to remove values from
                      f.sort,                                                    # select data frame 2 that values will be removed with
-                     by="id") |>                                                # remove rows based on the shared Nest.ID column
-  filter(Fate==0) |>                                                            # filter out successful (1) nests
+                     by = "id") |>                                              # remove rows based on the shared Nest.ID column
+  filter(Fate == 0) |>                                                       # filter out successful (0) nests
   group_by(id,                                                                  # group by Nest.ID
            Spec,                                                                # species
            LastPresent,                                                         # date last present
            LastChecked,                                                         # date last checked
-           Fate,                                                                # fate
+           Fate,                                                                # Fate
            FirstFound,                                                          # date first found
            AgeFound) |>                                                         # age first found
-  summarize(Expos=sum(Expos),                                                   # create a column with Expos added together for Nest IDs
-            AgeFound,                                                           # keep the Age Found column
-            BHCONum=max(BHCONum)) |>                                            # keep the Age Found column
-  distinct(id, .keep_all=TRUE) |>                                               # select only unique nest ID and keep all other columns
+  reframe(Expos = sum(Expos),                                                   # create a column with Expos added together for Nest IDs
+          AgeFound,                                                           # keep the Age Found column
+          BHCONum = max(BHCONum)) |>                                          # keep the Age Found column
+  distinct(id, .keep_all = TRUE) |>                                             # select only unique nest ID and keep all other columns
   as.data.frame()                                                               # coerce table into a data frame
+
+success$id[duplicated(success$id)]
 
 # this is to create a list of just the failed nests and 
 # all their associated data. I couldn't use the previous list
@@ -172,19 +197,21 @@ success <- anti_join(raw,                                                       
 
 failed <- anti_join(raw,                                                        # select data frame 1 to remove values from
                     success,                                                    # select data frame 2 that values will be removed with
-                    by="id") |>                                                 # remove rows based on the shared Nest.ID column
-  filter(Fate==1) |>                                                            # filter out failed (0) nests
+                    by = "id") |>                                               # remove rows based on the shared Nest.ID column
+  filter(Fate == 1) |>                                                       # filter out failed (1) nests
   group_by(id,                                                                  # group by Nest.ID
            Spec,                                                                # species
            LastPresent,                                                         # date last present
            LastChecked,                                                         # date last checked
-           Fate,                                                                # fate
+           Fate,                                                                # Fate
            FirstFound,                                                          # date first found
            AgeFound) |>                                                         # age first found
-  summarize(Expos=sum(Expos),                                                   # create a column with Expos added together for Nest IDs
-            AgeFound,
-            BHCONum = max(BHCONum)) |>
+  reframe(Expos = sum(Expos),                                                   # create a column with Expos added together for Nest IDs
+          AgeFound,
+          BHCONum = max(BHCONum)) |>
   as.data.frame()                                                               # coerce table into a data frame
+
+failed$id[duplicated(failed$id)]
 
 nest <- bind_rows(success, failed)                                                  # combine the list of unique successful and failed nests
 
@@ -195,35 +222,79 @@ nest <- bind_rows(success, failed)                                              
 
 check <- nest |>                                                                # select the data frame
   group_by(id) |>                                                               # group by Nest.ID to only show unique nests
-  summarize()                                                                   # remove unrelevant columns
+  summarise()                                                                   # remove unrelevant columns
 
 # RMark needs successful nest dates to have the date last present
 # and date last checked to be equal
 
-nest$LastChecked <- ifelse(nest$Fate==0,                                        # if fate=0 (i.e. successful)                       
+nest$LastChecked <- ifelse(nest$Fate == 0,                                      # if Fate2=0 (i.e. successful)                       
                            nest$LastPresent,                                    # set the day last checked equal to last day present
-                           nest$LastChecked)                                    # if fate < 1 don't change the day last checked
+                           nest$LastChecked)                                    # if Fate2 < 1 don't change the day last checked
 
-data <- select(raw, Year:id, Stage, BHCOpres:InitBHCO, KBG:VOR) |>              # select the veg data columns from the altered raw data 
-  distinct(id, .keep_all=TRUE)                                                  # select only unique nest ID and keep all other columns
+data <- select(raw, Year:id, Visit.Interval, Fate2, DateChecked, Stage, 
+               InitBHCO:InitClutch, Open:pTreat) |>                             # select the other data columns from the altered raw data 
+  distinct(id, .keep_all = TRUE)                                                # select only unique nest ID and keep all other columns
 
 nest <- left_join(nest,                                                         # select data frame 1
                   data,                                                         # select data frame 2
-                  by="id",                                                      # combine the data frames by the shared Nest.ID column
-                  keep=FALSE)                                                   # remove duplicate "Nest.ID" column
+                  by = "id",                                                    # combine the data frames by the shared Nest.ID column
+                  keep = FALSE)                                                 # remove duplicate "Nest.ID" column
 
-nest <- relocate(nest,                                                          # select the data frame
-                 FirstFound,                                                    # select the column to move
-                 .before = LastPresent)                                         # select where to move the column to
+nest <- full_join(nest, sched, by = c("Year", "cTreat"="Intensity"))
 
-nest <- nest |> 
-  na.omit(nest$cTreat) |> 
-  ungroup()
+nest$AgeFound <- as.numeric(nest$AgeFound)
+
+nest$Initiation <- ifelse(is.na(nest$AgeFound), nest$FirstFound,
+                          nest$FirstFound - nest$AgeFound)
+
+nest <- relocate(nest,
+                 Initiation,
+                 .before = FirstFound)
+
+nest$BHCOPres <- ifelse(nest$BHCONum > 0, 1, 0)
+
+# I added one to each of these otherwise a nest with the same day as the start date would have 0 grazing days
+nest$grazed <- ifelse(nest$cTreat == "Rest", 0,
+                      ifelse(nest$Initiation < nest$start & nest$LastChecked < nest$start, 0,
+                             ifelse(nest$Initiation > nest$end & nest$LastChecked > nest$end, 0,
+                                    ifelse(nest$Initiation < nest$start & nest$LastChecked <= nest$end, nest$LastChecked - nest$start + 1,
+                                           ifelse(nest$Initiation >= nest$start & nest$LastChecked <= nest$end, abs(nest$LastChecked - nest$Initiation) + 1,
+                                                  ifelse(nest$Initiation > nest$start & nest$LastChecked > nest$end, abs(nest$end - nest$Initiation) + 1,
+                                                         ifelse(nest$Initiation <= nest$start & nest$LastChecked >= nest$end, nest$end - nest$start + 1,
+                                                                NA)))))))
+
+nest$grazep <- ifelse(nest$grazed > 0, 1, 0)
+
+# remove columns with NA values in environmental covariates
+
+MISSING <- is.na(nest$KBG) |
+  is.na(nest$Smooth.Brome) |
+  is.na(nest$Litter) |
+  is.na(nest$Bare) |
+  is.na(nest$Forb) |
+  is.na(nest$Grasslike) |
+  is.na(nest$Woody) |
+  is.na(nest$Litter.Depth) |
+  is.na(nest$Veg.Height) |
+  is.na(nest$VOR) |
+  is.na(nest$cTreat)
+
+sum(MISSING)
+
+nest <- subset(nest, 
+               subset = !MISSING)
 
 nest$cTreat <- as.factor(nest$cTreat)                                           # coerce the treatment column into a factor
 nest$pTreat <- as.factor(nest$pTreat)
-
+nest$Replicate <- as.factor(nest$Replicate)
+nest$Open <- as.factor(nest$Open)
+nest$Stage <- as.factor(nest$Stage)
+nest$Fate <- as.factor(nest$Fate)
+nest$id <- as.factor(nest$id)
 nest$Spec <- as.factor(nest$Spec)
+nest$Bare <- as.numeric(nest$Bare)
+nest$Litter.Depth <- as.numeric(nest$Litter.Depth)
+nest$AgeFound <- as.numeric(nest$AgeFound)
 
 str(nest)                                                                       # check the structure of the data
 
@@ -250,15 +321,15 @@ for (i in unique(nest$Spec)) {
   spec.surv$Veg.Height <- as.integer(spec.surv$Veg.Height)
   spec.surv$AgeFound <- as.numeric(spec.surv$AgeFound)
   
-  spec.surv <- select(spec.surv, id:VOR)
-
+  spec.surv <- select(spec.surv, id:grazep)
+  
   # I wanted to group nests into unique encounter histories
   # to create a frequency for each of those histories
   spec.unq <- spec.surv |> 
     group_by(FirstFound,
              LastPresent,
              LastChecked) |> 
-    summarize(Freq=n()) |> 
+    summarise(Freq=n()) |> 
     ungroup()
   
   # joining the two data frames to create a frequency column for the data frame
@@ -270,7 +341,7 @@ for (i in unique(nest$Spec)) {
   
   spec.surv <- relocate(spec.surv,
                         Freq,
-                        .after = Fate)
+                        .after = Fate2)
   
   #standardizing dates so each column starts at the first day a nest was found
   spec.surv$LastPresent <- spec.surv$LastPresent - min(spec.surv$FirstFound) + 1
@@ -281,8 +352,6 @@ for (i in unique(nest$Spec)) {
   spec.surv <- rename(spec.surv, LitterD=Litter.Depth)
   spec.surv <- rename(spec.surv, SmoothB=Smooth.Brome)
   
-  spec.surv <- na.omit(spec.surv) |> 
-    ungroup()
   
   spec.surv$cTreat <- dplyr::recode(spec.surv$cTreat,
                                     "Heavy" = "68",
@@ -291,11 +360,23 @@ for (i in unique(nest$Spec)) {
                                     "Rest" = "0") |> 
     as.factor()
   
+  spec.surv$pTreat <- dplyr::recode(spec.surv$pTreat,
+                                    "Heavy" = "68",
+                                    "Full" = "49",
+                                    "Moderate" = "39",
+                                    "Rest" = "0") |> 
+    as.factor()
+  
   spec.surv <- select(spec.surv, id:AgeDay1)
-
+  
   #spec.nest <- rbind(spec.nest, filter21)
   spec.nest <- bind_rows(spec.nest, spec.surv)
 }
+
+spec.nest <- select(spec.nest, Year, id, Spec, FirstFound, LastPresent, 
+                    LastChecked, Fate, Freq, Expos, AgeFound, AgeDay1, Stage, 
+                    InitBHCO, BHCONum, BHCOPres, InitClutch, Clutch, Open, 
+                    KBG:grazep)
 
 #remove everything but the final dataframe
 rm(list = ls()[!ls() %in%  c("spec.nest", "nest")])
