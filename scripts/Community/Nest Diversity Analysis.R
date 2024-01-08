@@ -23,19 +23,19 @@ windowsFonts(my_font = windowsFont("Gandhi Sans"))                          # do
 # Data wrangling ----------------------------------------------------------
 
 species21 <- aggregate(birds21[3:23],                                           # select the data frame for the analysis (I excluded the row with treatments) 
-                       by=list(birds21$cTreat),                               # select values to group by
-                       FUN=sum)                                               # add together abundances for each species
+                       by=list(birds21$cTreat),                                 # select values to group by
+                       FUN=sum)                                                 # add together abundances for each species
 
 # I wanted to get the simpson diversity for each of the
 # grazing intensities for 2021
-simpson.group21 <- diversity(species21[2:22],                                   # select the data frame for the analysis (I excluded the row with treatments) 
-                             index="simpson",                                           # using the simpson index
-                             MARGIN = 1)                                                # not positive what this does
+simpson21.group <- diversity(species21[2:22],                                   # select the data frame for the analysis (I excluded the row with treatments) 
+                             index="simpson",                                   # using the simpson index
+                             MARGIN = 1)                                        # not positive what this does
 
-summary(simpson.group21)                                                        # show the output of the simpson diversity index
-simpson.group21 <- as.data.frame(simpson.group21)                               # assign the simpson diversity index to a data frame
-simpson.group21$Treat <- species21$Group.1                                      # create a treatment column in the new data frame to use for an ANOVA
-simpson.group21                                                                 # show the output for the simpson diversity
+summary(simpson21.group)                                                        # show the output of the simpson diversity index
+simpson21.group <- as.data.frame(simpson21.group)                               # assign the simpson diversity index to a data frame
+simpson21.group$Treat <- species21$Group.1                                      # create a treatment column in the new data frame to use for an ANOVA
+simpson21.group                                                                 # show the output for the simpson diversity
 
 # I recalculated simpson diversity for each paddock to
 # determine whether diversity was significantly different
@@ -63,18 +63,18 @@ simpson21$Paddock <- factor(simpson21$Paddock,
                                        "9", "10", "11", "12",
                                        "13", "14", "15", "16"))
 
-aov.simp21 <- aov(simpson21~Treat,                                              # select the variables to compare with an ANOVA
-                  simpson21)
-summary(aov.simp21) 
-
 aov.simp21 <- glmmTMB(simpson21~Treat + (1|Paddock),                                              # select the variables to compare with an ANOVA
                       simpson21,
                       family = Gamma(link = "log"))
-summary(aov.simp21)                                                             # show the output of the ANOVA
+
+# remove random effect
+diagnose(aov.simp21)
+
+summary(aov.simp21)
 
 simulationOutput <- simulateResiduals(aov.simp21)
 plot(simulationOutput)
-diagnose(aov.simp21)
+testZeroInflation(simulationOutput)
 
 # Calculate species diversity ---------------------------------------------
 
@@ -84,14 +84,14 @@ species22 <- aggregate(birds22[3:23],                                           
 
 # I wanted to get the simpson diversity for each of the
 # grazing intensities for 2022
-simpson.group22 <- diversity(species22[2:22],                                   # select the data frame for the analysis (I excluded the row with treatments) 
+simpson22.group <- diversity(species22[2:22],                                   # select the data frame for the analysis (I excluded the row with treatments) 
                              index="simpson",                                           # using the simpson index
                              MARGIN = 1)                                                # not positive what this does
 
-summary(simpson.group22)                                                        # show the output of the simpson diversity index
-simpson.group22 <- as.data.frame(simpson.group22)                               # assign the simpson diversity index to a data frame
-simpson.group22$Treat <- species22$Group.1                                      # create a treatment column in the new data frame to use for an ANOVA
-simpson.group22                                                                 # show the output for the simpson diversity
+summary(simpson22.group)                                                        # show the output of the simpson diversity index
+simpson22.group <- as.data.frame(simpson22.group)                               # assign the simpson diversity index to a data frame
+simpson22.group$Treat <- species22$Group.1                                      # create a treatment column in the new data frame to use for an ANOVA
+simpson22.group                                                                 # show the output for the simpson diversity
 
 # I recalculated simpson diversity for each paddock to
 # determine whether diversity was significantly different
@@ -119,18 +119,18 @@ simpson22$Paddock <- factor(simpson22$Paddock,
                                        "9", "10", "11", "12",
                                        "13", "14", "15", "16"))
 
-aov.simp22 <- aov(simpson22~Treat,                                              # select the variables to compare with an ANOVA
-                  simpson22)
-summary(aov.simp22) 
-
 aov.simp22 <- glmmTMB(simpson22~Treat + (1|Paddock),                                              # select the variables to compare with an ANOVA
-                      simpson22,
+                      data = simpson22,
                       family = Gamma(link = "log"))
-summary(aov.simp22)                                                             # show the output of the ANOVA
+
+# remove random effect
+diagnose(aov.simp22)
+
+summary(aov.simp22)
 
 simulationOutput <- simulateResiduals(aov.simp22)
 plot(simulationOutput)
-diagnose(aov.simp22)
+testZeroInflation(simulationOutput)
 
 # Calculate species diversity ---------------------------------------------
 
@@ -140,14 +140,14 @@ species23 <- aggregate(birds23[3:24],                                           
 
 # I wanted to get the simpson diversity for each of the
 # grazing intensities for 2023
-simpson.group23 <- diversity(species23[2:23],                                   # select the data frame for the analysis (I excluded the row with treatments) 
+simpson23.group <- diversity(species23[2:23],                                   # select the data frame for the analysis (I excluded the row with treatments) 
                              index="simpson",                                           # using the simpson index
                              MARGIN = 1)                                                # not positive what this does
 
-summary(simpson.group23)                                                        # show the output of the simpson diversity index
-simpson.group23 <- as.data.frame(simpson.group23)                               # assign the simpson diversity index to a data frame
-simpson.group23$Treat <- species23$Group.1                                      # create a treatment column in the new data frame to use for an ANOVA
-simpson.group23                                                                 # show the output for the simpson diversity
+summary(simpson23.group)                                                        # show the output of the simpson diversity index
+simpson23.group <- as.data.frame(simpson23.group)                               # assign the simpson diversity index to a data frame
+simpson23.group$Treat <- species23$Group.1                                      # create a treatment column in the new data frame to use for an ANOVA
+simpson23.group                                                                 # show the output for the simpson diversity
 
 # I recalculated simpson diversity for each paddock to
 # determine whether diversity was significantly different
@@ -175,18 +175,18 @@ simpson23$Paddock <- factor(simpson23$Paddock,
                                        "9", "10", "11", "12",
                                        "13", "14", "15", "16"))
 
-aov.simp23 <- aov(simpson23~Treat,                                              # select the variables to compare with an ANOVA
-                  simpson23)
-summary(aov.simp23) 
-
 aov.simp23 <- glmmTMB(simpson23~Treat + (1|Paddock),                                              # select the variables to compare with an ANOVA
-                      simpson23,
+                      data = simpson23,
                       family = Gamma(link = "log"))
-summary(aov.simp23)                                                             # show the output of the ANOVA
+
+# remove random effect
+diagnose(aov.simp23)
+
+summary(aov.simp23)
 
 simulationOutput <- simulateResiduals(aov.simp23)
 plot(simulationOutput)
-diagnose(aov.simp23)
+testZeroInflation(simulationOutput)
 
 # Creating diversity data frame -------------------------------------------
 
@@ -217,33 +217,30 @@ qqnorm(simp.total$simpson)
 qqline(simp.total$simpson)
 hist(simp.total$simpson)
 
-simp.aov <- glmmTMB(simpson ~ Treat + (1|Year) + (1|Paddock), 
-                simp.total,
-                family = Gamma(link = "log"))
-summary(simp.aov)
-
-simp.aov <- glmmTMB(simpson ~ Treat + Year + (1|Paddock), 
-                    simp.total,
+aov.simp <- glmmTMB(simpson ~ Treat + (1|Year) + (1|Paddock), 
+                    data = simp.total,
                     family = Gamma(link = "log"))
 
-summary(simp.aov)
-diagnose(simp.aov)
+# remove random effect
+diagnose(aov.simp)
 
-simulationOutput <- simulateResiduals(simp.aov)
+summary(aov.simp)
+
+simulationOutput <- simulateResiduals(aov.simp)
 plot(simulationOutput)
-diagnose(simp.aov)
+testZeroInflation(simulationOutput)
 
-simp.div <- full_join(simpson.group21, 
-                      simpson.group22,
+simp.div <- full_join(simpson21.group, 
+                      simpson22.group,
                       by = "Treat") |> 
-  full_join(simpson.group23,
+  full_join(simpson23.group,
             by = "Treat") |> 
   relocate("Treat", 
-           .before="simpson.group21") |> 
+           .before="simpson21.group") |> 
   rename("Grazing Intensity" = "Treat", 
-         "2021 Diversity" = "simpson.group21", 
-         "2022 Diversity" = "simpson.group22",
-         "2023 Diversity" = "simpson.group23")
+         "2021 Diversity" = "simpson21.group", 
+         "2022 Diversity" = "simpson22.group",
+         "2023 Diversity" = "simpson23.group")
 
 write.csv(simp.total, "outputs/figs/SimpsonTotal.csv")
 
@@ -251,7 +248,7 @@ write.csv(simp.total, "outputs/figs/SimpsonTotal.csv")
 # Creating diversity plot -------------------------------------------------
 
 
-(simp.box <- ggplot(simp.total,                                                  # select the data to graph
+(box.simp <- ggplot(simp.total,                                                  # select the data to graph
                     aes(fill=Year,
                         x=Treat,                                                # define the x axis
                         y=simpson)) +
@@ -278,17 +275,13 @@ write.csv(simp.total, "outputs/figs/SimpsonTotal.csv")
          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
          text=element_text(size=24,                                              # change the size of the axis titles
                            colour = "black"),                                    # change the color of the axis titles
-         legend.position = "none") +                                             # remove the legend
+         legend.position = "right") +                                             # remove the legend
    labs(title = "Breeding Bird Diversity", 
         x = NULL, 
         y = "Simpson's Diversity") +                                               # changing axis titles
-   scale_x_discrete(breaks=c("Rest", "Moderate", "Full", "Heavy"), 
-                    labels=c("Rest"="Rest", "Moderate"="Moderate", 
-                             "Full"="Full", "Heavy"="Heavy"),
-                    limits=c("Heavy", "Full", "Moderate", "Rest")) +
-   coord_cartesian(xlim=NULL, ylim=c(0.3,0.9))
+   coord_cartesian(xlim=NULL, ylim=c(0.3,0.9)))
 
-ggsave(simp.box, 
+ggsave(box.simp, 
        filename = "outputs/figs/SimpsonsBox.png",  
        dpi = "retina", 
        bg = "white",

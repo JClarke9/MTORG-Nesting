@@ -11,6 +11,9 @@ new_f <- new_f |>
             Year = mean(Year),
             Clutch = max(Clutch))
 
+old_filtered <- old_f |> 
+  filter(InitClutch > 0 & Fate != "Unknown")
+
 old_f <- old |> 
   group_by(id) |> 
   summarise(Paddock = mean(Pasture),

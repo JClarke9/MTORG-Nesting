@@ -68,6 +68,10 @@ totals23 <- unique |>                                                           
   summarize(Abundance=n()) |>                                                   # count all abundances and create a new abundance column
   as.data.frame()                                                               # convert to a data frame
 
+
+# This is to create a totals table for each grazing intensity -------------
+
+
 paddock <- unique |> 
   group_by(Paddock,
            Spec,
@@ -101,7 +105,36 @@ totals.mat <- SpeciesGrouping(totals.mat)
 
 totals.mat <- column_to_rownames(totals.mat, var = "Spec")
 
-write.csv(totals.mat, "working/totals.csv")
+
+# Creating site by species matrices ---------------------------------------
+
+
+
+birds21 <- pivot_wider(totals21[c(1:3,5)],                                      # select the data frame to turn into a matrix
+                       names_from = Spec,                                       # select the column names
+                       values_from = Abundance,                                 # select the abundance values for each species
+                       values_fill = list(Abundance = 0)) |>                    # fill all NA with 0
+  column_to_rownames("Paddock")                                                 # set column names as the pasture ID
+
+birds22 <- pivot_wider(totals22[c(1:3,5)],                                      # select the data frame to turn into a matrix
+                       names_from = Spec,                                       # select the column names
+                       values_from = Abundance,                                 # select the abundance values for each species
+                       values_fill = list(Abundance = 0)) |>                    # fill all NA with 0
+  column_to_rownames("Paddock")                                                 # set column names as the pasture ID
+
+birds23 <- pivot_wider(totals23[c(1:3,5)],                                      # select the data frame to turn into a matrix
+                       names_from = Spec,                                       # select the column names
+                       values_from = Abundance,                                 # select the abundance values for each species
+                       values_fill = list(Abundance = 0)) |>                    # fill all NA with 0
+  column_to_rownames("Paddock")                                                 # set column names as the pasture ID
+
+
+# Saving all of the files -------------------------------------------------
+
 write.csv(totals21, "working/totals21.csv")
 write.csv(totals22, "working/totals22.csv")
 write.csv(totals23, "working/totals23.csv")
+write.csv(totals.mat, "working/totals.csv")
+write.csv(birds21, file = "working/birds21.csv")
+write.csv(birds22, file = "working/birds22.csv")
+write.csv(birds23, file = "working/birds23.csv")

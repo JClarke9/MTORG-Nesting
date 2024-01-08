@@ -25,9 +25,16 @@ sum(MISSING)
 CCSP.surv <- subset(CCSP.surv, 
                     subset = !MISSING)
 
-CCSP.surv$AgeDay1 <- CCSP.surv$AgeFound - CCSP.surv$FirstFound + 1
-CCSP.surv$Year <- as.factor(CCSP.surv$Year)
-CCSP.surv$cTreat <- as.factor(CCSP.surv$cTreat)
+CCSP.surv$Year <- factor(CCSP.surv$Year,
+                         levels = c("2021", "2022", "2023"))
+
+CCSP.surv$cTreat <- factor(CCSP.surv$cTreat,
+                           levels = c(0, 39, 49, 68))
+
+CCSP.surv$pTreat <- factor(CCSP.surv$pTreat,
+                           levels = c(0, 39, 49, 68))
+
+str(CCSP.surv)
 
 # Creating stage variable -------------------------------------------------
 
@@ -46,91 +53,82 @@ rm(list = ls()[!ls() %in% c("CCSP.surv")])
 CCSP.pr <- process.data(CCSP.surv,
                         nocc=max(CCSP.surv$LastChecked),
                         groups = c("cTreat",
+                                   "pTreat",
                                    "Year"),
                         model="Nest")
 
-# candidate models for the null vs. treatment model
+# Temporal candidate model set
 CCSP1.run <- function()
 {
-  # 1. a model for constant daily survival rate
-  S.Dot = list(formula =  ~1)
+  # 1. DSR varies with time
+  S.null = list(formula = ~1)
   
-  # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + grazed)
+  # 2. DSR varies with time
+  S.time = list(formula = ~1 + Time)
   
-  # 3. DSR varies with the previous years grazing intensity
-  S.pTreat = list(formula = ~1 + pTreat)
+  # 3. DSR varies with quadratic effect of date
+  S.quad = list(formula = ~1 + Time + I(Time^2))
   
   # 4. DSR varies with year
   S.year = list(formula = ~1 + Year)
-  
-  # 5. DSR varies With year and days grazed
-  S.grazedyear = list(formula = ~1 + Year + grazed)
-  
-  # 6. DSR varies With year and past treatment
-  S.ptreatyear = list(formula = ~1 + Year + pTreat)
-  
-  # 7. DSR varies With past treatment and days grazed
-  S.ptreatgrazed = list(formula = ~1 + pTreat + grazed)
   
   CCSP.model.list = create.model.list("Nest")
   CCSP1.results = mark.wrapper(CCSP.model.list,
                                data = CCSP.pr,
                                adjust = FALSE,
-                               delete = TRUE)
+                               delete = FALSE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 CCSP1.results <- CCSP1.run()
 CCSP1.results
 
-CCSP1.results$S.grazedyear$results$beta
 CCSP1.results$S.year$results$beta
-CCSP1.results$S.grazed$results$beta
 
-#candidate model set for time trends
+
+# Biological candidate model set
 CCSP2.run <- function()
 {
-  # 1. DSR varies with time
-  S.time = list(formula = ~1 + Year + grazed + Time)
+  # 1. DSR varies with year
+  S.year = list(formula = ~1 + Year)
   
-  # 2. DSR varies with quadratic effect of date
-  S.quad = list(formula = ~1 + Year + grazed + Time + I(Time^2))
+  # 2. DSR varies with BHCO number
+  S.bhcon = list(formula = ~1 + Year + BHCONum)
   
-  # 3. DSR varies with nest age
-  S.age = list(formula = ~1 + Year + grazed + NestAge)
+  # 2. DSR varies with BHCO number
+  S.bhcop = list(formula = ~1 + Year + BHCOPres)
   
-  # 5. DSR varies With year and days grazed
-  S.grazedyear = list(formula = ~1 + Year + grazed)
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + Year + NestAge)
   
   CCSP.model.list = create.model.list("Nest")
   CCSP2.results = mark.wrapper(CCSP.model.list,
                                data = CCSP.pr,
                                adjust = FALSE,
-                               delete = FALSE)
+                               delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 CCSP2.results <- CCSP2.run()
 CCSP2.results
 
-CCSP2.results$S.time$results$beta
-CCSP2.results$S.quad$results$beta
-CCSP2.results$S.grazedyear$results$beta
+CCSP2.results$S.bhcon$results$beta
 
-#candidate model set for parasitism and nest stage
+
+# Grazing candidate model set
 CCSP3.run <- function()
 {
   # 1. DSR varies with BHCO number
-  S.bhcon = list(formula = ~1 + Year + grazed + BHCONum)
-
-  # 2. DSR varies with BHCO number
-  S.bhcop = list(formula = ~1 + Year + grazed + BHCOPres)
+  S.bhcon = list(formula = ~1 + Year + BHCONum)
   
-  # 5. DSR varies With year and days grazed
-  S.grazedyear = list(formula = ~1 + Year + grazed)
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + Year + BHCONum + grazed)
+  
+  # 3. DSR varies with the number of days a nest experienced grazing
+  S.grazep = list(formula = ~1 + Year + BHCONum + grazep)
+  
+  # 4. DSR varies with the previous years grazing intensity
+  S.pTreat = list(formula = ~1 + Year + BHCONum + pTreat)
   
   CCSP.model.list = create.model.list("Nest")
   CCSP3.results = mark.wrapper(CCSP.model.list,
@@ -139,48 +137,48 @@ CCSP3.run <- function()
                                delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 CCSP3.results <- CCSP3.run()
 CCSP3.results
 
-CCSP3.results$S.bhcon$results$beta
+CCSP3.results$S.grazed$results$beta
 
-#candidate model set for vegetation data
+
+# Vegetation candidate model set
 CCSP4.run <- function()
 {
-  # 1. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + Year + grazed + BHCONum + KBG)
+  # 1. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + Year + BHCONum + grazed)
   
-  # 2. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.sb = list(formula = ~1 + Year + grazed + BHCONum + SmoothB)
+  # 2. DSR varies with KBG
+  S.kbg = list(formula =  ~1 + Year + BHCONum + grazed + KBG)
   
-  # 3. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + Year + grazed + BHCONum + Litter)
+  # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
+  S.brome = list(formula = ~1 + Year + BHCONum + grazed + SmoothB)
   
-  # 4. DSR varies with Bare
-  S.bare = list(formula =  ~1 + Year + grazed + BHCONum + Bare)
+  # 4. DSR varies with Litter (correlated with KBG)
+  S.lit = list(formula =  ~1 + Year + BHCONum + grazed + Litter)
   
-  # 5. DSR varies with Forb
-  S.forb = list(formula =  ~1 + Year + grazed + BHCONum + Forb)
+  # 5. DSR varies with Bare
+  S.bare = list(formula =  ~1 + Year + BHCONum + grazed + Bare)
   
-  # 6. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + Year + grazed + BHCONum + Grasslike)
+  # 6. DSR varies with Forb
+  S.forb = list(formula =  ~1 + Year + BHCONum + grazed + Forb)
   
-  # 7. DSR varies with Woody
-  S.woody = list(formula =  ~1 + Year + grazed + BHCONum + Woody)
+  # 7. DSR varies with Grasslike  (correlated with KBG)
+  S.grass = list(formula =  ~1 + Year + BHCONum + grazed + Grasslike)
   
-  # 8. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + Year + grazed + BHCONum + LitterD)
+  # 8. DSR varies with Woody
+  S.woody = list(formula =  ~1 + Year + BHCONum + grazed + Woody)
   
-  # 9. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Year + grazed + BHCONum + Veg.Height)
+  # 9. DSR varies with Litter Depth (correlated with VOR)
+  S.litdep = list(formula =  ~1 + Year + BHCONum + grazed + LitterD)
   
-  # 10. DSR varies with VOR
-  S.vor = list(formula =  ~1 + Year + grazed + BHCONum + VOR)
+  # 10. DSR varies with Veg Height (correlated with VOR)
+  S.height = list(formula =  ~1 + Year + BHCONum + grazed + Veg.Height)
   
-  # 1. DSR varies with BHCO number
-  S.bhcon = list(formula = ~1 + Year + grazed + BHCONum)
+  # 11. DSR varies with VOR
+  S.vor = list(formula =  ~1 + Year + BHCONum + grazed + VOR)
   
   CCSP.model.list = create.model.list("Nest")
   CCSP4.results = mark.wrapper(CCSP.model.list,
@@ -189,12 +187,54 @@ CCSP4.run <- function()
                                delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 CCSP4.results <- CCSP4.run()
 CCSP4.results
 
+
+CCSP4.results$S.height$results$beta
+CCSP4.results$S.bare$results$beta
+CCSP4.results$S.brome$results$beta
 CCSP4.results$S.vor$results$beta
+
+
+# Vegetation candidate model set
+CCSP5.run <- function()
+{
+  # 1. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
+  S.brome = list(formula = ~1 + Year + BHCONum + grazed + SmoothB)
+  
+  # 2. DSR varies with Bare
+  S.bare = list(formula =  ~1 + Year + BHCONum + grazed + Bare)
+  
+  # 3. DSR varies with Veg Height (correlated with VOR)
+  S.height = list(formula =  ~1 + Year + BHCONum + grazed + Veg.Height)
+  
+  # 4. DSR varies with Smooth Brome and Bare
+  S.vor = list(formula =  ~1 + Year + BHCONum + grazed + SmoothB + Bare)
+  
+  # 5. DSR varies with Smooth Brome and Veg Height
+  S.vor = list(formula =  ~1 + Year + BHCONum + grazed + SmoothB + Veg.Height)
+  
+  # 6. DSR varies with Smooth Brome and VOR
+  S.vor = list(formula =  ~1 + Year + BHCONum + grazed + SmoothB + VOR)
+  
+  # 7. DSR varies with Bare and Veg Height
+  S.vor = list(formula =  ~1 + Year + BHCONum + grazed + Bare + Veg.Height)
+  
+  # 8. DSR varies with Bare and VOR
+  S.vor = list(formula =  ~1 + Year + BHCONum + grazed + Bare + VOR)
+  
+  CCSP.model.list = create.model.list("Nest")
+  CCSP5.results = mark.wrapper(CCSP.model.list,
+                               data = CCSP.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
+}
+
+# Results of candidate model set
+CCSP5.results <- CCSP5.run()
+CCSP5.results
 
 CCSP.real <- as.data.frame(CCSP4.results$S.vor$results$real)
 CCSP.real <- rownames_to_column(CCSP.real, var = "Group")
