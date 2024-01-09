@@ -19,20 +19,55 @@ WEME.surv <- filter(nest, Spec == "WEME")
 
 veg <- select(WEME.surv, KBG:VOR)
 
-largeHeight <- WEME.surv |> 
-  filter(Veg.Height > quantile(WEME.surv$Veg.Height, 0.90, 
+outlierKBG <- WEME.surv |> 
+  filter(KBG > quantile(WEME.surv$KBG, 0.95, 
                                na.rm = T)) |> 
-  select(id, KBG:VOR)
+  select(id, Year, Paddock, Fate, KBG)
 
-largeLitter <- WEME.surv |> 
-  filter(LitterD > quantile(WEME.surv$LitterD, 0.90, 
+outlierBrome <- WEME.surv |> 
+  filter(SmoothB > quantile(WEME.surv$SmoothB, 0.95, 
+                               na.rm = T)) |> 
+  select(id, Year, Paddock, Fate, SmoothB)
+
+outlierLitter <- WEME.surv |> 
+  filter(Litter > quantile(WEME.surv$Litter, 0.95, 
+                               na.rm = T)) |> 
+  select(id, Year, Paddock, Fate, Litter)
+
+outlierBare <- WEME.surv |> 
+  filter(Bare > quantile(WEME.surv$Bare, 0.95, 
+                               na.rm = T)) |> 
+  select(id, Year, Paddock, Fate, Bare)
+
+outlierForb <- WEME.surv |> 
+  filter(Forb > quantile(WEME.surv$Forb, 0.95, 
+                               na.rm = T)) |> 
+  select(id, Year, Paddock, Fate, Forb)
+
+outlierGrass <- WEME.surv |> 
+  filter(Grasslike > quantile(WEME.surv$Grasslike, 0.95, 
+                              na.rm = T)) |> 
+  select(id, Year, Paddock, Fate, Grasslike)
+
+outlierWoody <- WEME.surv |> 
+  filter(Woody > quantile(WEME.surv$Woody, 0.95, 
+                               na.rm = T)) |> 
+  select(id, Year, Paddock, Fate, Woody)
+
+outlierLitterD <- WEME.surv |> 
+  filter(LitterD > quantile(WEME.surv$LitterD, 0.95, 
                             na.rm = T)) |> 
-  select(id, KBG:VOR)
+  select(id, Year, Paddock, Fate, LitterD)
 
-largeVOR <- WEME.surv |> 
-  filter(VOR > quantile(WEME.surv$VOR, 0.90, 
+outlierHeight <- WEME.surv |> 
+  filter(Veg.Height > quantile(WEME.surv$Veg.Height, 0.95, 
+                               na.rm = T)) |> 
+  select(id, Year, Paddock, Fate, Veg.Height)
+
+outlierVOR <- WEME.surv |> 
+  filter(VOR > quantile(WEME.surv$VOR, 0.95, 
                         na.rm = T)) |> 
-  select(id, KBG:VOR)
+  select(id, Year, Paddock, Fate, VOR)
 
 # pcaveg.scaled <- scale(veg, center=TRUE, scale=TRUE)
 # pcaveg <- PCA(pcaveg.scaled)
