@@ -143,7 +143,6 @@ CCSP3.results
 
 CCSP3.results$S.grazed$results$beta
 
-
 # Vegetation candidate model set
 CCSP4.run <- function()
 {
@@ -189,70 +188,29 @@ CCSP4.run <- function()
 
 # Results of candidate model set
 CCSP4.results <- CCSP4.run()
-CCSP4.results
-
+CCSP4.results$model.table
 
 CCSP4.results$S.height$results$beta
 CCSP4.results$S.bare$results$beta
 CCSP4.results$S.brome$results$beta
 CCSP4.results$S.vor$results$beta
 
+CCSP4.results$S.height$results$real
 
-# Vegetation candidate model set
-CCSP5.run <- function()
-{
-  # 1. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.brome = list(formula = ~1 + Year + BHCONum + grazed + SmoothB)
-  
-  # 2. DSR varies with Bare
-  S.bare = list(formula =  ~1 + Year + BHCONum + grazed + Bare)
-  
-  # 3. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Year + BHCONum + grazed + Veg.Height)
-  
-  # 4. DSR varies with Smooth Brome and Bare
-  S.vor = list(formula =  ~1 + Year + BHCONum + grazed + SmoothB + Bare)
-  
-  # 5. DSR varies with Smooth Brome and Veg Height
-  S.vor = list(formula =  ~1 + Year + BHCONum + grazed + SmoothB + Veg.Height)
-  
-  # 6. DSR varies with Smooth Brome and VOR
-  S.vor = list(formula =  ~1 + Year + BHCONum + grazed + SmoothB + VOR)
-  
-  # 7. DSR varies with Bare and Veg Height
-  S.vor = list(formula =  ~1 + Year + BHCONum + grazed + Bare + Veg.Height)
-  
-  # 8. DSR varies with Bare and VOR
-  S.vor = list(formula =  ~1 + Year + BHCONum + grazed + Bare + VOR)
-  
-  CCSP.model.list = create.model.list("Nest")
-  CCSP5.results = mark.wrapper(CCSP.model.list,
-                               data = CCSP.pr,
-                               adjust = FALSE,
-                               delete = TRUE)
-}
+CCSP4.avg <- model.average(CCSP4.results$model.table)
 
-# Results of candidate model set
-CCSP5.results <- CCSP5.run()
-CCSP5.results
+model.average()
 
-CCSP.real <- as.data.frame(CCSP4.results$S.vor$results$real)
-CCSP.real <- rownames_to_column(CCSP.real, var = "Group")
-CCSP.real[,1] <- gsub("S g", "", CCSP.real[,1])
+CCSP.dsr <- as.data.frame(CCSP4.avg) |> 
+  select(-par.index) |> 
+  unique() |> 
+  rownames_to_column("Year")
 
-CCSP.real <- CCSP.real |> 
-  mutate(Year = case_when(
-    grepl("2021", Group) ~ "2021",
-    grepl("2022", Group) ~ "2022",
-    grepl("2023", Group) ~ "2023"
-  ))
+CCSP.dsr$Year <- case_match(CCSP.dsr$Year,
+                            "1" ~ "2021",
+                            "349" ~ "2022",
+                            "697" ~ "2023")
 
-(CCSP.avgDSR <- CCSP.real |> 
-    group_by(Year) |> 
-    summarize(estimate = mean(estimate),
-              se = mean(se),
-              lcl = mean(lcl),
-              ucl = mean(ucl)))
 
 # Plotting beta coefficients ----------------------------------------------
 
