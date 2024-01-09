@@ -5,6 +5,7 @@ library(GGally)
 library(FactoMineR)
 library(factoextra)
 library(corrplot)
+library(tidyverse)
 
 # Data import -------------------------------------------------------------
 
@@ -12,34 +13,49 @@ nest <- read.csv("working/RMarknesting.csv")
 
 # Subsetting data ---------------------------------------------------------
 
-WEME.surv <- filter(nest, Spec=="WEME")
+WEME.surv <- filter(nest, Spec == "WEME")
 
 # Creating a PCA ----------------------------------------------------------
 
-veg <- WEME.surv[c(18:26, 31)]
+veg <- select(WEME.surv, KBG:VOR)
 
-pcaveg.scaled <- scale(veg, center=TRUE, scale=TRUE)
-pcaveg <- PCA(pcaveg.scaled)
+largeHeight <- WEME.surv |> 
+  filter(Veg.Height > quantile(WEME.surv$Veg.Height, 0.90, 
+                               na.rm = T)) |> 
+  select(id, KBG:VOR)
 
-fviz_screeplot(pcaveg, addlabels=TRUE)
-var.pca <- get_pca_var(pcaveg)
-corrplot(var.pca$cos2)
-corrplot(var.pca$cor)
+largeLitter <- WEME.surv |> 
+  filter(LitterD > quantile(WEME.surv$LitterD, 0.90, 
+                            na.rm = T)) |> 
+  select(id, KBG:VOR)
 
-var.pca$cos2
+largeVOR <- WEME.surv |> 
+  filter(VOR > quantile(WEME.surv$VOR, 0.90, 
+                        na.rm = T)) |> 
+  select(id, KBG:VOR)
 
-fviz_cos2(pcaveg, choice = "var", axes = 1)
-fviz_cos2(pcaveg, choice = "var", axes = 2)
-
-ind.pca <- get_pca_ind(pcaveg)
-
-tall.veg <- ind.pca$coord[,1]
-sparse.grass <- ind.pca$coord[,2]
-
-WEME.veg <- data.frame(tall.veg, sparse.grass)
-WEME.surv <- cbind(WEME.surv, WEME.veg)
-
-write.csv(WEME.surv, "~/Git/NDSU/RMARK/Working Data/WEMEsurvival.csv")
+# pcaveg.scaled <- scale(veg, center=TRUE, scale=TRUE)
+# pcaveg <- PCA(pcaveg.scaled)
+# 
+# fviz_screeplot(pcaveg, addlabels=TRUE)
+# var.pca <- get_pca_var(pcaveg)
+# corrplot(var.pca$cos2)
+# corrplot(var.pca$cor)
+# 
+# var.pca$cos2
+# 
+# fviz_cos2(pcaveg, choice = "var", axes = 1)
+# fviz_cos2(pcaveg, choice = "var", axes = 2)
+# 
+# ind.pca <- get_pca_ind(pcaveg)
+# 
+# tall.veg <- ind.pca$coord[,1]
+# sparse.grass <- ind.pca$coord[,2]
+# 
+# WEME.veg <- data.frame(tall.veg, sparse.grass)
+# WEME.surv <- cbind(WEME.surv, WEME.veg)
+# 
+# write.csv(WEME.surv, "~/Git/NDSU/RMARK/Working Data/WEMEsurvival.csv")
 
 # Creating correlation function -------------------------------------------
 
@@ -135,7 +151,7 @@ my_custom_smooth(iris, aes(Sepal.Length, Sepal.Width))   # test plot using data 
 
 # Running WEME correlations -----------------------------------------------
 
-a <- ggpairs(as.data.frame(WEME.surv[c(18:26, 31)]),     # create the matrix and put it in an object -- allows it to
+a <- ggpairs(as.data.frame(veg),     # create the matrix and put it in an object -- allows it to
              # be modified by ggplot2 commands later
              upper = list(continuous = my_custom_cor),        # set the upper half to be the figure we created
              lower = list(continuous = my_custom_smooth),     # set the lower halff to be the scatterplot we created
