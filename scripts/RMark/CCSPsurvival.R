@@ -101,6 +101,9 @@ CCSP2.run <- function()
   # 4. DSR varies with nest age
   S.age = list(formula = ~1 + Year + NestAge)
   
+  # 5. DSR varies with nest age
+  S.stage = list(formula = ~1 + Year + Incub)
+  
   CCSP.model.list = create.model.list("Nest")
   CCSP2.results = mark.wrapper(CCSP.model.list,
                                data = CCSP.pr,
@@ -190,13 +193,14 @@ CCSP4.run <- function()
 CCSP4.results <- CCSP4.run()
 CCSP4.results$model.table
 
-CCSP4.results$S.height$results$beta
 CCSP4.results$S.bare$results$beta
 CCSP4.results$S.brome$results$beta
 CCSP4.results$S.vor$results$beta
+CCSP4.results$S.kbg$results$beta
 
 CCSP4.results$S.height$results$real
 
+<<<<<<< HEAD
 CCSP4.avg <- model.average(CCSP4.results$model.table)
 
 model.average()
@@ -211,6 +215,25 @@ CCSP.dsr$Year <- case_match(CCSP.dsr$Year,
                             "349" ~ "2022",
                             "697" ~ "2023")
 
+=======
+CCSP.real <- as.data.frame(CCSP4.results$S.vor$results$real)
+CCSP.real <- rownames_to_column(CCSP.real, var = "Group")
+CCSP.real[,1] <- gsub("S g", "", CCSP.real[,1])
+
+CCSP.real <- CCSP.real |> 
+  mutate(Year = case_when(
+    grepl("2021", Group) ~ "2021",
+    grepl("2022", Group) ~ "2022",
+    grepl("2023", Group) ~ "2023"
+  ))
+
+(CCSP.avgDSR <- CCSP.real |> 
+    group_by(Year) |> 
+    summarize(estimate = mean(estimate),
+              se = mean(se),
+              lcl = mean(lcl),
+              ucl = mean(ucl)))
+>>>>>>> 6274997ccd899e28592e23efce4aa9c30fc5e2bd
 
 # Plotting beta coefficients ----------------------------------------------
 
