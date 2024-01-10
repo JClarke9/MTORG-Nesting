@@ -1,9 +1,11 @@
-# Loading Libraries -------------------------------------------------------
+# Loading libraries -------------------------------------------------------
 
 library(ggplot2)
 library(vegan)
 library(tidyverse)
 library(RMark)
+library(MuMIn)
+source("scripts/Functions/RMark_Stage_Code.R")
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
@@ -12,27 +14,37 @@ windowsFonts(my_font = windowsFont("Gandhi Sans"))
 nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
 
-# Subsetting Data ---------------------------------------------------------
+# Subsetting data ---------------------------------------------------------
 
 BRBL.surv <- filter(nest, 
-                    Spec=="BRBL")                                         # select out only BRBL nests
+                    Spec=="BRBL")                                         # select out only BRBL nest
 
-BRBL.surv$AgeDay1 <- BRBL.surv$AgeFound - BRBL.surv$FirstFound + 1
-BRBL.surv$Year <- as.factor(BRBL.surv$Year)
-BRBL.surv$cTreat <- as.factor(BRBL.surv$cTreat)
+test <- filter(BRBL.surv,
+               is.na(KBG) |
+                 is.na(SmoothB) |
+                 is.na(Litter) |
+                 is.na(Bare) |
+                 is.na(Forb) |
+                 is.na(Grasslike) |
+                 is.na(Woody) |
+                 is.na(LitterD) |
+                 is.na(Veg.Height) |
+                 is.na(VOR) |
+                 is.na(cTreat))
 
-# Creating nest stage variable --------------------------------------------
+MISSING <- is.na(BRBL.surv$AgeFound)
 
-create.stage.var=function(data,agevar.name,stagevar.name,time.intervals,cutoff)
-{
-  nocc=length(time.intervals)
-  age.mat=matrix(data[,agevar.name],nrow=dim(data)[1],ncol=nocc-1)
-  age.mat=t(t(age.mat)+cumsum(c(0,time.intervals[1:(nocc-2)])))
-  stage.mat=t(apply(age.mat,1,function(x) as.numeric(x<=cutoff)))
-  stage.mat=data.frame(stage.mat)
-  names(stage.mat)=paste(stagevar.name,1:(nocc-1),sep="")
-  return(stage.mat)
-}
+sum(MISSING)
+
+BRBL.surv <- subset(BRBL.surv, 
+                    subset = !MISSING)
+
+BRBL.surv$Year <- factor(BRBL.surv$Year,
+                         levels = c("2021", "2022", "2023"))
+
+str(BRBL.surv)
+
+# Creating stage variable -------------------------------------------------
 
 x <- create.stage.var(BRBL.surv, 
                       "AgeDay1", 
@@ -42,61 +54,62 @@ x <- create.stage.var(BRBL.surv,
 
 BRBL.surv <- bind_cols(BRBL.surv, x)
 
-#remove everything but the final dataframe
-rm(list = ls()[!ls() %in%  c("BRBL.surv")])
+rm(list = ls()[!ls() %in% c("BRBL.surv")])
 
 # Daily survival rate models ----------------------------------------------
 
 BRBL.pr <- process.data(BRBL.surv,
                         nocc=max(BRBL.surv$LastChecked),
-                        groups = c("cTreat", 
-                                   "Year"),
+                        groups = c("Year"),
                         model="Nest")
 
-# candidate models for the null vs. treatment model
+# Temporal candidate model set
 BRBL1.run <- function()
 {
-  # 1. a model for constant daily survival rate
-  S.Dot = list(formula =  ~1)
+  # 1. DSR varies with time
+  S.null = list(formula = ~1)
   
-  # 2. DSR varies with current treatment
-  S.cTreat = list(formula = ~1 + cTreat)
+  # 2. DSR varies with time
+  S.time = list(formula = ~1 + Time)
   
-  # 3. DSR varies with year
+  # 3. DSR varies with quadratic effect of date
+  S.quad = list(formula = ~1 + Time + I(Time^2))
+  
+  # 4. DSR varies with year
   S.year = list(formula = ~1 + Year)
-  
-  # 4. DSR varies With year interacting with treatment (treatment identity varies by year)
-  S.treatyear = list(formula = ~1 + cTreat:Year)
   
   BRBL.model.list = create.model.list("Nest")
   BRBL1.results = mark.wrapper(BRBL.model.list,
                                data = BRBL.pr,
                                adjust = FALSE,
-                               delete = TRUE)
+                               delete = FALSE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 BRBL1.results <- BRBL1.run()
 BRBL1.results
 
-BRBL1.results$S.year$results$beta
-BRBL1.results$S.Dot$results$beta
+coef(BRBL1.results$S.year)
+confint(BRBL1.results$S.year, level = 0.85)
 
-#candidate model set for time trends
+
+# Biological candidate model set
 BRBL2.run <- function()
 {
-  # 1. DSR varies with time
-  S.time = list(formula = ~1 + Year + Time)
-  
-  # 3. DSR varies with quadratic effect of date
-  S.quad = list(formula = ~1 + Year+ Time + I(Time^2))
-  
-  # 4. DSR varies across stages
-  S.stage = list(formula = ~1 + Year + Incub)
-  
-  # 2. DSR varies with current treatment
+  # 1. DSR varies with year
   S.year = list(formula = ~1 + Year)
+  
+  # 2. DSR varies with BHCO number
+  S.bhcon = list(formula = ~1 + Year + BHCONum)
+  
+  # 2. DSR varies with BHCO number
+  S.bhcop = list(formula = ~1 + Year + BHCOPres)
+  
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + Year + NestAge)
+  
+  # 5. DSR varies with nest age
+  S.stage = list(formula = ~1 + Year + Incub)
   
   BRBL.model.list = create.model.list("Nest")
   BRBL2.results = mark.wrapper(BRBL.model.list,
@@ -105,29 +118,36 @@ BRBL2.run <- function()
                                delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 BRBL2.results <- BRBL2.run()
 BRBL2.results
 
-BRBL2.results$S.time$results$beta
-BRBL2.results$S.year$results$beta
-BRBL2.results$S.quad$results$beta
+coef(BRBL2.results$S.age)
+coef(BRBL2.results$S.year)
+coef(BRBL2.results$S.stage)
 
-#candidate model set for parasitism and grazing
+confint(BRBL2.results$S.age, level = 0.85)
+confint(BRBL2.results$S.year, level = 0.85)
+confint(BRBL2.results$S.stage, level = 0.85)
+
+
+# Grazing candidate model set
 BRBL3.run <- function()
 {
-  # 1. DSR varies with BHCO number
-  S.bhco = list(formula = ~1 + Year + Time + BHCONum)
+  # 1. DSR varies with year
+  S.year = list(formula = ~1 + Year)
   
-  S.grazed = list(formula = ~1 + Year + Time + grazed)
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + Year + grazed)
   
-  S.bhcop = list(formula = ~1 + Year + Time + BHCOpres)
+  # 3. DSR varies with the number of days a nest experienced grazing
+  S.grazep = list(formula = ~1 + Year + grazep)
   
-  S.grazep = list(formula = ~1 + Year + Time + grazep)
+  # 4. DSR varies with the previous years grazing intensity
+  S.pTreat = list(formula = ~1 + Year + pTreat)
   
-  # 2. DSR varies with quadratic effect of date
-  S.time = list(formula = ~1 + Year + Time)
+  # 4. DSR varies with the previous years grazing intensity
+  S.grazedpTreat = list(formula = ~1 + Year + grazed + pTreat)
   
   BRBL.model.list = create.model.list("Nest")
   BRBL3.results = mark.wrapper(BRBL.model.list,
@@ -136,80 +156,59 @@ BRBL3.run <- function()
                                delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 BRBL3.results <- BRBL3.run()
 BRBL3.results
 
-BRBL3.results$S.time$results$beta
-BRBL3.results$S.bhco$results$beta
-
-#candidate model set for parasitism and nest stage
+# Vegetation candidate model set
 BRBL4.run <- function()
 {
-  # 1. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + Year + Time + KBG)
+  # 1. DSR varies with year
+  S.year = list(formula = ~1 + Year)
   
-  # 2. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.smooth.brome = list(formula = ~1 + Year + Time + SmoothB)
+  # 2. DSR varies with KBG
+  S.kbg = list(formula =  ~1 + Year + KBG)
   
-  # 3. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + Year + Time + Litter)
+  # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
+  S.brome = list(formula = ~1 + Year + SmoothB)
   
-  # 4. DSR varies with Bare
-  S.bare = list(formula =  ~1 + Year + Time + Bare)
+  # 4. DSR varies with Litter (correlated with KBG)
+  S.lit = list(formula =  ~1 + Year + Litter)
   
-  # 5. DSR varies with Forb
-  S.forb = list(formula =  ~1 + Year + Time + Forb)
+  # 5. DSR varies with Bare
+  S.bare = list(formula =  ~1 + Year + Bare)
   
-  # 6. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + Year + Time + Grasslike)
+  # 6. DSR varies with Forb
+  S.forb = list(formula =  ~1 + Year + Forb)
   
-  # 7. DSR varies with Woody
-  S.woody = list(formula =  ~1 + Year + Time + Woody)
+  # 7. DSR varies with Grasslike  (correlated with KBG)
+  S.grass = list(formula =  ~1 + Year + Grasslike)
   
-  # 8. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + Year + Time + LitterD)
+  # 8. DSR varies with Woody
+  S.woody = list(formula =  ~1 + Year + Woody)
   
-  # 9. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Year + Time + Veg.Height)
+  # 9. DSR varies with Litter Depth (correlated with VOR)
+  S.litdep = list(formula =  ~1 + Year + LitterD)
   
-  # 10. DSR varies with VOR
-  S.vor = list(formula =  ~1 + Year + Time + VOR)
+  # 10. DSR varies with Veg Height (correlated with VOR)
+  S.height = list(formula =  ~1 + Year + Veg.Height)
   
-  # 11. DSR varies with litter and Veg Height
-  S.litheight = list(formula = ~1 + Year + Time + Litter + Veg.Height)
-  
-  # 12. DSR varies with woody and litter depth
-  S.woodylitdep = list(formula = ~1 + Year + Time + Woody + LitterD)
-  
-  # 13. DSR varies with KBG and litter depth
-  S.kbglitdep = list(formula = ~1 + Year + Time + KBG + LitterD)
-  
-  # 14. DSR varies with KBG and Veg.Height
-  S.kbgheight = list(formula = ~1 + Year + Time + KBG + Veg.Height)
-  
-  # 15. DSR varies with woody and Veg Height
-  S.woodyheight = list(formula = ~1 + Year + Time + Woody + Veg.Height)
-  
-  # 2. DSR varies with quadratic effect of date
-  S.time = list(formula = ~1 + Year + Time)
+  # 11. DSR varies with VOR
+  S.vor = list(formula =  ~1 + Year + VOR)
   
   BRBL.model.list = create.model.list("Nest")
   BRBL4.results = mark.wrapper(BRBL.model.list,
                                data = BRBL.pr,
                                adjust = FALSE,
-                               delete = FALSE)
+                               delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 BRBL4.results <- BRBL4.run()
 BRBL4.results
-names(BRBL4.results)
 
-BRBL4.results$S.vor$results$beta
-BRBL4.results$S.forb$results$beta
+coef(BRBL4.results$S.lit)
+confint(BRBL4.results$S.lit, level = 0.85)
 
 BRBL.real <- as.data.frame(BRBL4.results$S.vor$results$real)
 BRBL.real <- rownames_to_column(BRBL.real, var = "Group")

@@ -4,6 +4,7 @@ library(ggplot2)
 library(vegan)
 library(tidyverse)
 library(RMark)
+library(MuMIn)
 source("scripts/Functions/RMark_Stage_Code.R")
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
@@ -16,7 +17,20 @@ nest <- read.csv("working/RMarknesting.csv",
 # Subsetting data ---------------------------------------------------------
 
 CCSP.surv <- filter(nest, 
-                    Spec=="CCSP")                                         # select out only CCSP nests
+                    Spec=="CCSP")                                         # select out only CCSP nest
+
+test <- filter(CCSP.surv,
+               is.na(KBG) |
+                 is.na(SmoothB) |
+                 is.na(Litter) |
+                 is.na(Bare) |
+                 is.na(Forb) |
+                 is.na(Grasslike) |
+                 is.na(Woody) |
+                 is.na(LitterD) |
+                 is.na(Veg.Height) |
+                 is.na(VOR) |
+                 is.na(cTreat))
 
 MISSING <- is.na(CCSP.surv$AgeFound)
 
@@ -27,12 +41,6 @@ CCSP.surv <- subset(CCSP.surv,
 
 CCSP.surv$Year <- factor(CCSP.surv$Year,
                          levels = c("2021", "2022", "2023"))
-
-CCSP.surv$cTreat <- factor(CCSP.surv$cTreat,
-                           levels = c(0, 39, 49, 68))
-
-CCSP.surv$pTreat <- factor(CCSP.surv$pTreat,
-                           levels = c(0, 39, 49, 68))
 
 str(CCSP.surv)
 
@@ -52,9 +60,7 @@ rm(list = ls()[!ls() %in% c("CCSP.surv")])
 
 CCSP.pr <- process.data(CCSP.surv,
                         nocc=max(CCSP.surv$LastChecked),
-                        groups = c("cTreat",
-                                   "pTreat",
-                                   "Year"),
+                        groups = c("Year"),
                         model="Nest")
 
 # Temporal candidate model set
@@ -76,14 +82,15 @@ CCSP1.run <- function()
   CCSP1.results = mark.wrapper(CCSP.model.list,
                                data = CCSP.pr,
                                adjust = FALSE,
-                               delete = FALSE)
+                               delete = TRUE)
 }
 
 # Results of candidate model set
 CCSP1.results <- CCSP1.run()
 CCSP1.results
 
-CCSP1.results$S.year$results$beta
+coef(CCSP1.results$S.year)
+confint(CCSP1.results$S.year, level = 0.85)
 
 
 # Biological candidate model set
@@ -115,7 +122,8 @@ CCSP2.run <- function()
 CCSP2.results <- CCSP2.run()
 CCSP2.results
 
-CCSP2.results$S.bhcon$results$beta
+coef(CCSP2.results$S.bhcon)
+confint(CCSP2.results$S.bhcon, level = 0.85)
 
 
 # Grazing candidate model set
@@ -144,43 +152,44 @@ CCSP3.run <- function()
 CCSP3.results <- CCSP3.run()
 CCSP3.results
 
-CCSP3.results$S.grazed$results$beta
+coef(CCSP2.results$S.bhcon)
+confint(CCSP2.results$S.bhcon, level = 0.85)
 
 # Vegetation candidate model set
 CCSP4.run <- function()
 {
-  # 1. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + Year + BHCONum + grazed)
+  # 1. DSR varies with BHCO number
+  S.bhcon = list(formula = ~1 + Year + BHCONum)
   
   # 2. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + Year + BHCONum + grazed + KBG)
+  S.kbg = list(formula =  ~1 + Year + BHCONum + KBG)
   
   # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.brome = list(formula = ~1 + Year + BHCONum + grazed + SmoothB)
+  S.brome = list(formula = ~1 + Year + BHCONum + SmoothB)
   
   # 4. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + Year + BHCONum + grazed + Litter)
+  S.lit = list(formula =  ~1 + Year + BHCONum + Litter)
   
   # 5. DSR varies with Bare
-  S.bare = list(formula =  ~1 + Year + BHCONum + grazed + Bare)
+  S.bare = list(formula =  ~1 + Year + BHCONum + Bare)
   
   # 6. DSR varies with Forb
-  S.forb = list(formula =  ~1 + Year + BHCONum + grazed + Forb)
+  S.forb = list(formula =  ~1 + Year + BHCONum + Forb)
   
   # 7. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + Year + BHCONum + grazed + Grasslike)
+  S.grass = list(formula =  ~1 + Year + BHCONum + Grasslike)
   
   # 8. DSR varies with Woody
-  S.woody = list(formula =  ~1 + Year + BHCONum + grazed + Woody)
+  S.woody = list(formula =  ~1 + Year + BHCONum + Woody)
   
   # 9. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + Year + BHCONum + grazed + LitterD)
+  S.litdep = list(formula =  ~1 + Year + BHCONum + LitterD)
   
   # 10. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Year + BHCONum + grazed + Veg.Height)
+  S.height = list(formula =  ~1 + Year + BHCONum + Veg.Height)
   
   # 11. DSR varies with VOR
-  S.vor = list(formula =  ~1 + Year + BHCONum + grazed + VOR)
+  S.vor = list(formula =  ~1 + Year + BHCONum + VOR)
   
   CCSP.model.list = create.model.list("Nest")
   CCSP4.results = mark.wrapper(CCSP.model.list,
@@ -191,7 +200,11 @@ CCSP4.run <- function()
 
 # Results of candidate model set
 CCSP4.results <- CCSP4.run()
-CCSP4.results$model.table
+CCSP4.results
+
+summary(CCSP.avg)
+confint(CCSP.avg, level = 0.85)
+
 
 CCSP4.results$S.bare$results$beta
 CCSP4.results$S.brome$results$beta
@@ -200,40 +213,23 @@ CCSP4.results$S.kbg$results$beta
 
 CCSP4.results$S.height$results$real
 
-<<<<<<< HEAD
-CCSP4.avg <- model.average(CCSP4.results$model.table)
+CCSP.avg <- model.avg(CCSP4.results,
+                      rank = AIC)
 
-model.average()
+(CCSP4.avg <- model.average(CCSP4.results,
+                            parameter = "S",
+                            vcv = TRUE))
 
-CCSP.dsr <- as.data.frame(CCSP4.avg) |> 
-  select(-par.index) |> 
-  unique() |> 
-  rownames_to_column("Year")
+CCSP.dsr <- rename(CCSP4.avg,
+                   "Year" = "par.index")
 
 CCSP.dsr$Year <- case_match(CCSP.dsr$Year,
-                            "1" ~ "2021",
-                            "349" ~ "2022",
-                            "697" ~ "2023")
+                            1 ~ "2021",
+                            349 ~ "2022",
+                            697 ~ "2023")
 
-=======
-CCSP.real <- as.data.frame(CCSP4.results$S.vor$results$real)
-CCSP.real <- rownames_to_column(CCSP.real, var = "Group")
-CCSP.real[,1] <- gsub("S g", "", CCSP.real[,1])
+CCSP.dsr
 
-CCSP.real <- CCSP.real |> 
-  mutate(Year = case_when(
-    grepl("2021", Group) ~ "2021",
-    grepl("2022", Group) ~ "2022",
-    grepl("2023", Group) ~ "2023"
-  ))
-
-(CCSP.avgDSR <- CCSP.real |> 
-    group_by(Year) |> 
-    summarize(estimate = mean(estimate),
-              se = mean(se),
-              lcl = mean(lcl),
-              ucl = mean(ucl)))
->>>>>>> 6274997ccd899e28592e23efce4aa9c30fc5e2bd
 
 # Plotting beta coefficients ----------------------------------------------
 

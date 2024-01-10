@@ -99,7 +99,7 @@ raw <- anti_join(raw,                                                           
 LastChecked <- raw |>                                                           # select the data frame
   group_by(id) |>                                                               # group data by Nest.ID
   filter(Visit.Interval == max(Visit.Interval)) |>                               # select the most recent visit interval
-  summarise(Date)                                                               # select only the two relevant columns
+  reframe(Date)                                                               # select only the two relevant columns
 
 LastChecked$id[duplicated(LastChecked$id)]
 
@@ -135,9 +135,8 @@ LastPresent$LastPresent <- LastPresent$DateChecked - LastPresent$Expos
 
 raw <- left_join(raw,                                                           # select data frame 1
                  LastPresent,                                                   # select data frame 2
-                 by="id",                                                       # join by the shared Nest.ID column
+                 by = "id",
                  keep=FALSE)                                                    # remove duplicate "Nest.ID" column
-
 
 # I needed to rename the columns to match the input values for RMark
 

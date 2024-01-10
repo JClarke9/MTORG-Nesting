@@ -1,80 +1,82 @@
 # Loading libraries -------------------------------------------------------
 
 library(ggplot2)
+library(vegan)
 library(tidyverse)
 library(RMark)
-library(cowplot)
+library(MuMIn)
+source("scripts/Functions/RMark_Stage_Code.R")
 
+windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
 # Data import -------------------------------------------------------------
-
 
 nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
 
-
-windowsFonts(my_font = windowsFont("Times New Roman"))
-
-
 # Subsetting data ---------------------------------------------------------
 
-
 WEME.surv <- filter(nest, 
-                    Spec=="WEME")                                         # select out only WEME nests
+                    Spec=="WEME")                                         # select out only WEME nest
 
-WEME.surv$AgeDay1 <- WEME.surv$AgeFound - WEME.surv$FirstFound + 1
-WEME.surv$Year <- as.factor(WEME.surv$Year)
-WEME.surv$cTreat <- as.factor(WEME.surv$cTreat)
+test <- filter(WEME.surv,
+               is.na(KBG) |
+                 is.na(SmoothB) |
+                 is.na(Litter) |
+                 is.na(Bare) |
+                 is.na(Forb) |
+                 is.na(Grasslike) |
+                 is.na(Woody) |
+                 is.na(LitterD) |
+                 is.na(Veg.Height) |
+                 is.na(VOR) |
+                 is.na(cTreat))
 
+MISSING <- is.na(WEME.surv$AgeFound)
+
+sum(MISSING)
+
+WEME.surv <- subset(WEME.surv, 
+                    subset = !MISSING)
+
+WEME.surv$Year <- factor(WEME.surv$Year,
+                         levels = c("2021", "2022", "2023"))
+
+str(WEME.surv)
 
 # Creating stage variable -------------------------------------------------
-
-
-create.stage.var=function(data,agevar.name,stagevar.name,time.intervals,cutoff)
-{
-  nocc=length(time.intervals)
-  age.mat=matrix(data[,agevar.name],nrow=dim(data)[1],ncol=nocc-1)
-  age.mat=t(t(age.mat)+cumsum(c(0,time.intervals[1:(nocc-2)])))
-  stage.mat=t(apply(age.mat,1,function(x) as.numeric(x<=cutoff)))
-  stage.mat=data.frame(stage.mat)
-  names(stage.mat)=paste(stagevar.name,1:(nocc-1),sep="")
-  return(stage.mat)
-}
 
 x <- create.stage.var(WEME.surv, 
                       "AgeDay1", 
                       "Incub", 
                       rep(1,max(WEME.surv$LastChecked)), 
-                      14)
+                      12)
 
 WEME.surv <- bind_cols(WEME.surv, x)
 
-rm(list = ls()[!ls() %in% "WEME.surv"])
-
+rm(list = ls()[!ls() %in% c("WEME.surv")])
 
 # Daily survival rate models ----------------------------------------------
 
-
 WEME.pr <- process.data(WEME.surv,
                         nocc=max(WEME.surv$LastChecked),
-                        groups = c("cTreat",
-                                   "Year"),
+                        groups = c("Year"),
                         model="Nest")
 
-# candidate models for the null vs. treatment model
+# Temporal candidate model set
 WEME1.run <- function()
 {
-  # 1. a model for constant daily survival rate
-  S.Dot = list(formula =  ~1)
+  # 1. DSR varies with time
+  S.null = list(formula = ~1)
   
-  # 2. DSR varies with current treatment
-  S.cTreat = list(formula = ~1 + cTreat)
+  # 2. DSR varies with time
+  S.time = list(formula = ~1 + Time)
   
-  # 3. DSR varies with year
+  # 3. DSR varies with quadratic effect of date
+  S.quad = list(formula = ~1 + Time + I(Time^2))
+  
+  # 4. DSR varies with year
   S.year = list(formula = ~1 + Year)
-  
-  # 4. DSR varies With year interacting with treatment (treatment identity varies by year)
-  S.treatyear = list(formula = ~1 + cTreat:Year)
   
   WEME.model.list = create.model.list("Nest")
   WEME1.results = mark.wrapper(WEME.model.list,
@@ -83,58 +85,58 @@ WEME1.run <- function()
                                delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 WEME1.results <- WEME1.run()
 WEME1.results
 
-WEME1.results$S.Dot$results$beta
-WEME1.results$S.year$results$beta
+coef(WEME1.results$S.null)
 
-#candidate model set for time trends
+# Biological candidate model set
 WEME2.run <- function()
 {
   # 1. DSR varies with time
-  S.time = list(formula = ~1 + Time)
+  S.null = list(formula = ~1)
   
-  # 3. DSR varies with quadratic effect of date
-  S.quad = list(formula = ~1 + Time + I(Time^2))
+  # 2. DSR varies with BHCO number
+  S.bhcon = list(formula = ~1 + BHCONum)
   
-  # 4. DSR varies across stages
+  # 2. DSR varies with BHCO number
+  S.bhcop = list(formula = ~1 + BHCOPres)
+  
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + NestAge)
+  
+  # 5. DSR varies with nest age
   S.stage = list(formula = ~1 + Incub)
-  
-  # 1. a model for constant daily survival rate
-  S.Dot = list(formula =  ~1)
   
   WEME.model.list = create.model.list("Nest")
   WEME2.results = mark.wrapper(WEME.model.list,
                                data = WEME.pr,
                                adjust = FALSE,
-                               delete = FALSE)
+                               delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 WEME2.results <- WEME2.run()
 WEME2.results
 
-WEME2.results$S.Dot$results$beta
-WEME2.results$S.time$results$beta
-WEME2.results$S.stage$results$beta
+coef(WEME2.results$S.null)
 
-#candidate model set for parasitism and grazing
+
+# Grazing candidate model set
 WEME3.run <- function()
 {
-  # 1. DSR varies with BHCO number
-  S.bhco = list(formula = ~1 + BHCONum)
+  # 1. DSR varies with time
+  S.null = list(formula = ~1)
   
+  # 2. DSR varies with the number of days a nest experienced grazing
   S.grazed = list(formula = ~1 + grazed)
   
-  S.bhcop = list(formula = ~1 + BHCOpres)
-  
+  # 3. DSR varies with the number of days a nest experienced grazing
   S.grazep = list(formula = ~1 + grazep)
   
-  S.Dot = list(formula = ~1)
+  # 4. DSR varies with the previous years grazing intensity
+  S.pTreat = list(formula = ~1 + pTreat)
   
   WEME.model.list = create.model.list("Nest")
   WEME3.results = mark.wrapper(WEME.model.list,
@@ -143,95 +145,66 @@ WEME3.run <- function()
                                delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 WEME3.results <- WEME3.run()
 WEME3.results
 
-WEME3.results$S.grazed$results$beta
-WEME3.results$S.Dot$results$beta
-WEME3.results$S.bhcop$results$beta
-WEME3.results$S.grazep$results$beta
+coef(WEME3.results$S.grazed)
+confint(WEME3.results$S.grazed)
 
-#candidate model set for parasitism and nest stage
+# Vegetation candidate model set
 WEME4.run <- function()
 {
-  # 1. DSR varies with KBG
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + grazed)
+  
+  # 2. DSR varies with KBG
   S.kbg = list(formula =  ~1 + grazed + KBG)
   
-  # 2. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.smooth.brome = list(formula = ~1 + grazed + SmoothB)
+  # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
+  S.brome = list(formula = ~1 + grazed + SmoothB)
   
-  # 3. DSR varies with Litter (correlated with KBG)
+  # 4. DSR varies with Litter (correlated with KBG)
   S.lit = list(formula =  ~1 + grazed + Litter)
   
-  # 4. DSR varies with Bare
+  # 5. DSR varies with Bare
   S.bare = list(formula =  ~1 + grazed + Bare)
   
-  # 5. DSR varies with Forb
+  # 6. DSR varies with Forb
   S.forb = list(formula =  ~1 + grazed + Forb)
   
-  # 6. DSR varies with Grasslike  (correlated with KBG)
+  # 7. DSR varies with Grasslike  (correlated with KBG)
   S.grass = list(formula =  ~1 + grazed + Grasslike)
   
-  # 7. DSR varies with Woody
+  # 8. DSR varies with Woody
   S.woody = list(formula =  ~1 + grazed + Woody)
   
-  # 8. DSR varies with Litter Depth (correlated with VOR)
+  # 9. DSR varies with Litter Depth (correlated with VOR)
   S.litdep = list(formula =  ~1 + grazed + LitterD)
   
-  # 9. DSR varies with Veg Height (correlated with VOR)
+  # 10. DSR varies with Veg Height (correlated with VOR)
   S.height = list(formula =  ~1 + grazed + Veg.Height)
   
-  # 1 + grazed0. DSR varies with VOR
+  # 11. DSR varies with VOR
   S.vor = list(formula =  ~1 + grazed + VOR)
-  
-  # 1 + grazed1 + grazed. DSR varies with litter and Veg Height
-  S.litheight = list(formula = ~1 + grazed + Litter + Veg.Height)
-  
-  # 1 + grazed2. DSR varies with woody and litter depth
-  S.woodylitdep = list(formula = ~1 + grazed + Woody + LitterD)
-  
-  # 1 + grazed3. DSR varies with KBG and litter depth
-  S.kbglitdep = list(formula = ~1 + grazed + KBG + LitterD)
-  
-  # 1 + grazed4. DSR varies with KBG and Veg.Height
-  S.kbgheight = list(formula = ~1 + grazed + KBG + Veg.Height)
-  
-  # 1 + grazed5. DSR varies with woody and Veg Height
-  S.woodyheight = list(formula = ~1 + grazed + Woody + Veg.Height)
-  
-  # 1. a model for constant daily survival rate
-  S.grazed = list(formula =  ~1 + grazed)
   
   WEME.model.list = create.model.list("Nest")
   WEME4.results = mark.wrapper(WEME.model.list,
                                data = WEME.pr,
                                adjust = FALSE,
-                               delete = FALSE)
+                               delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 WEME4.results <- WEME4.run()
 WEME4.results
 
-WEME4.results$S.kbgheight$results$beta
-WEME4.results$S.bare$results$beta
-WEME4.results$S.height$results$beta
-WEME4.results$S.forb$results$beta
-WEME4.results$S.grazed$results$beta
-
-WEME4.results$S.bare$results$real
+coef(WEME4.results$S.litdep)
+confint(WEME4.results$S.litdep)
 
 
 # Plotting beta coefficients ----------------------------------------------
 
-
-WEME.mod <- mark(WEME.surv, 
-                 nocc=max(WEME.surv$LastChecked), 
-                 model = "Nest", 
-                 model.parameters = list(S = list(formula =  ~1 + grazed + KBG + Veg.Height)))
 
 WEME4.beta <- WEME4.results$S.bare$results$beta
 WEME4.beta

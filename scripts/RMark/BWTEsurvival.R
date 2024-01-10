@@ -4,6 +4,8 @@ library(ggplot2)
 library(vegan)
 library(tidyverse)
 library(RMark)
+library(MuMIn)
+source("scripts/Functions/RMark_Stage_Code.R")
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
@@ -14,31 +16,41 @@ nest <- read.csv("working/RMarknesting.csv",
 
 # Subsetting data ---------------------------------------------------------
 
-BWTE.surv <- dplyr::filter(nest,
-                           Spec=="BWTE")                                         # select out only BWTE nests
+BWTE.surv <- filter(nest, 
+                    Spec=="BWTE")                                         # select out only BWTE nest
 
-BWTE.surv$AgeDay1 <- BWTE.surv$AgeFound - BWTE.surv$FirstFound + 1
-BWTE.surv$Year <- as.factor(BWTE.surv$Year)
-BWTE.surv$cTreat <- as.factor(BWTE.surv$cTreat)
+test <- filter(BWTE.surv,
+               is.na(KBG) |
+                 is.na(SmoothB) |
+                 is.na(Litter) |
+                 is.na(Bare) |
+                 is.na(Forb) |
+                 is.na(Grasslike) |
+                 is.na(Woody) |
+                 is.na(LitterD) |
+                 is.na(Veg.Height) |
+                 is.na(VOR) |
+                 is.na(cTreat))
 
-# Creating nest stage variable --------------------------------------------
+MISSING <- is.na(BWTE.surv$AgeFound)
 
-create.stage.var=function(data,agevar.name,stagevar.name,time.intervals,cutoff)
-{
-  nocc=length(time.intervals)
-  age.mat=matrix(data[,agevar.name],nrow=dim(data)[1],ncol=nocc-1)
-  age.mat=t(t(age.mat)+cumsum(c(0,time.intervals[1:(nocc-2)])))
-  stage.mat=t(apply(age.mat,1,function(x) as.numeric(x<=cutoff)))
-  stage.mat=data.frame(stage.mat)
-  names(stage.mat)=paste(stagevar.name,1:(nocc-1),sep="")
-  return(stage.mat)
-}
+sum(MISSING)
+
+BWTE.surv <- subset(BWTE.surv, 
+                    subset = !MISSING)
+
+BWTE.surv$Year <- factor(BWTE.surv$Year,
+                         levels = c("2021", "2022", "2023"))
+
+str(BWTE.surv)
+
+# Creating stage variable -------------------------------------------------
 
 x <- create.stage.var(BWTE.surv, 
                       "AgeDay1", 
                       "Incub", 
                       rep(1,max(BWTE.surv$LastChecked)), 
-                      23)
+                      12)
 
 BWTE.surv <- bind_cols(BWTE.surv, x)
 
@@ -47,52 +59,48 @@ rm(list = ls()[!ls() %in% c("BWTE.surv")])
 # Daily survival rate models ----------------------------------------------
 
 BWTE.pr <- process.data(BWTE.surv,
-                        nocc=max(BWTE.surv$LastChecked), 
-                        groups = c("cTreat",
-                                   "Year"),
+                        nocc=max(BWTE.surv$LastChecked),
+                        groups = c("Year"),
                         model="Nest")
 
-# candidate models for the null vs. treatment model
+# Temporal candidate model set
 BWTE1.run <- function()
 {
-  # 1. a model for constant daily survival rate
-  S.Dot = list(formula =  ~1)
+  # 1. DSR varies with time
+  S.null = list(formula = ~1)
   
-  # 2. DSR varies with current treatment
-  S.cTreat = list(formula = ~1 + cTreat)
+  # 2. DSR varies with time
+  S.time = list(formula = ~1 + Time)
   
-  # 3. DSR varies with year
+  # 3. DSR varies with quadratic effect of date
+  S.quad = list(formula = ~1 + Time + I(Time^2))
+  
+  # 4. DSR varies with year
   S.year = list(formula = ~1 + Year)
-  
-  # 4. DSR varies With year interacting with treatment (treatment identity varies by year)
-  S.treatyear = list(formula = ~1 + cTreat:Year)
   
   BWTE.model.list = create.model.list("Nest")
   BWTE1.results = mark.wrapper(BWTE.model.list,
                                data = BWTE.pr,
                                adjust = FALSE,
-                               delete = TRUE)
+                               delete = FALSE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 BWTE1.results <- BWTE1.run()
 BWTE1.results
 
-BWTE1.results$S.cTreat$results$beta
-BWTE1.results$S.treatyear$results$beta
+coef(BWTE1.results$S.year)
+confint(BWTE1.results$S.year, level = 0.85)
 
-#candidate model set for time trends
+
+# Biological candidate model set
 BWTE2.run <- function()
 {
-  # 1. DSR varies with time
-  S.time = list(formula = ~1 + cTreat + Time)
+  # 1. DSR varies with year
+  S.year = list(formula = ~1 + Year)
   
-  # 3. DSR varies with quadratic effect of date
-  S.quad = list(formula = ~1 + cTreat + Time + I(Time^2))
-  
-  # 2. DSR varies with current treatment
-  S.cTreat = list(formula = ~1 + cTreat)
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + Year + NestAge)
   
   BWTE.model.list = create.model.list("Nest")
   BWTE2.results = mark.wrapper(BWTE.model.list,
@@ -101,24 +109,33 @@ BWTE2.run <- function()
                                delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 BWTE2.results <- BWTE2.run()
 BWTE2.results
 
-BWTE2.results$S.time$results$beta
-BWTE2.results$S.quad$results$beta
+coef(BWTE2.results$S.age)
 
-#candidate model set for grazing
+confint(BWTE2.results$S.age, level = 0.85)
+
+
+# Grazing candidate model set
 BWTE3.run <- function()
 {
-  # 1. DSR varies with BHCO number
-  S.grazed = list(formula = ~1 + cTreat + Time + grazed)
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + Year + NestAge)
   
-  S.grazep = list(formula = ~1 + cTreat + Time + grazep)
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + Year + NestAge + grazed)
   
-  # 2. DSR varies with quadratic effect of date
-  S.time = list(formula = ~1 + cTreat + Time)
+  # 3. DSR varies with the number of days a nest experienced grazing
+  S.grazep = list(formula = ~1 + Year + NestAge + grazep)
+  
+  # 4. DSR varies with the previous Year + NestAges grazing intensity
+  S.pTreat = list(formula = ~1 + Year + NestAge + pTreat)
+  
+  # 4. DSR varies with the previous Year + NestAges grazing intensity
+  S.grazedpTreat = list(formula = ~1 + Year + NestAge + grazed + pTreat)
+  
   BWTE.model.list = create.model.list("Nest")
   BWTE3.results = mark.wrapper(BWTE.model.list,
                                data = BWTE.pr,
@@ -126,83 +143,75 @@ BWTE3.run <- function()
                                delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 BWTE3.results <- BWTE3.run()
 BWTE3.results
 
-BWTE3.results$S.time$results$beta
-BWTE3.results$S.grazed$results$beta
-BWTE3.results$S.grazep$results$beta
+coef(BWTE3.results$S.grazep)
+confint(BWTE3.results$S.grazep, level = 0.85)
 
-#candidate model set for parasitism and nest stage
+# Vegetation candidate model set
 BWTE4.run <- function()
 {
-  # 1. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + cTreat + Time + KBG)
+  # 3. DSR varies with the number of days a nest experienced grazing
+  S.grazep = list(formula = ~1 + Year + NestAge + grazep)
   
-  # 2. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.smooth.brome = list(formula = ~1 + cTreat + Time + SmoothB)
+  # 2. DSR varies with KBG
+  S.kbg = list(formula =  ~1 + Year + NestAge + grazep + KBG)
   
-  # 3. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + cTreat + Time + Litter)
+  # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
+  S.brome = list(formula = ~1 + Year + NestAge + grazep + SmoothB)
   
-  # 4. DSR varies with Bare
-  S.bare = list(formula =  ~1 + cTreat + Time + Bare)
+  # 4. DSR varies with Litter (correlated with KBG)
+  S.lit = list(formula =  ~1 + Year + NestAge + grazep + Litter)
   
-  # 5. DSR varies with Forb
-  S.forb = list(formula =  ~1 + cTreat + Time + Forb)
+  # 5. DSR varies with Bare
+  S.bare = list(formula =  ~1 + Year + NestAge + grazep + Bare)
   
-  # 6. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + cTreat + Time + Grasslike)
+  # 6. DSR varies with Forb
+  S.forb = list(formula =  ~1 + Year + NestAge + grazep + Forb)
   
-  # 7. DSR varies with Woody
-  S.woody = list(formula =  ~1 + cTreat + Time + Woody)
+  # 7. DSR varies with Grasslike  (correlated with KBG)
+  S.grass = list(formula =  ~1 + Year + NestAge + grazep + Grasslike)
   
-  # 8. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + cTreat + Time + LitterD)
+  # 8. DSR varies with Woody
+  S.woody = list(formula =  ~1 + Year + NestAge + grazep + Woody)
   
-  # 9. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + cTreat + Time + Veg.Height)
+  # 9. DSR varies with Litter Depth (correlated with VOR)
+  S.litdep = list(formula =  ~1 + Year + NestAge + grazep + LitterD)
   
-  # 10. DSR varies with VOR
-  S.vor = list(formula =  ~1 + cTreat + Time + VOR)
+  # 10. DSR varies with Veg Height (correlated with VOR)
+  S.height = list(formula =  ~1 + Year + NestAge + grazep + Veg.Height)
   
-  # 11. DSR varies with litter and Veg Height
-  S.litheight = list(formula = ~1 + cTreat + Time + Litter + Veg.Height)
-  
-  # 12. DSR varies with woody and litter depth
-  S.woodylitdep = list(formula = ~1 + cTreat + Time + Woody + LitterD)
-  
-  # 13. DSR varies with KBG and litter depth
-  S.kbglitdep = list(formula = ~1 + cTreat + Time + KBG + LitterD)
-  
-  # 14. DSR varies with KBG and Veg.Height
-  S.kbgheight = list(formula = ~1 + cTreat + Time + KBG + Veg.Height)
-  
-  # 15. DSR varies with woody and Veg Height
-  S.woodyheight = list(formula = ~1 + cTreat + Time + Woody + Veg.Height)
-  
-  # 1. DSR varies with BHCO number
-  S.time = list(formula =  ~1 + cTreat + Time)
+  # 11. DSR varies with VOR
+  S.vor = list(formula =  ~1 + Year + NestAge + grazep + VOR)
   
   BWTE.model.list = create.model.list("Nest")
   BWTE4.results = mark.wrapper(BWTE.model.list,
                                data = BWTE.pr,
                                adjust = FALSE,
-                               delete = FALSE)
+                               delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 BWTE4.results <- BWTE4.run()
 BWTE4.results
 
-BWTE4.results$S.litdep$results$beta
-BWTE4.results$S.woodylitdep$results$beta
-BWTE4.results$S.kbglitdep$results$beta
+coef(BWTE4.results$S.height)
+coef(BWTE4.results$S.litdep)
+coef(BWTE4.results$S.vor)
 
-BWTE4.results$S.bare$results$real
+confint(BWTE4.results$S.height, level = 0.85)
+confint(BWTE4.results$S.litdep, level = 0.85)
+confint(BWTE4.results$S.vor, level = 0.85)
+
+BWTE.avg <- model.avg(BWTE4.results$S.height,
+                      BWTE4.results$S.litdep,
+                      BWTE4.results$S.vor)
+
+summary(BWTE.avg)
+coef(BWTE.avg)
+confint(BWTE.avg, level = 0.85)
 
 BWTE.real <- as.data.frame(BWTE4.results$S.bare$results$real)
 BWTE.real <- rownames_to_column(BWTE.real, var = "Group")

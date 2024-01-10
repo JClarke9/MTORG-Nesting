@@ -4,6 +4,8 @@ library(ggplot2)
 library(vegan)
 library(tidyverse)
 library(RMark)
+library(MuMIn)
+source("scripts/Functions/RMark_Stage_Code.R")
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
@@ -15,87 +17,93 @@ nest <- read.csv("working/RMarknesting.csv",
 # Subsetting data ---------------------------------------------------------
 
 MODO.surv <- filter(nest, 
-                    Spec=="MODO")                     # select out only MODO nests
+                    Spec=="MODO")                                         # select out only MODO nest
 
-MODO.surv$AgeDay1 <- MODO.surv$AgeFound - MODO.surv$FirstFound + 1
-MODO.surv$Year <- as.factor(MODO.surv$Year)
-MODO.surv$cTreat <- as.factor(MODO.surv$cTreat)
+test <- filter(MODO.surv,
+               is.na(KBG) |
+                 is.na(SmoothB) |
+                 is.na(Litter) |
+                 is.na(Bare) |
+                 is.na(Forb) |
+                 is.na(Grasslike) |
+                 is.na(Woody) |
+                 is.na(LitterD) |
+                 is.na(Veg.Height) |
+                 is.na(VOR) |
+                 is.na(cTreat))
+
+MISSING <- is.na(MODO.surv$AgeFound)
+
+sum(MISSING)
+
+MODO.surv <- subset(MODO.surv, 
+                    subset = !MISSING)
+
+MODO.surv$Year <- factor(MODO.surv$Year,
+                         levels = c("2021", "2022", "2023"))
+
+str(MODO.surv)
 
 # Creating stage variable -------------------------------------------------
-
-create.stage.var=function(data,agevar.name,stagevar.name,time.intervals,cutoff)
-{
-  nocc=length(time.intervals)
-  age.mat=matrix(data[,agevar.name],nrow=dim(data)[1],ncol=nocc-1)
-  age.mat=t(t(age.mat)+cumsum(c(0,time.intervals[1:(nocc-2)])))
-  stage.mat=t(apply(age.mat,1,function(x) as.numeric(x<=cutoff)))
-  stage.mat=data.frame(stage.mat)
-  names(stage.mat)=paste(stagevar.name,1:(nocc-1),sep="")
-  return(stage.mat)
-}
 
 x <- create.stage.var(MODO.surv, 
                       "AgeDay1", 
                       "Incub", 
                       rep(1,max(MODO.surv$LastChecked)), 
-                      14)
+                      12)
 
 MODO.surv <- bind_cols(MODO.surv, x)
 
-rm(list = ls()[!ls() %in% "MODO.surv"])
+rm(list = ls()[!ls() %in% c("MODO.surv")])
 
 # Daily survival rate models ----------------------------------------------
 
 MODO.pr <- process.data(MODO.surv,
-                        nocc=max(MODO.surv$LastChecked), 
-                        groups = c("cTreat",
-                                   "Year"),
+                        nocc=max(MODO.surv$LastChecked),
+                        groups = c("Year"),
                         model="Nest")
 
-# candidate models for the null vs. treatment model
+# Temporal candidate model set
 MODO1.run <- function()
 {
-  # 1. a model for constant daily survival rate
-  S.Dot = list(formula =  ~1)
-  
-  # 2. DSR varies with current treatment
-  S.cTreat = list(formula = ~1 + cTreat)
-  
-  # 3. DSR varies with year
-  S.year = list(formula = ~1 + Year)
-  
-  # 4. DSR varies With year interacting with treatment (treatment identity varies by year)
-  S.treatyear = list(formula = ~1 + cTreat:Year)
-  
-  MODO.model.list = create.model.list("Nest")
-  MODO1.results = mark.wrapper(MODO.model.list,
-                               data = MODO.pr,
-                               adjust = FALSE,
-                               delete = TRUE)
-}
-
-#results of candidate model set 
-#all results
-MODO1.results <- MODO1.run()
-MODO1.results
-
-MODO1.results$S.Dot$results$beta
-MODO1.results$S.year$results$beta
-
-#candidate model set for time trends
-MODO2.run <- function()
-{
   # 1. DSR varies with time
+  S.null = list(formula = ~1)
+  
+  # 2. DSR varies with time
   S.time = list(formula = ~1 + Time)
   
   # 3. DSR varies with quadratic effect of date
   S.quad = list(formula = ~1 + Time + I(Time^2))
   
-  # 4. DSR varies across stages
-  S.stage = list(formula = ~1 + Incub)
+  # 4. DSR varies with year
+  S.year = list(formula = ~1 + Year)
   
-  # 1. a model for constant daily survival rate
-  S.Dot = list(formula =  ~1)
+  MODO.model.list = create.model.list("Nest")
+  MODO1.results = mark.wrapper(MODO.model.list,
+                               data = MODO.pr,
+                               adjust = FALSE,
+                               delete = FALSE)
+}
+
+# Results of candidate model set
+MODO1.results <- MODO1.run()
+MODO1.results
+
+coef(MODO1.results$S.quad)
+confint(MODO1.results$S.quad, level = 0.85)
+
+
+# Biological candidate model set
+MODO2.run <- function()
+{
+  # 3. DSR varies with quadratic effect of date
+  S.quad = list(formula = ~1 + Time + I(Time^2))
+  
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + Time + I(Time^2) + NestAge)
+  
+  # 5. DSR varies with nest age
+  S.stage = list(formula = ~1 + Time + I(Time^2) + Incub)
   
   MODO.model.list = create.model.list("Nest")
   MODO2.results = mark.wrapper(MODO.model.list,
@@ -104,23 +112,31 @@ MODO2.run <- function()
                                delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 MODO2.results <- MODO2.run()
 MODO2.results
 
-MODO2.results$S.quad$results$beta
-MODO2.results$S.Dot$results$beta
+coef(MODO2.results$S.stage)
+confint(MODO2.results$S.stage, level = 0.85)
 
-#candidate model set for grazing
+
+# Grazing candidate model set
 MODO3.run <- function()
 {
-  S.grazed = list(formula = ~1 + Time + I(Time^2) + grazed)
+  # 5. DSR varies with nest age
+  S.stage = list(formula = ~1 + Time + I(Time^2) + Incub)
   
-  S.grazep = list(formula = ~1 + Time + I(Time^2) + grazep)
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + Time + I(Time^2) + Incub + grazed)
   
-  # 2. DSR varies with quadratic effect of date
-  S.quad = list(formula = ~1 + Time + I(Time^2))
+  # 3. DSR varies with the number of days a nest experienced grazing
+  S.grazep = list(formula = ~1 + Time + I(Time^2) + Incub + grazep)
+  
+  # 4. DSR varies with the previous years grazing intensity
+  S.pTreat = list(formula = ~1 + Time + I(Time^2) + Incub + pTreat)
+  
+  # 4. DSR varies with the previous years grazing intensity
+  S.grazedpTreat = list(formula = ~1 + Time + I(Time^2) + Incub + grazed + pTreat)
   
   MODO.model.list = create.model.list("Nest")
   MODO3.results = mark.wrapper(MODO.model.list,
@@ -129,82 +145,59 @@ MODO3.run <- function()
                                delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 MODO3.results <- MODO3.run()
 MODO3.results
 
-MODO3.results$S.quad$results$beta
-MODO3.results$S.grazed$results$beta
-MODO3.results$S.grazep$results$beta
-
-#candidate model set for parasitism and nest BHCONum
+# Vegetation candidate model set
 MODO4.run <- function()
 {
-  # 1. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + Time + I(Time^2) + KBG)
+  # 5. DSR varies with nest age
+  S.stage = list(formula = ~1 + Time + I(Time^2) + Incub)
   
-  # 2. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.smooth.brome = list(formula = ~1 + Time + I(Time^2) + SmoothB)
+  # 2. DSR varies with KBG
+  S.kbg = list(formula =  ~1 + Time + I(Time^2) + Incub + KBG)
   
-  # 3. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + Time + I(Time^2) + Litter)
+  # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
+  S.brome = list(formula = ~1 + Time + I(Time^2) + Incub + SmoothB)
   
-  # 4. DSR varies with Bare
-  S.bare = list(formula =  ~1 + Time + I(Time^2) + Bare)
+  # 4. DSR varies with Litter (correlated with KBG)
+  S.lit = list(formula =  ~1 + Time + I(Time^2) + Incub + Litter)
   
-  # 5. DSR varies with Forb
-  S.forb = list(formula =  ~1 + Time + I(Time^2) + Forb)
+  # 5. DSR varies with Bare
+  S.bare = list(formula =  ~1 + Time + I(Time^2) + Incub + Bare)
   
-  # 6. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + Time + I(Time^2) + Grasslike)
+  # 6. DSR varies with Forb
+  S.forb = list(formula =  ~1 + Time + I(Time^2) + Incub + Forb)
   
-  # 7. DSR varies with Woody
-  S.woody = list(formula =  ~1 + Time + I(Time^2) + Woody)
+  # 7. DSR varies with Grasslike  (correlated with KBG)
+  S.grass = list(formula =  ~1 + Time + I(Time^2) + Incub + Grasslike)
   
-  # 8. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + Time + I(Time^2) + LitterD)
+  # 8. DSR varies with Woody
+  S.woody = list(formula =  ~1 + Time + I(Time^2) + Incub + Woody)
   
-  # 9. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Time + I(Time^2) + Veg.Height)
+  # 9. DSR varies with Litter Depth (correlated with VOR)
+  S.litdep = list(formula =  ~1 + Time + I(Time^2) + Incub + LitterD)
   
-  # 10. DSR varies with VOR
-  S.vor = list(formula =  ~1 + Time + I(Time^2) + VOR)
+  # 10. DSR varies with Veg Height (correlated with VOR)
+  S.height = list(formula =  ~1 + Time + I(Time^2) + Incub + Veg.Height)
   
-  # 11. DSR varies with litter and Veg Height
-  S.litheight = list(formula = ~1 + Time + I(Time^2) + Litter + Veg.Height)
-  
-  # 12. DSR varies with woody and litter depth
-  S.woodylitdep = list(formula = ~1 + Time + I(Time^2) + Woody + LitterD)
-  
-  # 13. DSR varies with KBG and litter depth
-  S.kbglitdep = list(formula = ~1 + Time + I(Time^2) + KBG + LitterD)
-  
-  # 14. DSR varies with KBG and Veg.Height
-  S.kbgheight = list(formula = ~1 + Time + I(Time^2) + KBG + Veg.Height)
-  
-  # 15. DSR varies with woody and Veg Height
-  S.woodyheight = list(formula = ~1 + Time + I(Time^2) + Woody + Veg.Height)
-  
-  # 3. DSR varies with quadratic effect of date
-  S.quad = list(formula = ~1 + Time + I(Time^2))
+  # 11. DSR varies with VOR
+  S.vor = list(formula =  ~1 + Time + I(Time^2) + Incub + VOR)
   
   MODO.model.list = create.model.list("Nest")
   MODO4.results = mark.wrapper(MODO.model.list,
                                data = MODO.pr,
                                adjust = FALSE,
-                               delete = FALSE)
+                               delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 MODO4.results <- MODO4.run()
 MODO4.results
-names(MODO4.results)
 
-MODO4.results$S.kbglitdep$results$beta
-MODO4.results$S.kbg$results$beta
-MODO4.results$S.height$results$beta
+coef(MODO4.results$S.kbg)
+confint(MODO4.results$S.kbg, level = 0.85)
 
 MODO.real <- as.data.frame(MODO4.results$S.kbglitdep$results$real)
 

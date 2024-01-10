@@ -7,33 +7,31 @@ library(tidyverse)
 
 # Data import -------------------------------------------------------------
 
-raw <- read.csv("~/Git/NDSU/Nesting.csv")                                       # read in the data set
-
-raw$Date <- as.Date(raw$Date,                                                   # read the Date column as a date
-                    "%m/%d/%y") |>                                            # show the format of the existing dates
-  yday()                                                                      # calculate the Date day
-
-raw$FirstFound <- as.Date(raw$FirstFound,                                                   # read the Date column as a date
-                          "%m/%d/%y") |>                                            # show the format of the existing dates
-  yday()                                                                      # calculate the Date day
-
-raw$aRobel <- rowMeans(raw[,28:31])                                             # create a new column with the robel readings averaged
+raw <- read.csv("working/Community.csv",
+                row.names = 1)                                       # read in the data set
 
 raw$Litter.Depth <- as.numeric(raw$Litter.Depth)
 raw$Veg.Height <- as.numeric(raw$Veg.Height)
-raw$cTreat <- as.factor(raw$cTreat)
-raw$pTreat <- as.factor(raw$pTreat)
-raw$Stage <- as.factor(raw$Stage)
-raw$Pasture <- as.factor(raw$Pasture)
-raw$Patch <- as.factor(raw$Patch)
-raw$Survive <- as.factor(raw$Survive)
-raw$Year <- as.factor(raw$Year)
-raw$id <- as.factor(raw$id)
-raw$Spec <- as.factor(raw$Spec)
 raw$AgeFound <- as.numeric(raw$AgeFound)
-```
 
-```{r}
+raw$id <- factor(raw$id)
+raw$Spec <- factor(raw$Spec)
+
+raw$cTreat <- factor(raw$cTreat,
+                     c("Rest", "Moderate", "Full", "Heavy"))
+raw$pTreat <- factor(raw$pTreat,
+                     c("Rest", "Moderate", "Full", "Heavy"))
+raw$Stage <- factor(raw$Stage,
+                    c("Laying", "Incubating", "Nestling"))
+raw$Paddock <- factor(raw$Paddock,
+                      c(1:16))
+raw$Replicate <- factor(raw$Replicate,
+                        c("NE", "SE", "SW", "NW"))
+raw$Year <- factor(raw$Year,
+                   levels = c("2021", "2022", "2023"))
+
+str(raw)
+
 ##################################################################################
 ##red-winged blackbird nest survival code from Shew et al. 2018 (Journal of Applied Ecology) 
 #################################################################################
@@ -72,56 +70,76 @@ library(lme4)
 library(MuMIn)
 library(AICcmodavg)
 
-BWTE <- raw |> 
-  filter(Spec=="BWTE") |> 
-  na.omit() |> 
+CCSP <- raw |> 
+  filter(Spec=="CCSP" & Fate2 != "Unknown") |> 
   ungroup()
 
-BWTE <- BWTE %>% 
-  filter(BWTE$Expos != 0)
+MISSING <- is.na(CCSP$KBG)
+MISSING <- is.na(CCSP$Smooth.Brome)
+MISSING <- is.na(CCSP$Litter)
+MISSING <- is.na(CCSP$Bare)
+MISSING <- is.na(CCSP$Forb)
+MISSING <- is.na(CCSP$Grasslike)
+MISSING <- is.na(CCSP$Woody)
+MISSING <- is.na(CCSP$Litter.Depth)
+MISSING <- is.na(CCSP$Veg.Height)
+MISSING <- is.na(CCSP$VOR)
 
-attributes(BWTE)$na.action <- NULL
+sum(MISSING)
 
-BWTE$trials <- 1
+CCSP <- subset(CCSP, subset = !MISSING)
 
-BWTE[,c(6,19:31,39)] <- scale(BWTE[,c(6,19:31,39)], center = TRUE, scale = TRUE)
+CCSP <- CCSP |> 
+  filter(CCSP$Expos != 0)
 
-BWTE$Stage <- recode(BWTE$Stage,
-                     "Incubating" = "INC",
-                     "Laying" = "LAY",
-                     "Nestling" = "NST")
+CCSP$trials <- 1
+
 ## STEP 1a
 
-R1 <- glmer(Fate/trials ~ (1|id),
-            family = binomial(logexp(exposure=BWTE$Expos)),
-            data=BWTE)
-R2 <- glmer(Fate/trials ~ (1|id) + (1|Year),
-            family = binomial(logexp(exposure=BWTE$Expos)),
-            data=BWTE)
-R3 <- glmer(Fate/trials ~ (1|Pasture/id),
-            family=binomial(logexp(exposure=BWTE$Expos)),
-            data=BWTE)
-R4 <- glmer(Fate/trials ~ (1|Pasture/id) + (1|Year),
-            family=binomial(logexp(exposure=BWTE$Expos)),
-            data=BWTE)
+R1 <-glmer(Fate/trials ~ (1|id), 
+           family = binomial(logexp(exposure = CCSP$Expos)),
+           data = CCSP)
+
+R2 <-glmer(Fate/trials ~ ( 1|Paddock/id), 
+           family = binomial(logexp(exposure = CCSP$Expos)) ,
+           data = CCSP)
+
+R3<-glmer(Fate/trials ~ (1|Paddock/id) + (1|Year), 
+          family = binomial(logexp(exposure = CCSP$Expos)),
+          data = CCSP)
+
+R4<-glmer(Fate/trials ~ (1|Replicate/Paddock/id), 
+          family = binomial(logexp(exposure = CCSP$Expos)),
+          data = CCSP)
+
+R5 <-glmer(Fate/trials ~  (1|Replicate/Paddock/id) +(1|Year), 
+           family = binomial(logexp(exposure = CCSP$Expos)),
+           data = CCSP)
 
 ## AIC Table
 
 Cand.Rand.mods <- list(
   "id-R1" = R1,
-  "id+Year-R2" = R2,
-  "Pasture/id-R3" = R3, 
-  "Pasture/id+Year-R4" = R4)
+  "Paddock/id-R2" = R2, 
+  "Paddock/id+Year-R3" = R3, 
+  "Replicate/Paddock/id-R4" = R4,
+  "Replicate/Paddock/id+Year-R5" = R5)
 
 aictab(cand.set = Cand.Rand.mods,
        second.ord = TRUE)
 
 ## summary of best model to investigate beta’s and SE
 
-R1
-summary(R1)
-coeffs(R1)
-confint(R1,
+R3
+summary(R3)
+coeffs(R3)
+confint(R3,
+        method = c("Wald"))
+
+R5
+summary(R5)
+coeffs(R5)
+confint(R5,
         method = c("Wald"))
 
 Cp(R1)
@@ -129,47 +147,27 @@ Cp(R2)
 Cp(R3)
 Cp(R4)
 
-## STEP 1b
-
-E1 <- glmer(Fate/trials ~ (1|id) + cTreat,
-            family = binomial(logexp(exposure=BWTE$Expos)),
-            data=BWTE)
-
-## AIC Table
-
-Cand.Exp.mods <- list(
-  "id-Null" = R1,
-  "id+cTreat-E1" = E1)
-
-aictab(cand.set = Cand.Exp.mods,
-       second.ord = TRUE)
-
-## summary of best model to investigate beta’s and SE
-
-R1
-summary(R1)
-coeffs(R1)
-confint(R1,
-        method = c("Wald"))
-
-Cp(R1)
-Cp(E1)
-
 ##STEP 2
 
-T1 <- glmer(Fate/trials ~ (1|id) + Date,
-            family=binomial(logexp(exposure=BWTE$Expos)),
-            data=BWTE)
-T2 <- glmer(Fate/trials ~ (1|id) + Date + Date^2,
-            family=binomial(logexp(exposure=BWTE$Expos)),
-            data=BWTE)
+T1 <- glmer(Fate/trials ~ (1|Paddock/id) + (1|Year) + Date,
+            family = binomial(logexp(exposure = CCSP$Expos)),
+            data = CCSP)
+
+T2 <- glmer(Fate/trials ~ (1|Paddock/id) + (1|Year) + Date + I(Date^2),
+            family = binomial(logexp(exposure = CCSP$Expos)),
+            data = CCSP)
+
+T3 <- glmer(Fate/trials ~ (1|Paddock/id) + (1|Year) + Stage,
+            family = binomial(logexp(exposure = CCSP$Expos)),
+            data = CCSP)
 
 ## AIC Table
 
 Cand.Temp.mods <- list(
-  "id-Null" = R1, 
+  "id-Null-R3" = R3, 
   "Date-T1" = T1, 
-  "Quad Date-T2" = T2)
+  "Quad Date-T2" = T2,
+  "Stage-T3" = T3)
 
 aictab(cand.set = Cand.Temp.mods,
        second.ord = TRUE)
@@ -177,11 +175,11 @@ aictab(cand.set = Cand.Temp.mods,
 
 ##### summary of best model to investigate beta’s and SE
 
-summary(T2)
-T2
+summary(T3)
+T3
 
-coeffs(T2)
-confint(T2,
+coeffs(T3)
+confint(T3,
         method = c("Wald"))
 
 Cp(R1)
@@ -218,38 +216,38 @@ VarF/(VarF + VarCorr(T2)$id[1] + pi^2/3)
 ##STEP 3a
 
 N1 <- glmer(Fate/trials ~ (1|id) + Stage + KBG,
-            family=binomial(logexp(exposure=BWTE$Expos)),
-            data=BWTE)
+            family=binomial(logexp(exposure=CCSP$Expos)),
+            data=CCSP)
 N2 <- glmer(Fate/trials ~ (1|id) + Stage + Smooth.Brome,
-            family=binomial(logexp(exposure=BWTE$Expos)),
-            data=BWTE)
+            family=binomial(logexp(exposure=CCSP$Expos)),
+            data=CCSP)
 N3 <- glmer(Fate/trials ~ (1|id) + Stage + Litter,
-            family=binomial(logexp(exposure=BWTE$Expos)),
-            data=BWTE)
+            family=binomial(logexp(exposure=CCSP$Expos)),
+            data=CCSP)
 N4 <- glmer(Fate/trials ~ (1|id) + Stage + Bare,
-            family=binomial(logexp(exposure=BWTE$Expos)),
-            data=BWTE)
+            family=binomial(logexp(exposure=CCSP$Expos)),
+            data=CCSP)
 N5 <- glmer(Fate/trials ~ (1|id) + Stage + Forb,
-            family=binomial(logexp(exposure=BWTE$Expos)),
-            data=BWTE)
+            family=binomial(logexp(exposure=CCSP$Expos)),
+            data=CCSP)
 N6 <- glmer(Fate/trials ~ (1|id) + Stage + Grasslike,
-            family=binomial(logexp(exposure=BWTE$Expos)),
-            data=BWTE)
+            family=binomial(logexp(exposure=CCSP$Expos)),
+            data=CCSP)
 N7 <- glmer(Fate/trials ~ (1|id) + Stage + Woody,
-            family=binomial(logexp(exposure=BWTE$Expos)),
-            data=BWTE)
+            family=binomial(logexp(exposure=CCSP$Expos)),
+            data=CCSP)
 N8 <- glmer(Fate/trials ~ (1|id) + Stage + Litter.Depth,
-            family=binomial(logexp(exposure=BWTE$Expos)),
-            data=BWTE)
+            family=binomial(logexp(exposure=CCSP$Expos)),
+            data=CCSP)
 N9 <- glmer(Fate/trials ~ (1|id) + Stage + Veg.Height,
-            family=binomial(logexp(exposure=BWTE$Expos)),
-            data=BWTE)
+            family=binomial(logexp(exposure=CCSP$Expos)),
+            data=CCSP)
 N10<- glmer(Fate/trials ~ (1|id) + Stage + aRobel,
-            family=binomial(logexp(exposure=BWTE$Expos)),
-            data=BWTE)
+            family=binomial(logexp(exposure=CCSP$Expos)),
+            data=CCSP)
 N11 <- glmer(Fate/trials ~ (1|id) + Stage + Litter.Depth + aRobel,
-             family=binomial(logexp(exposure=BWTE$Expos)),
-             data=BWTE)
+             family=binomial(logexp(exposure=CCSP$Expos)),
+             data=CCSP)
 
 ##AIC Table
 Cand.Nest.mods <- list(

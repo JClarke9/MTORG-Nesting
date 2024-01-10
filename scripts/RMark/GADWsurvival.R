@@ -4,6 +4,8 @@ library(ggplot2)
 library(vegan)
 library(tidyverse)
 library(RMark)
+library(MuMIn)
+source("scripts/Functions/RMark_Stage_Code.R")
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
@@ -15,30 +17,40 @@ nest <- read.csv("working/RMarknesting.csv",
 # Subsetting data ---------------------------------------------------------
 
 GADW.surv <- filter(nest, 
-                    Spec=="GADW")                                         # select out only GADW nests
+                    Spec=="GADW")                                         # select out only GADW nest
 
-GADW.surv$AgeDay1 <- GADW.surv$AgeFound - GADW.surv$FirstFound + 1
-GADW.surv$Year <- as.factor(GADW.surv$Year)
-GADW.surv$cTreat <- as.factor(GADW.surv$cTreat)
+test <- filter(GADW.surv,
+               is.na(KBG) |
+                 is.na(SmoothB) |
+                 is.na(Litter) |
+                 is.na(Bare) |
+                 is.na(Forb) |
+                 is.na(Grasslike) |
+                 is.na(Woody) |
+                 is.na(LitterD) |
+                 is.na(Veg.Height) |
+                 is.na(VOR) |
+                 is.na(cTreat))
+
+MISSING <- is.na(GADW.surv$AgeFound)
+
+sum(MISSING)
+
+GADW.surv <- subset(GADW.surv, 
+                    subset = !MISSING)
+
+GADW.surv$Year <- factor(GADW.surv$Year,
+                         levels = c("2021", "2022", "2023"))
+
+str(GADW.surv)
 
 # Creating stage variable -------------------------------------------------
-
-create.stage.var=function(data,agevar.name,stagevar.name,time.intervals,cutoff)
-{
-  nocc=length(time.intervals)
-  age.mat=matrix(data[,agevar.name],nrow=dim(data)[1],ncol=nocc-1)
-  age.mat=t(t(age.mat)+cumsum(c(0,time.intervals[1:(nocc-2)])))
-  stage.mat=t(apply(age.mat,1,function(x) as.numeric(x<=cutoff)))
-  stage.mat=data.frame(stage.mat)
-  names(stage.mat)=paste(stagevar.name,1:(nocc-1),sep="")
-  return(stage.mat)
-}
 
 x <- create.stage.var(GADW.surv, 
                       "AgeDay1", 
                       "Incub", 
                       rep(1,max(GADW.surv$LastChecked)), 
-                      23)
+                      12)
 
 GADW.surv <- bind_cols(GADW.surv, x)
 
@@ -47,52 +59,48 @@ rm(list = ls()[!ls() %in% c("GADW.surv")])
 # Daily survival rate models ----------------------------------------------
 
 GADW.pr <- process.data(GADW.surv,
-                        nocc=max(GADW.surv$LastChecked), 
-                        groups = c("cTreat",
-                                   "Year"),
+                        nocc=max(GADW.surv$LastChecked),
+                        groups = c("Year"),
                         model="Nest")
 
-# candidate models for the null vs. treatment model
+# Temporal candidate model set
 GADW1.run <- function()
 {
-  # 1. a model for constant daily survival rate
-  S.Dot = list(formula =  ~1)
-  
-  # 2. DSR varies with current treatment
-  S.cTreat = list(formula = ~1 + cTreat)
-  
-  # 3. DSR varies with year
-  S.year = list(formula = ~1 + Year)
-  
-  # 4. DSR varies With year interacting with treatment (treatment identity varies by year)
-  S.treatyear = list(formula = ~1 + cTreat:Year)
-  
-  GADW.model.list = create.model.list("Nest")
-  GADW1.results = mark.wrapper(GADW.model.list,
-                               data = GADW.pr,
-                               adjust = FALSE,
-                               delete = TRUE)
-}
-
-#results of candidate model set 
-#all results
-GADW1.results <- GADW1.run()
-GADW1.results
-
-GADW1.results$S.Dot$results$beta
-GADW1.results$S.year$results$beta
-
-#candidate model set for time trends
-GADW2.run <- function()
-{
   # 1. DSR varies with time
+  S.null = list(formula = ~1)
+  
+  # 2. DSR varies with time
   S.time = list(formula = ~1 + Time)
   
   # 3. DSR varies with quadratic effect of date
   S.quad = list(formula = ~1 + Time + I(Time^2))
   
-  # 1. a model for constant daily survival rate
-  S.Dot = list(formula =  ~1)
+  # 4. DSR varies with year
+  S.year = list(formula = ~1 + Year)
+  
+  GADW.model.list = create.model.list("Nest")
+  GADW1.results = mark.wrapper(GADW.model.list,
+                               data = GADW.pr,
+                               adjust = FALSE,
+                               delete = FALSE)
+}
+
+# Results of candidate model set
+GADW1.results <- GADW1.run()
+GADW1.results
+
+coef(GADW1.results$S.year)
+confint(GADW1.results$S.year, level = 0.85)
+
+
+# Biological candidate model set
+GADW2.run <- function()
+{
+  # 1. DSR varies with year
+  S.year = list(formula = ~1 + Year)
+  
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + Year + NestAge)
   
   GADW.model.list = create.model.list("Nest")
   GADW2.results = mark.wrapper(GADW.model.list,
@@ -101,26 +109,33 @@ GADW2.run <- function()
                                delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 GADW2.results <- GADW2.run()
 GADW2.results
 
-GADW2.results$S.Dot$results$beta
-GADW2.results$S.quad$results$beta
-GADW2.results$S.julian$results$beta
-GADW2.results$S.year$results$beta
+coef(GADW2.results$S.age)
 
-#candidate model set for grazing
+confint(GADW2.results$S.age, level = 0.85)
+
+
+# Grazing candidate model set
 GADW3.run <- function()
 {
-  # 1. DSR varies with BHCO number
-  S.grazed = list(formula = ~1 + grazed)
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + Year + NestAge)
   
-  S.grazep = list(formula = ~1 + grazep)
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + Year + NestAge + grazed)
   
-  # 2. DSR varies with quadratic effect of date
-  S.Dot = list(formula = ~1)
+  # 3. DSR varies with the number of days a nest experienced grazing
+  S.grazep = list(formula = ~1 + Year + NestAge + grazep)
+  
+  # 4. DSR varies with the previous Year + NestAges grazing intensity
+  S.pTreat = list(formula = ~1 + Year + NestAge + pTreat)
+  
+  # 4. DSR varies with the previous Year + NestAges grazing intensity
+  S.grazedpTreat = list(formula = ~1 + Year + NestAge + grazed + pTreat)
+  
   GADW.model.list = create.model.list("Nest")
   GADW3.results = mark.wrapper(GADW.model.list,
                                data = GADW.pr,
@@ -128,84 +143,60 @@ GADW3.run <- function()
                                delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 GADW3.results <- GADW3.run()
 GADW3.results
 
-GADW3.results$S.Dot$results$beta
-GADW3.results$S.grazed$results$beta
-GADW3.results$S.grazep$results$beta
 
-#candidate model set for parasitism and nest stage
+# Vegetation candidate model set
 GADW4.run <- function()
 {
-  # 1. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + KBG)
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + Year + NestAge)
   
-  # 2. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.smooth.brome = list(formula = ~1 + SmoothB)
+  # 2. DSR varies with KBG
+  S.kbg = list(formula =  ~1 + Year + KBG)
   
-  # 3. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + Litter)
+  # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
+  S.brome = list(formula = ~1 + Year + SmoothB)
   
-  # 4. DSR varies with Bare
-  S.bare = list(formula =  ~1 + Bare)
+  # 4. DSR varies with Litter (correlated with KBG)
+  S.lit = list(formula =  ~1 + Year + Litter)
   
-  # 5. DSR varies with Forb
-  S.forb = list(formula =  ~1 + Forb)
+  # 5. DSR varies with Bare
+  S.bare = list(formula =  ~1 + Year + Bare)
   
-  # 6. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + Grasslike)
+  # 6. DSR varies with Forb
+  S.forb = list(formula =  ~1 + Year + Forb)
   
-  # 7. DSR varies with Woody
-  S.woody = list(formula =  ~1 + Woody)
+  # 7. DSR varies with Grasslike  (correlated with KBG)
+  S.grass = list(formula =  ~1 + Year + Grasslike)
   
-  # 8. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + LitterD)
+  # 8. DSR varies with Woody
+  S.woody = list(formula =  ~1 + Year + Woody)
   
-  # 9. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Veg.Height)
+  # 9. DSR varies with Litter Depth (correlated with VOR)
+  S.litdep = list(formula =  ~1 + Year + LitterD)
   
-  # 10. DSR varies with VOR
-  S.vor = list(formula =  ~1 + VOR)
+  # 10. DSR varies with Veg Height (correlated with VOR)
+  S.height = list(formula =  ~1 + Year + Veg.Height)
   
-  # 11. DSR varies with litter and Veg Height
-  S.litheight = list(formula = ~1 + Litter + Veg.Height)
-  
-  # 12. DSR varies with woody and litter depth
-  S.woodylitdep = list(formula = ~1 + Woody + LitterD)
-  
-  # 13. DSR varies with KBG and litter depth
-  S.kbglitdep = list(formula = ~1 + KBG + LitterD)
-  
-  # 14. DSR varies with KBG and Veg.Height
-  S.kbgheight = list(formula = ~1 + KBG + Veg.Height)
-  
-  # 15. DSR varies with woody and Veg Height
-  S.woodyheight = list(formula = ~1 + Woody + Veg.Height)
-  
-  # 1. a model for constant daily survival rate
-  S.Dot = list(formula =  ~1)
+  # 11. DSR varies with VOR
+  S.vor = list(formula =  ~1 + Year + VOR)
   
   GADW.model.list = create.model.list("Nest")
   GADW4.results = mark.wrapper(GADW.model.list,
                                data = GADW.pr,
                                adjust = FALSE,
-                               delete = FALSE)
+                               delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 GADW4.results <- GADW4.run()
 GADW4.results
 
-GADW4.results$S.litdep$results$beta
-GADW4.results$S.bare$results$beta
-GADW4.results$S.forb$results$beta
-GADW4.results$S.height$results$beta
-GADW4.results$S.kbglitdep$results$beta
-GADW4.results$S.woodylitdep$results$beta
+coef(GADW4.results$S.forb)
+confint(GADW4.results$S.forb, level = 0.85)
 
 
 # Plotting Beta Coefficients ----------------------------------------------

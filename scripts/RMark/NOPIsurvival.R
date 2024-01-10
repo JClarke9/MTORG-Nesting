@@ -4,6 +4,8 @@ library(ggplot2)
 library(vegan)
 library(tidyverse)
 library(RMark)
+library(MuMIn)
+source("scripts/Functions/RMark_Stage_Code.R")
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
@@ -15,84 +17,89 @@ nest <- read.csv("working/RMarknesting.csv",
 # Subsetting data ---------------------------------------------------------
 
 NOPI.surv <- filter(nest, 
-                    Spec=="NOPI")                                         # select out only NOPI nests
+                    Spec=="NOPI")                                         # select out only NOPI nest
 
-NOPI.surv$AgeDay1 <- NOPI.surv$AgeFound - NOPI.surv$FirstFound + 1
-NOPI.surv$Year <- as.factor(NOPI.surv$Year)
-NOPI.surv$cTreat <- as.factor(NOPI.surv$cTreat)
+test <- filter(NOPI.surv,
+               is.na(KBG) |
+                 is.na(SmoothB) |
+                 is.na(Litter) |
+                 is.na(Bare) |
+                 is.na(Forb) |
+                 is.na(Grasslike) |
+                 is.na(Woody) |
+                 is.na(LitterD) |
+                 is.na(Veg.Height) |
+                 is.na(VOR) |
+                 is.na(cTreat))
+
+MISSING <- is.na(NOPI.surv$AgeFound)
+
+sum(MISSING)
+
+NOPI.surv <- subset(NOPI.surv, 
+                    subset = !MISSING)
+
+NOPI.surv$Year <- factor(NOPI.surv$Year,
+                         levels = c("2021", "2022", "2023"))
+
+str(NOPI.surv)
 
 # Creating stage variable -------------------------------------------------
-
-create.stage.var=function(data,agevar.name,stagevar.name,time.intervals,cutoff)
-{
-  nocc=length(time.intervals)
-  age.mat=matrix(data[,agevar.name],nrow=dim(data)[1],ncol=nocc-1)
-  age.mat=t(t(age.mat)+cumsum(c(0,time.intervals[1:(nocc-2)])))
-  stage.mat=t(apply(age.mat,1,function(x) as.numeric(x<=cutoff)))
-  stage.mat=data.frame(stage.mat)
-  names(stage.mat)=paste(stagevar.name,1:(nocc-1),sep="")
-  return(stage.mat)
-}
 
 x <- create.stage.var(NOPI.surv, 
                       "AgeDay1", 
                       "Incub", 
                       rep(1,max(NOPI.surv$LastChecked)), 
-                      23)
+                      12)
 
 NOPI.surv <- bind_cols(NOPI.surv, x)
 
-rm(list = ls()[!ls() %in% "NOPI.surv"])
+rm(list = ls()[!ls() %in% c("NOPI.surv")])
 
 # Daily survival rate models ----------------------------------------------
 
 NOPI.pr <- process.data(NOPI.surv,
                         nocc=max(NOPI.surv$LastChecked),
-                        groups = c("cTreat", 
-                                   "Year"),
+                        groups = c("Year"),
                         model="Nest")
 
-# candidate models for the null vs. treatment model
+# Temporal candidate model set
 NOPI1.run <- function()
 {
-  # 1. a model for constant daily survival rate
-  S.Dot = list(formula =  ~1)
-  
-  # 2. DSR varies with current treatment
-  S.cTreat = list(formula = ~1 + cTreat)
-  
-  # 3. DSR varies with year
-  S.year = list(formula = ~1 + Year)
-  
-  # 4. DSR varies With year interacting with treatment (treatment identity varies by year)
-  S.treatyear = list(formula = ~1 + cTreat:Year)
-  
-  NOPI.model.list = create.model.list("Nest")
-  NOPI1.results = mark.wrapper(NOPI.model.list,
-                               data = NOPI.pr,
-                               adjust = FALSE,
-                               delete = TRUE)
-}
-
-#results of candidate model set 
-#all results
-NOPI1.results <- NOPI1.run()
-NOPI1.results
-
-NOPI1.results$S.Dot$results$beta
-NOPI1.results$S.year$results$beta
-
-#candidate model set for time trends
-NOPI2.run <- function()
-{
   # 1. DSR varies with time
+  S.null = list(formula = ~1)
+  
+  # 2. DSR varies with time
   S.time = list(formula = ~1 + Time)
   
   # 3. DSR varies with quadratic effect of date
   S.quad = list(formula = ~1 + Time + I(Time^2))
   
-  # 1. a model for constant daily survival rate
-  S.Dot = list(formula =  ~1)
+  # 4. DSR varies with year
+  S.year = list(formula = ~1 + Year)
+  
+  NOPI.model.list = create.model.list("Nest")
+  NOPI1.results = mark.wrapper(NOPI.model.list,
+                               data = NOPI.pr,
+                               adjust = FALSE,
+                               delete = FALSE)
+}
+
+# Results of candidate model set
+NOPI1.results <- NOPI1.run()
+NOPI1.results
+
+coef(NOPI1.results$S.null)
+
+
+# Biological candidate model set
+NOPI2.run <- function()
+{
+  # 1. DSR varies with time
+  S.null = list(formula = ~1)
+  
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + NestAge)
   
   NOPI.model.list = create.model.list("Nest")
   NOPI2.results = mark.wrapper(NOPI.model.list,
@@ -101,25 +108,29 @@ NOPI2.run <- function()
                                delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 NOPI2.results <- NOPI2.run()
 NOPI2.results
 
-NOPI2.results$S.Dot$results$beta
-NOPI2.results$S.time$results$beta
-NOPI2.results$S.quad$results$beta
+coef(NOPI2.results$S.null)
 
-#candidate model set for grazing
+# Grazing candidate model set
 NOPI3.run <- function()
 {
-  # 1. DSR varies with BHCO number
+  # 1. DSR varies with time
+  S.null = list(formula = ~1)
+  
+  # 2. DSR varies with the number of days a nest experienced grazing
   S.grazed = list(formula = ~1 + grazed)
   
+  # 3. DSR varies with the number of days a nest experienced grazing
   S.grazep = list(formula = ~1 + grazep)
   
-  # 2. DSR varies with quadratic effect of date
-  S.Dot = list(formula = ~1)
+  # 4. DSR varies with the previous  + NestAges grazing intensity
+  S.pTreat = list(formula = ~1 + pTreat)
+  
+  # 4. DSR varies with the previous  + NestAges grazing intensity
+  S.grazedpTreat = list(formula = ~1 + grazed + pTreat)
   
   NOPI.model.list = create.model.list("Nest")
   NOPI3.results = mark.wrapper(NOPI.model.list,
@@ -128,76 +139,71 @@ NOPI3.run <- function()
                                delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 NOPI3.results <- NOPI3.run()
 NOPI3.results
 
-#candidate model set for parasitism and nest stage
+coef(NOPI3.results$S.null)
+
+# Vegetation candidate model set
 NOPI4.run <- function()
 {
-  # 1. DSR varies with KBG
-  S.kbg = list(formula = ~1 + KBG)
+  # 1. DSR varies with time
+  S.null = list(formula = ~1)
   
-  # 2. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.smooth.brome = list(formula = ~1 + SmoothB)
+  # 2. DSR varies with KBG
+  S.kbg = list(formula =  ~1 + KBG)
   
-  # 3. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula = ~1 + Litter)
+  # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
+  S.brome = list(formula = ~1 + SmoothB)
   
-  # 4. DSR varies with Bare
-  S.bare = list(formula = ~1 + Bare)
+  # 4. DSR varies with Litter (correlated with KBG)
+  S.lit = list(formula =  ~1 + Litter)
   
-  # 5. DSR varies with Forb
-  S.forb = list(formula = ~1 + Forb)
+  # 5. DSR varies with Bare
+  S.bare = list(formula =  ~1 + Bare)
   
-  # 6. DSR varies with Grasslike (correlated with KBG)
-  S.grass = list(formula = ~1 + Grasslike)
+  # 6. DSR varies with Forb
+  S.forb = list(formula =  ~1 + Forb)
   
-  # 7. DSR varies with Woody
-  S.woody = list(formula = ~1 + Woody)
+  # 7. DSR varies with Grasslike  (correlated with KBG)
+  S.grass = list(formula =  ~1 + Grasslike)
   
-  # 8. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula = ~1 + LitterD)
+  # 8. DSR varies with Woody
+  S.woody = list(formula =  ~1 + Woody)
   
-  # 9. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula = ~1 + Veg.Height)
+  # 9. DSR varies with Litter Depth (correlated with VOR)
+  S.litdep = list(formula =  ~1 + LitterD)
   
-  # 10. DSR varies with VOR
-  S.vor = list(formula = ~1 + VOR)
+  # 10. DSR varies with Veg Height (correlated with VOR)
+  S.height = list(formula =  ~1 + Veg.Height)
   
-  # 11. DSR varies with litter and Veg Height
-  S.litheight = list(formula = ~1 + Litter + Veg.Height)
-  
-  # 12. DSR varies with woody and litter depth
-  S.woodylitdep = list(formula = ~1 + Woody + LitterD)
-  
-  # 13. DSR varies with KBG and litter depth
-  S.kbglitdep = list(formula = ~1 + KBG + LitterD)
-  
-  # 14. DSR varies with KBG and Veg.Height
-  S.kbgheight = list(formula = ~1 + KBG + Veg.Height)
-  
-  # 15. DSR varies with woody and Veg Height
-  S.woodyheight = list(formula = ~1 + Woody + Veg.Height)
-  
-  # 1. a model for constant daily survival rate
-  S.Dot = list(formula =  ~1)
+  # 11. DSR varies with VOR
+  S.vor = list(formula =  ~1 + VOR)
   
   NOPI.model.list = create.model.list("Nest")
   NOPI4.results = mark.wrapper(NOPI.model.list,
                                data = NOPI.pr,
                                adjust = FALSE,
-                               delete = FALSE)
+                               delete = TRUE)
 }
 
-#results of candidate model set 
-#all results
+# Results of candidate model set
 NOPI4.results <- NOPI4.run()
 NOPI4.results
 
-NOPI4.results$S.lit$results$beta
-NOPI4.results$S.litheight$results$beta
+coef(NOPI4.results$S.vor)
+coef(NOPI4.results$S.lit)
+
+confint(NOPI4.results$S.vor, level = 0.85)
+confint(NOPI4.results$S.lit, level = 0.85)
+
+NOPI.avg <- model.avg(NOPI4.results$S.vor,
+                      NOPI4.results$S.lit)
+
+summary(NOPI.avg)
+coef(NOPI.avg)
+confint(NOPI.avg, level = 0.85)
 
 # Plotting beta coefficients ----------------------------------------------
 
