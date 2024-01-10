@@ -101,6 +101,9 @@ CCSP2.run <- function()
   # 4. DSR varies with nest age
   S.age = list(formula = ~1 + Year + NestAge)
   
+  # 5. DSR varies with nest age
+  S.stage = list(formula = ~1 + Year + Incub)
+  
   CCSP.model.list = create.model.list("Nest")
   CCSP2.results = mark.wrapper(CCSP.model.list,
                                data = CCSP.pr,
@@ -192,49 +195,11 @@ CCSP4.results <- CCSP4.run()
 CCSP4.results
 
 
-CCSP4.results$S.height$results$beta
 CCSP4.results$S.bare$results$beta
 CCSP4.results$S.brome$results$beta
 CCSP4.results$S.vor$results$beta
+CCSP4.results$S.kbg$results$beta
 
-
-# Vegetation candidate model set
-CCSP5.run <- function()
-{
-  # 1. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.brome = list(formula = ~1 + Year + BHCONum + grazed + SmoothB)
-  
-  # 2. DSR varies with Bare
-  S.bare = list(formula =  ~1 + Year + BHCONum + grazed + Bare)
-  
-  # 3. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Year + BHCONum + grazed + Veg.Height)
-  
-  # 4. DSR varies with Smooth Brome and Bare
-  S.vor = list(formula =  ~1 + Year + BHCONum + grazed + SmoothB + Bare)
-  
-  # 5. DSR varies with Smooth Brome and Veg Height
-  S.vor = list(formula =  ~1 + Year + BHCONum + grazed + SmoothB + Veg.Height)
-  
-  # 6. DSR varies with Smooth Brome and VOR
-  S.vor = list(formula =  ~1 + Year + BHCONum + grazed + SmoothB + VOR)
-  
-  # 7. DSR varies with Bare and Veg Height
-  S.vor = list(formula =  ~1 + Year + BHCONum + grazed + Bare + Veg.Height)
-  
-  # 8. DSR varies with Bare and VOR
-  S.vor = list(formula =  ~1 + Year + BHCONum + grazed + Bare + VOR)
-  
-  CCSP.model.list = create.model.list("Nest")
-  CCSP5.results = mark.wrapper(CCSP.model.list,
-                               data = CCSP.pr,
-                               adjust = FALSE,
-                               delete = TRUE)
-}
-
-# Results of candidate model set
-CCSP5.results <- CCSP5.run()
-CCSP5.results
 
 CCSP.real <- as.data.frame(CCSP4.results$S.vor$results$real)
 CCSP.real <- rownames_to_column(CCSP.real, var = "Group")
