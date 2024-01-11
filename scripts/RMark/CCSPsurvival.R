@@ -155,6 +155,7 @@ CCSP3.results
 coef(CCSP2.results$S.bhcon)
 confint(CCSP2.results$S.bhcon, level = 0.85)
 
+
 # Vegetation candidate model set
 CCSP4.run <- function()
 {
@@ -202,54 +203,35 @@ CCSP4.run <- function()
 CCSP4.results <- CCSP4.run()
 CCSP4.results
 
-summary(CCSP.avg)
-confint(CCSP.avg, level = 0.85)
+coef(CCSP4.results$S.bhcon)
+confint(CCSP4.results$S.bhcon, level = 0.85)
 
 
-CCSP4.results$S.bare$results$beta
-CCSP4.results$S.brome$results$beta
-CCSP4.results$S.vor$results$beta
-CCSP4.results$S.kbg$results$beta
-
-CCSP4.results$S.height$results$real
-
-CCSP.avg <- model.avg(CCSP4.results,
-                      rank = AIC)
-
-(CCSP4.avg <- model.average(CCSP4.results,
-                            parameter = "S",
-                            vcv = TRUE))
-
-CCSP.dsr <- rename(CCSP4.avg,
-                   "Year" = "par.index")
-
-CCSP.dsr$Year <- case_match(CCSP.dsr$Year,
-                            1 ~ "2021",
-                            349 ~ "2022",
-                            697 ~ "2023")
-
-CCSP.dsr
+CCSP.real <- as.data.frame(CCSP4.results$S.bhcon$results$real) |> 
+  rownames_to_column(var = "Group") |> 
+  mutate(Year = case_when(
+    grepl("2021", Group) ~ "2021",
+    grepl("2022", Group) ~ "2022",
+    grepl("2023", Group) ~ "2023")) |> 
+  select(Year, estimate, se, lcl, ucl)
 
 
 # Plotting beta coefficients ----------------------------------------------
 
 
-CCSP4.beta <- CCSP4.results$S.vor$results$beta
-CCSP4.beta
+CCSP.beta <- coef(CCSP4.results$S.bhcon) |>
+  cbind(confint(CCSP4.results$S.bhcon, level = 0.85)) |> 
+  select(estimate, `7.5 %`, `92.5 %`) |> 
+  rownames_to_column(var = "Variable") |> 
+  rename(c("Coefficient" = "estimate",
+           "lcl" = "7.5 %",
+           "ucl" = "92.5 %"))
 
-CCSP.top <- rownames_to_column(CCSP4.beta, 
-                               "Variable")
+CCSP.beta$Variable <- gsub("S:", "", CCSP.beta$Variable)
 
-CCSP.top <- rename(CCSP.top, 
-                   "Coefficient"="estimate")
+str(CCSP.beta)
 
-CCSP.top[,1] <- gsub("S:", "", CCSP.top[,1])
-str(CCSP.top)
-
-CCSP.top$SEup <- CCSP.top$Coefficient + CCSP.top$se
-CCSP.top$SElow <- CCSP.top$Coefficient - CCSP.top$se
-
-(CCSP.plot <- ggplot(CCSP.top, 
+(CCSP.plot <- ggplot(CCSP.beta[4,], 
                      aes(x = Variable,
                          y = Coefficient)) +
     geom_hline(yintercept = 0,
@@ -263,102 +245,54 @@ CCSP.top$SElow <- CCSP.top$Coefficient - CCSP.top$se
                       ymax = ucl),
                   width = .5,
                   linewidth = 1) +
-    ggtitle("CCSP Beta Coefficient") +
-    theme(panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+    theme(plot.title = element_text(family = "my_font",
+                                    hjust = .5,
+                                    size = 20,
+                                    vjust = 1,
+                                    colour = "black"),
+          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
           panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-          panel.background = element_rect(fill="white",                     # make the interior background transparent
+          panel.background = element_rect(fill = NA,                     # make the interior background transparent
                                           colour = NA),                           # remove any other colors
-          plot.background = element_rect(fill="white",                      # make the outer background transparent
-                                         colour=NA),                              # remove any other colors
+          plot.background = element_rect(fill = NA,                      # make the outer background transparent
+                                         colour = NA),                              # remove any other colors
           axis.line = element_line(colour = "black"),                             # color the x and y axis
           axis.text = element_text(size=12, 
                                    colour = "black"),                    # color the axis text
           axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
           text=element_text(size=12,                                              # change the size of the axis titles
                             colour = "black")) +                                    # change the color of the axis titles
-    coord_flip())
+    labs(title = "Clay-colored Sparrow",
+         x = NULL,
+         y = expression("Beta " (beta))))
 
 # Creating predictive plots -----------------------------------------------
 
-CCSP.ddl <- make.design.data(CCSP.pr)
-CCSP.ddl <- as.data.frame(CCSP.ddl)
+CCSP.ddl <- make.design.data(CCSP.pr) |> 
+  as.data.frame()
 
-plotdata <- CCSP4.results$S.vor
+plotdata <- CCSP4.results$S.bhcon
 
-VORvalues = seq(from = quantile(CCSP.surv$VOR, 0.05),
-                to = quantile(CCSP.surv$VOR, 0.95),
-                length = 100)
+BHCOvalues = seq(from = min(CCSP.surv$BHCONum),
+                 to = max(CCSP.surv$BHCONum),
+                 length = 100)
 
-BHCONum.values = seq(from = quantile(CCSP.surv$BHCONum, 0.05),
-                     to = max(CCSP.surv$BHCONum, 0.95),
-                     length = 100)
+BHCO.pred <- covariate.predictions(plotdata,
+                                   data = data.frame(BHCONum = BHCOvalues),
+                                   indices = c(1, 88, 175))
 
-vor.pred <- covariate.predictions(plotdata,
-                                  data = data.frame(VOR = VORvalues,
-                                                    BHCONum = mean(BHCONum.values)),
-                                  indices = c(1, 88, 175, 262,
-                                              349, 436, 523, 610,
-                                              697, 784, 871, 958))
+`2021` <- which(BHCO.pred$estimates$par.index == 1)
+`2022` <- which(BHCO.pred$estimates$par.index == 88)
+`2023` <- which(BHCO.pred$estimates$par.index == 175)
 
-Rest.21 <- which(vor.pred$estimates$par.index == 1)
-Moderate.21 <- which(vor.pred$estimates$par.index == 88)
-Full.21 <- which(vor.pred$estimates$par.index == 175)
-Heavy.21 <- which(vor.pred$estimates$par.index == 262)
-Rest.22 <- which(vor.pred$estimates$par.index == 349)
-Moderate.22 <- which(vor.pred$estimates$par.index == 436)
-Full.22 <- which(vor.pred$estimates$par.index == 523)
-Heavy.22 <- which(vor.pred$estimates$par.index == 610)
-Rest.23 <- which(vor.pred$estimates$par.index == 697)
-Moderate.23 <- which(vor.pred$estimates$par.index == 784)
-Full.23 <- which(vor.pred$estimates$par.index == 871)
-Heavy.23 <- which(vor.pred$estimates$par.index == 958)
+BHCO.pred$estimates$Year <- NA
+BHCO.pred$estimates$Year[`2021`] <- "2021"
+BHCO.pred$estimates$Year[`2022`] <- "2022"
+BHCO.pred$estimates$Year[`2023`] <- "2023"
 
-vor.pred$estimates$Group <- NA
-vor.pred$estimates$Group[Rest.21] <- "Rest 2021"
-vor.pred$estimates$Group[Moderate.21] <- "Moderate 2021"
-vor.pred$estimates$Group[Full.21] <- "Full 2021"
-vor.pred$estimates$Group[Heavy.21] <- "Heavy 2022"
-vor.pred$estimates$Group[Rest.22] <- "Rest 2022"
-vor.pred$estimates$Group[Moderate.22] <- "Moderate 2022"
-vor.pred$estimates$Group[Full.22] <- "Full 2022"
-vor.pred$estimates$Group[Heavy.22] <- "Heavy 2022"
-vor.pred$estimates$Group[Rest.23] <- "Rest 2023"
-vor.pred$estimates$Group[Moderate.23] <- "Moderate 2023"
-vor.pred$estimates$Group[Full.23] <- "Full 2023"
-vor.pred$estimates$Group[Heavy.23] <- "Heavy 2023"
-
-vor.pred$estimates$Treat <- NA
-vor.pred$estimates$Treat[Rest.21] <- "Rest"
-vor.pred$estimates$Treat[Moderate.21] <- "Moderate"
-vor.pred$estimates$Treat[Full.21] <- "Full"
-vor.pred$estimates$Treat[Heavy.21] <- "Heavy"
-vor.pred$estimates$Treat[Rest.22] <- "Rest"
-vor.pred$estimates$Treat[Moderate.22] <- "Moderate"
-vor.pred$estimates$Treat[Full.22] <- "Full"
-vor.pred$estimates$Treat[Heavy.22] <- "Heavy"
-vor.pred$estimates$Treat[Rest.23] <- "Rest"
-vor.pred$estimates$Treat[Moderate.23] <- "Moderate"
-vor.pred$estimates$Treat[Full.23] <- "Full"
-vor.pred$estimates$Treat[Heavy.23] <- "Heavy"
-
-vor.pred$estimates$Year <- NA
-vor.pred$estimates$Year[Rest.21] <- "2021"
-vor.pred$estimates$Year[Moderate.21] <- "2021"
-vor.pred$estimates$Year[Full.21] <- "2021"
-vor.pred$estimates$Year[Heavy.21] <- "2021"
-vor.pred$estimates$Year[Rest.22] <- "2022"
-vor.pred$estimates$Year[Moderate.22] <- "2022"
-vor.pred$estimates$Year[Full.22] <- "2022"
-vor.pred$estimates$Year[Heavy.22] <- "2022"
-vor.pred$estimates$Year[Rest.23] <- "2023"
-vor.pred$estimates$Year[Moderate.23] <- "2023"
-vor.pred$estimates$Year[Full.23] <- "2023"
-vor.pred$estimates$Year[Heavy.23] <- "2023"
-head(vor.pred$estimates)
-
-(CCSPvor.plot <- ggplot(transform(vor.pred$estimates,
+(CCSPbhco.plot <- ggplot(transform(BHCO.pred$estimates,
                                   Year = factor(Year, levels=c("2021", "2022", "2023"))), 
-                        aes(x = VOR, 
+                        aes(x = covdata, 
                             y = estimate,
                             groups = Year,
                             fill = Year)) +
@@ -371,9 +305,6 @@ head(vor.pred$estimates)
     scale_fill_manual(values = c('black',
                                  '#717F5B',
                                  '#D4A634')) +
-    xlab("VOR (dm)") +
-    ylab("Daily Survival Rate") +
-    ylim(0.7, 1) + 
     theme(plot.title = element_text(family="my_font",                             # select the font for the title
                                     size=16,
                                     hjust=.5),
@@ -393,123 +324,13 @@ head(vor.pred$estimates)
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
     labs(title = "Clay-colored Sparrow",
-         color = "Year"))
+         color = "Year",
+         x = "Number of BHCO Eggs",
+         y = "Daily Survival Rate"))
 
-bhco.pred <- covariate.predictions(plotdata,
-                                   data=data.frame(VOR = mean(VORvalues),
-                                                   BHCONum = BHCONum.values),
-                                   indices = c(1, 88, 175, 262,
-                                               349, 436, 523, 610,
-                                               697, 784, 871, 958))
-
-Rest.21 <- which(bhco.pred$estimates$par.index == 1)
-Moderate.21 <- which(bhco.pred$estimates$par.index == 88)
-Full.21 <- which(bhco.pred$estimates$par.index == 175)
-Heavy.21 <- which(bhco.pred$estimates$par.index == 262)
-Rest.22 <- which(bhco.pred$estimates$par.index == 349)
-Moderate.22 <- which(bhco.pred$estimates$par.index == 436)
-Full.22 <- which(bhco.pred$estimates$par.index == 523)
-Heavy.22 <- which(bhco.pred$estimates$par.index == 610)
-Rest.23 <- which(bhco.pred$estimates$par.index == 697)
-Moderate.23 <- which(bhco.pred$estimates$par.index == 784)
-Full.23 <- which(bhco.pred$estimates$par.index == 871)
-Heavy.23 <- which(bhco.pred$estimates$par.index == 958)
-
-bhco.pred$estimates$Group <- NA
-bhco.pred$estimates$Group[Rest.21] <- "Rest 2021"
-bhco.pred$estimates$Group[Moderate.21] <- "Moderate 2021"
-bhco.pred$estimates$Group[Full.21] <- "Full 2021"
-bhco.pred$estimates$Group[Heavy.21] <- "Heavy 2022"
-bhco.pred$estimates$Group[Rest.22] <- "Rest 2022"
-bhco.pred$estimates$Group[Moderate.22] <- "Moderate 2022"
-bhco.pred$estimates$Group[Full.22] <- "Full 2022"
-bhco.pred$estimates$Group[Heavy.22] <- "Heavy 2022"
-bhco.pred$estimates$Group[Rest.23] <- "Rest 2023"
-bhco.pred$estimates$Group[Moderate.23] <- "Moderate 2023"
-bhco.pred$estimates$Group[Full.23] <- "Full 2023"
-bhco.pred$estimates$Group[Heavy.23] <- "Heavy 2023"
-
-bhco.pred$estimates$Treat <- NA
-bhco.pred$estimates$Treat[Rest.21] <- "Rest"
-bhco.pred$estimates$Treat[Moderate.21] <- "Moderate"
-bhco.pred$estimates$Treat[Full.21] <- "Full"
-bhco.pred$estimates$Treat[Heavy.21] <- "Heavy"
-bhco.pred$estimates$Treat[Rest.22] <- "Rest"
-bhco.pred$estimates$Treat[Moderate.22] <- "Moderate"
-bhco.pred$estimates$Treat[Full.22] <- "Full"
-bhco.pred$estimates$Treat[Heavy.22] <- "Heavy"
-bhco.pred$estimates$Treat[Rest.23] <- "Rest"
-bhco.pred$estimates$Treat[Moderate.23] <- "Moderate"
-bhco.pred$estimates$Treat[Full.23] <- "Full"
-bhco.pred$estimates$Treat[Heavy.23] <- "Heavy"
-
-bhco.pred$estimates$Year <- NA
-bhco.pred$estimates$Year[Rest.21] <- "2021"
-bhco.pred$estimates$Year[Moderate.21] <- "2021"
-bhco.pred$estimates$Year[Full.21] <- "2021"
-bhco.pred$estimates$Year[Heavy.21] <- "2021"
-bhco.pred$estimates$Year[Rest.22] <- "2022"
-bhco.pred$estimates$Year[Moderate.22] <- "2022"
-bhco.pred$estimates$Year[Full.22] <- "2022"
-bhco.pred$estimates$Year[Heavy.22] <- "2022"
-bhco.pred$estimates$Year[Rest.23] <- "2023"
-bhco.pred$estimates$Year[Moderate.23] <- "2023"
-bhco.pred$estimates$Year[Full.23] <- "2023"
-bhco.pred$estimates$Year[Heavy.23] <- "2023"
-head(bhco.pred$estimates)
-
-(CCSPbhco.plot <- ggplot(transform(bhco.pred$estimates,
-                                   Year = factor(Year, levels=c("2021", "2022", "2023"))), 
-                         aes(x = BHCONum, 
-                             y = estimate,
-                             groups = Year,
-                             fill = Year)) +
-    geom_line(linewidth = 1.5,
-              aes(color = Year)) +
-    scale_linetype_manual(values = c(1, 3, 2)) +
-    scale_colour_manual(values = c('#A2A4A2',
-                                   '#717F5B',
-                                   '#D4A634')) +
-    scale_fill_manual(values = c('#A2A4A2',
-                                 '#717F5B',
-                                 '#D4A634')) +
-    xlab("BHCO Eggs") +
-    ylab("Daily Survival Rate") +
-    ylim(0.7, 1) + 
-    theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                    size=16,
-                                    hjust=.5),
-          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-          panel.background = element_rect(fill=NA,                                # make the interior background transparent
-                                          colour = NA),                           # remove any other colors
-          plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                         colour=NA),                              # remove any other colors
-          axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-          axis.text.x = element_text(size=12, colour = "black"),
-          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text=element_text(size=12,                                              # change the size of the axis titles
-                            colour = "black"),                                    # change the color of the axis titles
-          legend.background = element_rect(fill=NA),
-          legend.position = c(.85, .1),
-          legend.box = "horizontal") +
-    labs(title = "Clay-colored Sparrow",
-         color = "Year"))
-
-CCSP.plot
-CCSPvor.plot
-CCSPbhco.plot
 
 ggsave(CCSP.plot,
        filename = "outputs/figs/CCSPbeta.png",
-       dpi = "print",
-       bg = "white",
-       height = 6,
-       width = 6)
-
-ggsave(CCSPvor.plot,
-       filename = "outputs/figs/CCSPvor.png",
        dpi = "print",
        bg = "white",
        height = 6,
@@ -521,6 +342,7 @@ ggsave(CCSPbhco.plot,
        bg = "white",
        height = 6,
        width = 6)
+
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,

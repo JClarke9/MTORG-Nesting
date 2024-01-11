@@ -82,7 +82,7 @@ BWTE1.run <- function()
   BWTE1.results = mark.wrapper(BWTE.model.list,
                                data = BWTE.pr,
                                adjust = FALSE,
-                               delete = FALSE)
+                               delete = TRUE)
 }
 
 # Results of candidate model set
@@ -114,7 +114,6 @@ BWTE2.results <- BWTE2.run()
 BWTE2.results
 
 coef(BWTE2.results$S.age)
-
 confint(BWTE2.results$S.age, level = 0.85)
 
 
@@ -132,9 +131,6 @@ BWTE3.run <- function()
   
   # 4. DSR varies with the previous Year + NestAges grazing intensity
   S.pTreat = list(formula = ~1 + Year + NestAge + pTreat)
-  
-  # 4. DSR varies with the previous Year + NestAges grazing intensity
-  S.grazedpTreat = list(formula = ~1 + Year + NestAge + grazed + pTreat)
   
   BWTE.model.list = create.model.list("Nest")
   BWTE3.results = mark.wrapper(BWTE.model.list,
@@ -213,32 +209,56 @@ summary(BWTE.avg)
 coef(BWTE.avg)
 confint(BWTE.avg, level = 0.85)
 
-BWTE.real <- as.data.frame(BWTE4.results$S.bare$results$real)
-BWTE.real <- rownames_to_column(BWTE.real, var = "Group")
-BWTE.real[,1] <- gsub("S g", "", BWTE.real[,1])
+# Vegetation candidate model set
+BWTE.run <- function()
+{
+    # 9. DSR varies with Litter Depth (correlated with VOR)
+  S.litdep = list(formula =  ~1 + Year + NestAge + grazep + LitterD)
+  
+  # 10. DSR varies with Veg Height (correlated with VOR)
+  S.height = list(formula =  ~1 + Year + NestAge + grazep + Veg.Height)
+  
+  # 11. DSR varies with VOR
+  S.vor = list(formula =  ~1 + Year + NestAge + grazep + VOR)
+  
+  BWTE.model.list = create.model.list("Nest")
+  BWTE.results = mark.wrapper(BWTE.model.list,
+                              data = BWTE.pr,
+                              adjust = FALSE,
+                              delete = TRUE)
+}
 
-BWTE.real <- BWTE.real |> 
-  mutate(Treat = case_when(
-    startsWith(Group, "0") ~ "Rest",
-    startsWith(Group, "39") ~ "Moderate",
-    startsWith(Group, "49") ~ "Full",
-    startsWith(Group, "68") ~ "Heavy"
-  ))
+BWTE.results <- BWTE.run()
+BWTE.results
 
-BWTE.avgDSR <- BWTE.real |> 
-  group_by(Treat) |> 
-  summarize(estimate = mean(estimate))
+BWTE.dsr <- model.average(BWTE.results)
+
+BWTE.dsr <- as.data.frame(BWTE.avg) |> 
+  rename("Year" = "par.index")
+
+BWTE.dsr$Year <- case_match(BWTE.dsr$Year,
+                            1 ~ "2021",
+                            67 ~ "2022",
+                            133 ~ "2023")
+
+BWTE.dsr <- fill(BWTE.dsr, Year, .direction = "down")
+
+BWTE.dsr <- BWTE.dsr |> 
+  group_by(Year) |> 
+  summarise(estimate = mean(estimate))
+
 
 # Plotting beta coefficients ----------------------------------------------
 
-BWTE.mod <- mark(BWTE.surv, 
-                 nocc=max(BWTE.surv$LastChecked), 
-                 model = "Nest", 
-                 groups = "cTreat", 
-                 model.parameters = list(S = list(formula =  ~1 + cTreat + Time + LitterD)))
 
-BWTE.mod$results$beta
-
+BWTE.beta <- as.data.frame(coef(BWTE.avg)) |> 
+  cbind(confint(BWTE.avg, level = 0.85))
+  select(estimate, `7.5 %`, `92.5 %`) |> 
+  rownames_to_column(var = "Variable") |> 
+  rename(c("Coefficient" = "estimate",
+           "lcl" = "7.5 %",
+           "ucl" = "92.5 %"))
+  
 BWTE4.beta <- BWTE4.results$S.litdep$results$beta
 BWTE4.beta
 

@@ -82,7 +82,7 @@ BRBL1.run <- function()
   BRBL1.results = mark.wrapper(BRBL.model.list,
                                data = BRBL.pr,
                                adjust = FALSE,
-                               delete = FALSE)
+                               delete = TRUE)
 }
 
 # Results of candidate model set
@@ -122,13 +122,8 @@ BRBL2.run <- function()
 BRBL2.results <- BRBL2.run()
 BRBL2.results
 
-coef(BRBL2.results$S.age)
 coef(BRBL2.results$S.year)
-coef(BRBL2.results$S.stage)
-
-confint(BRBL2.results$S.age, level = 0.85)
 confint(BRBL2.results$S.year, level = 0.85)
-confint(BRBL2.results$S.stage, level = 0.85)
 
 
 # Grazing candidate model set
@@ -146,9 +141,6 @@ BRBL3.run <- function()
   # 4. DSR varies with the previous years grazing intensity
   S.pTreat = list(formula = ~1 + Year + pTreat)
   
-  # 4. DSR varies with the previous years grazing intensity
-  S.grazedpTreat = list(formula = ~1 + Year + grazed + pTreat)
-  
   BRBL.model.list = create.model.list("Nest")
   BRBL3.results = mark.wrapper(BRBL.model.list,
                                data = BRBL.pr,
@@ -159,6 +151,10 @@ BRBL3.run <- function()
 # Results of candidate model set
 BRBL3.results <- BRBL3.run()
 BRBL3.results
+
+coef(BRBL3.results$S.year)
+confint(BRBL3.results$S.year, level = 0.85)
+
 
 # Vegetation candidate model set
 BRBL4.run <- function()
@@ -210,218 +206,128 @@ BRBL4.results
 coef(BRBL4.results$S.lit)
 confint(BRBL4.results$S.lit, level = 0.85)
 
-BRBL.real <- as.data.frame(BRBL4.results$S.vor$results$real)
-BRBL.real <- rownames_to_column(BRBL.real, var = "Group")
-BRBL.real[,1] <- gsub("S g0", "", BRBL.real[,1])
 
-BRBL.real <- BRBL.real |> 
+BRBL.real <- as.data.frame(BRBL4.results$S.lit$results$real) |>
+  rownames_to_column(var = "Group") |> 
   mutate(Year = case_when(
-    startsWith(Group, "2021") ~ "2021",
-    startsWith(Group, "2022") ~ "2022"
-  ))
+    grepl("2021", Group) ~ "2021",
+    grepl("2022", Group) ~ "2022",
+    grepl("2023", Group) ~ "2023")) |> 
+  select(Year, estimate, se, lcl, ucl)
 
-BRBL.avgDSR <- BRBL.real |> 
-  group_by(Year) |> 
-  summarize(estimate = mean(estimate))
 
 # Plotting Beta Coefficients ----------------------------------------------
 
-BRBL4.results$S.vor$results$real
 
-BRBL.mod <- mark(BRBL.surv, nocc=max(BRBL.surv$LastChecked), 
-                 model = "Nest", 
-                 groups = "Year", 
-                 model.parameters = list(S = list(formula =  ~1 + Year + Time + VOR)))
+BRBL.beta <- coef(BRBL4.results$S.lit) |>
+  cbind(confint(BRBL4.results$S.lit, level = 0.85)) |> 
+  select(estimate, `7.5 %`, `92.5 %`) |> 
+  rownames_to_column(var = "Variable") |> 
+  rename(c("Coefficient" = "estimate",
+           "lcl" = "7.5 %",
+           "ucl" = "92.5 %"))
 
-BRBL4.beta <- BRBL4.results$S.vor$results$beta
-BRBL4.beta
+BRBL.beta$Variable <- gsub("S:", "", BRBL.beta$Variable)
 
-BRBL.top <- rownames_to_column(BRBL4.beta, 
-                               "Variable")
-BRBL.top <- rename(BRBL.top, 
-                   "Coefficient"="estimate")
-str(BRBL.top)
+str(BRBL.beta)
 
-BRBL.top[,1] <- gsub("S:", "", BRBL.top[,1])
-
-BRBL.top$SEup <- BRBL.top$Coefficient + BRBL.top$se
-BRBL.top$SElow <- BRBL.top$Coefficient - BRBL.top$se
-
-BRBL.plot <- ggplot(BRBL.top, aes(x = Variable,
-                                  y = Coefficient)) +
-  geom_hline(yintercept = 0,
-             colour = gray(1/2), 
-             lty = 2) +
-  geom_point(aes(x = Variable,
-                 y = Coefficient),
-             size = 5) +
-  geom_errorbar(aes(x = Variable,
-                    ymin = lcl,
-                    ymax = ucl),
-                width = .5,
-                size = 1) +
-  ggtitle("BRBL Beta Coefficient") +
-  theme(panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-        panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-        panel.background = element_rect(fill="white",                     # make the interior background transparent
-                                        colour = NA),                           # remove any other colors
-        plot.background = element_rect(fill="white",                      # make the outer background transparent
-                                       colour=NA),                              # remove any other colors
-        axis.line = element_line(colour = "black"),                             # color the x and y axis
-        axis.text = element_text(size=12, colour = "black"),                    # color the axis text
-        axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-        text=element_text(size=12,                                              # change the size of the axis titles
-                          colour = "black")) +                                    # change the color of the axis titles
-  coord_flip()
+(BRBL.plot <- ggplot(BRBL.beta[4,], 
+                     aes(x = Variable,
+                         y = Coefficient)) +
+    geom_hline(yintercept = 0,
+               colour = gray(1/2), 
+               lty = 2) +
+    geom_point(aes(x = Variable,
+                   y = Coefficient),
+               size = 4) +
+    geom_errorbar(aes(x = Variable,
+                      ymin = lcl,
+                      ymax = ucl),
+                  width = .5,
+                  linewidth = 1) +
+    theme(plot.title = element_text(family = "my_font",
+                                    hjust = .5,
+                                    size = 20,
+                                    vjust = 1,
+                                    colour = "black"),
+          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+          panel.background = element_rect(fill = NA,                     # make the interior background transparent
+                                          colour = NA),                           # remove any other colors
+          plot.background = element_rect(fill = NA,                      # make the outer background transparent
+                                         colour = NA),                              # remove any other colors
+          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.text = element_text(size=12, 
+                                   colour = "black"),                    # color the axis text
+          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          text=element_text(size=12,                                              # change the size of the axis titles
+                            colour = "black")) +                                    # change the color of the axis titles
+    labs(title = "BRBL",
+         x = "Percent Cover",
+         y = expression("Beta " (beta))))
 
 # Creating Predictive Plots -----------------------------------------------
 
-plotdata <- BRBL4.results$S.vor
+plotdata <- BRBL4.results$S.lit
 
 BRBL.ddl <- make.design.data(BRBL.pr)
 BRBL.ddl <- as.data.frame(BRBL.ddl)
 
-minvor <- min(BRBL.surv$VOR)
-maxvor <- max(BRBL.surv$VOR)
-VOR.values = seq(from = minvor, 
-                 to = maxvor, 
+lit.values = seq(from = min(BRBL.surv$Litter), 
+                 to = max(BRBL.surv$Litter), 
                  length = 100)
 
-vor.pred <- covariate.predictions(plotdata,
-                                  data=data.frame(VOR=VOR.values),
-                                  indices = c(6, 41, 71,309, 344, 374))
+lit.pred <- covariate.predictions(plotdata,
+                                  data = data.frame(Litter = lit.values),
+                                  indices = c(1, 88, 175))
 
-Day5.21 <- which(vor.pred$estimates$par.index == 6)
-Day40.21 <- which(vor.pred$estimates$par.index == 41)
-Day70.21 <- which(vor.pred$estimates$par.index == 71)
-Day5.22 <- which(vor.pred$estimates$par.index == 309)
-Day40.22 <- which(vor.pred$estimates$par.index == 344)
-Day70.22 <- which(vor.pred$estimates$par.index == 374)
+`2021` <- which(lit.pred$estimates$par.index == 1)
+`2022` <- which(lit.pred$estimates$par.index == 88)
+`2023` <- which(lit.pred$estimates$par.index == 175)
 
-vor.pred$estimates$Group <- NA
-vor.pred$estimates$Group[Day5.21] <- "Early 2021"
-vor.pred$estimates$Group[Day40.21] <- "Mid 2021"
-vor.pred$estimates$Group[Day70.21] <- "Late 2021"
-vor.pred$estimates$Group[Day5.22] <- "Early 2022"
-vor.pred$estimates$Group[Day40.22] <- "Mid 2022"
-vor.pred$estimates$Group[Day70.22] <- "Late 2022"
-head(vor.pred$estimates)
+lit.pred$estimates$Year <- NA
+lit.pred$estimates$Year[`2021`] <- "2021"
+lit.pred$estimates$Year[`2022`] <- "2022"
+lit.pred$estimates$Year[`2023`] <- "2023"
 
-vor.pred$estimates$Date <- NA
-vor.pred$estimates$Date[Day5.21] <- "Early"
-vor.pred$estimates$Date[Day40.21] <- "Mid"
-vor.pred$estimates$Date[Day70.21] <- "Late"
-vor.pred$estimates$Date[Day5.22] <- "Early"
-vor.pred$estimates$Date[Day40.22] <- "Mid"
-vor.pred$estimates$Date[Day70.22] <- "Late"
-head(vor.pred$estimates)
+(BRBLlit.plot <- ggplot(transform(lit.pred$estimates,
+                                  Year = factor(Year, levels=c("2021", "2022", "2023"))), 
+                        aes(x = covdata, 
+                            y = estimate,
+                            groups = Year,
+                            fill = Year)) +
+    geom_line(linewidth = 1.5,
+              aes(color = Year)) +
+    scale_linetype_manual(values = c(1, 3, 2)) +
+    scale_colour_manual(values = c('#A2A4A2',
+                                   '#717F5B',
+                                   '#D4A634')) +
+    scale_fill_manual(values = c('black',
+                                 '#717F5B',
+                                 '#D4A634')) +
+    theme(plot.title = element_text(family="my_font",                             # select the font for the title
+                                    size=16,
+                                    hjust=.5),
+          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+          panel.background = element_rect(fill=NA,                                # make the interior background transparent
+                                          colour = NA),                           # remove any other colors
+          plot.background = element_rect(fill=NA,                                 # make the outer background transparent
+                                         colour=NA),                              # remove any other colors
+          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size=12, colour = "black"),
+          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          text=element_text(size=12,                                              # change the size of the axis titles
+                            colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill=NA),
+          legend.position = c(.85, .1),
+          legend.box = "horizontal") +
+    labs(title = "Brewer's Blackbird",
+         color = "Year",
+         x = "Percent Litter Cover",
+         y = "Daily Survival Rate"))
 
-vor.pred$estimates$Year <- NA
-vor.pred$estimates$Year[Day5.21] <- "2021"
-vor.pred$estimates$Year[Day40.21] <- "2021"
-vor.pred$estimates$Year[Day70.21] <- "2021"
-vor.pred$estimates$Year[Day5.22] <- "2022"
-vor.pred$estimates$Year[Day40.22] <- "2022"
-vor.pred$estimates$Year[Day70.22] <- "2022"
-head(vor.pred$estimates)
-
-BRBLvor.plot <- ggplot(transform(vor.pred$estimates,
-                                 Year = factor(Year, levels=c("2021", "2022")),
-                                 Date = factor(Date, levels=c("Early", "Mid", "Late"))),
-                       aes(x = covdata, 
-                           y = estimate,
-                           groups = Group,
-                           fill = Year)) +
-  geom_line(size = 1.5,
-            aes(linetype = Date,
-                colour = Year)) +
-  geom_ribbon(aes(ymin = lcl, 
-                  ymax = ucl), 
-              alpha = 0.05)  +
-  facet_grid(Date~.) +
-  scale_colour_manual(values = c('#56B4E9',
-                                          '#D55E00')) +
-                                            scale_fill_manual(values = c('#56B4E9',
-                                                                                  '#D55E00')) +
-                                                                                    xlab("VOR") +
-  ylab("Estimated DSR") +
-  xlim(1 , 16) +
-  ylim(0, 1) +
-  theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                  size=16,
-                                  hjust=.5),
-        panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-        panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-        panel.background = element_rect(fill=NA,                                # make the interior background transparent
-                                        colour = NA),                           # remove any other colors
-        plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                       colour=NA),                              # remove any other colors
-        axis.line = element_line(colour = "black"),                             # color the x and y axis
-        axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-        axis.text.x = element_text(size=12, colour = "black"),
-        axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-        text=element_text(size=12,                                              # change the size of the axis titles
-                          colour = "black"),                                    # change the color of the axis titles
-        legend.background = element_rect(fill=NA),
-        legend.position = c(.85, .1),
-        legend.box = "horizontal") +
-  labs(title = "Brewer's Blackbird")
-
-BRBLvor.plot
-
-julian.pred <- covariate.predictions(plotdata,
-                                     data=data.frame(VOR=mean(VOR.values)),
-                                     indices=c(1:76, 305:380))
-
-Year21 <- which(julian.pred$estimates$par.index == c(1:76))
-Year22 <- which(julian.pred$estimates$par.index == c(305:380))
-
-julian.pred$estimates$Year[Year21] <- "2021"
-julian.pred$estimates$Year[Year22] <- "2022"
-
-julian.pred$estimates$Julian[Year21] <- c(1:76)
-julian.pred$estimates$Julian[Year22] <- c(1:76)
-
-BRBLjulian.plot <- ggplot(transform(julian.pred$estimates,
-                                    Year = factor(Year, levels=c("2021", "2022"))), 
-                          aes(x = Julian,
-                              y = estimate,
-                              fill = Year)) +
-  geom_line(size = 1.5,
-            aes(colour=Year)) +
-  geom_ribbon(aes(ymin = lcl, 
-                  ymax = ucl), 
-              alpha = 0.2) +
-  scale_colour_manual(values = c('#56B4E9',
-                                          '#D55E00')) +
-                                            scale_fill_manual(values = c('#56B4E9',
-                                                                                  '#D55E00')) +
-                                                                                    xlab("Julian Day") +
-  ylab("Estimated DSR") +
-  ylim(0, 1.0) +
-  theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                  size=16,
-                                  hjust=.5),
-        panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-        panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-        panel.background = element_rect(fill=NA,                                # make the interior background transparent
-                                        colour = NA),                           # remove any other colors
-        plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                       colour=NA),                              # remove any other colors
-        axis.line = element_line(colour = "black"),                             # color the x and y axis
-        axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-        axis.text.x = element_text(size=12, colour = "black"),
-        axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-        text=element_text(size=12,                                              # change the size of the axis titles
-                          colour = "black"),                                    # change the color of the axis titles
-        legend.background = element_rect(fill=NA),
-        legend.position = c(.1, .1),
-        legend.box = "horizontal") +
-  labs(title = "Brewer's Blackbird")
-
-BRBL.plot
-BRBLvor.plot
-BRBLjulian.plot
 
 ggsave(BRBL.plot,
        filename = "outputs/figs/BRBLbeta.png",
@@ -430,19 +336,13 @@ ggsave(BRBL.plot,
        height = 6,
        width = 6)
 
-ggsave(BRBLvor.plot,
-       filename = "outputs/figs/BRBLvor.png",
+ggsave(BRBLlit.plot,
+       filename = "outputs/figs/BRBLlit.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
-ggsave(BRBLjulian.plot,
-       filename = "outputs/figs/BRBLjulian.png",
-       dpi = "print",
-       bg = "white",
-       height = 6,
-       width = 6)
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,
