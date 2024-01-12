@@ -1,5 +1,6 @@
 # Loading libraries -------------------------------------------------------
 
+
 library(ggplot2)
 library(vegan)
 library(tidyverse)
@@ -9,12 +10,16 @@ source("scripts/Functions/RMark_Stage_Code.R")
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
+
 # Data import -------------------------------------------------------------
+
 
 nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
 
+
 # Subsetting data ---------------------------------------------------------
+
 
 MODO.surv <- filter(nest, 
                     Spec=="MODO")                                         # select out only MODO nest
@@ -44,7 +49,9 @@ MODO.surv$Year <- factor(MODO.surv$Year,
 
 str(MODO.surv)
 
+
 # Creating stage variable -------------------------------------------------
+
 
 x <- create.stage.var(MODO.surv, 
                       "AgeDay1", 
@@ -56,7 +63,9 @@ MODO.surv <- bind_cols(MODO.surv, x)
 
 rm(list = ls()[!ls() %in% c("MODO.surv")])
 
+
 # Daily survival rate models ----------------------------------------------
+
 
 MODO.pr <- process.data(MODO.surv,
                         nocc=max(MODO.surv$LastChecked),
@@ -82,7 +91,7 @@ MODO1.run <- function()
   MODO1.results = mark.wrapper(MODO.model.list,
                                data = MODO.pr,
                                adjust = FALSE,
-                               delete = FALSE)
+                               delete = TRUE)
 }
 
 # Results of candidate model set
@@ -135,9 +144,6 @@ MODO3.run <- function()
   # 4. DSR varies with the previous years grazing intensity
   S.pTreat = list(formula = ~1 + Time + I(Time^2) + Incub + pTreat)
   
-  # 4. DSR varies with the previous years grazing intensity
-  S.grazedpTreat = list(formula = ~1 + Time + I(Time^2) + Incub + grazed + pTreat)
-  
   MODO.model.list = create.model.list("Nest")
   MODO3.results = mark.wrapper(MODO.model.list,
                                data = MODO.pr,
@@ -148,6 +154,10 @@ MODO3.run <- function()
 # Results of candidate model set
 MODO3.results <- MODO3.run()
 MODO3.results
+
+coef(MODO3.results$S.stage)
+confint(MODO3.results$S.stage, level = 0.85)
+
 
 # Vegetation candidate model set
 MODO4.run <- function()
@@ -199,228 +209,203 @@ MODO4.results
 coef(MODO4.results$S.kbg)
 confint(MODO4.results$S.kbg, level = 0.85)
 
-MODO.real <- as.data.frame(MODO4.results$S.kbglitdep$results$real)
 
-mean(MODO.real$estimate)
+MODO.real <- as.data.frame(MODO4.results$S.kbg$results$real) |> 
+  summarise(estimate = mean(estimate),
+            se = mean(se),
+            lcl = mean(lcl),
+            ucl = mean(ucl))
+
 
 # Plotting beta coefficients ----------------------------------------------
 
-MODO.mod <- mark(MODO.surv, 
-                 nocc=max(MODO.surv$LastChecked), 
-                 model = "Nest", 
-                 model.parameters = list(S = list(formula = ~1 + Time + I(Time^2) + KBG + LitterD)))
 
-MODO4.beta <- MODO4.results$S.kbglitdep$results$beta
-MODO4.beta
+MODO.beta <- coef(MODO4.results$S.kbg) |>
+  cbind(confint(MODO4.results$S.kbg, level = 0.85)) |> 
+  select(estimate, `7.5 %`, `92.5 %`) |> 
+  rownames_to_column(var = "Variable") |> 
+  rename(c("Coefficient" = "estimate",
+           "lcl" = "7.5 %",
+           "ucl" = "92.5 %"))
 
-MODO.top <- rownames_to_column(MODO4.beta, 
-                               "Variable")
-MODO.top <- rename(MODO.top, 
-                   "Coefficient"="estimate")
-str(MODO.top)
+MODO.beta$Variable <- gsub("S:", "", MODO.beta$Variable)
 
-MODO.top[,1] <- gsub("S:", "", MODO.top[,1])
+str(MODO.beta)
 
+(MODO.plot <- ggplot(MODO.beta[4:5,], 
+                     aes(x = Variable,
+                         y = Coefficient)) +
+    geom_hline(yintercept = 0,
+               colour = gray(1/2), 
+               lty = 2) +
+    geom_point(aes(x = Variable,
+                   y = Coefficient),
+               size = 4) +
+    geom_errorbar(aes(x = Variable,
+                      ymin = lcl,
+                      ymax = ucl),
+                  width = .5,
+                  linewidth = 1) +
+    theme(plot.title = element_text(family = "my_font",
+                                    hjust = .5,
+                                    size = 20,
+                                    vjust = 1,
+                                    colour = "black"),
+          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+          panel.background = element_rect(fill = NA,                     # make the interior background transparent
+                                          colour = NA),                           # remove any other colors
+          plot.background = element_rect(fill = NA,                      # make the outer background transparent
+                                         colour = NA),                              # remove any other colors
+          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.text = element_text(size=12, 
+                                   colour = "black"),                    # color the axis text
+          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          text=element_text(size=12,                                              # change the size of the axis titles
+                            colour = "black")) +                                    # change the color of the axis titles
+    labs(title = "Clay-colored Sparrow",
+         x = NULL,
+         y = expression("Beta " (beta))))
 
-MODO.top$SEup <- MODO.top$Coefficient + MODO.top$se
-MODO.top$SElow <- MODO.top$Coefficient - MODO.top$se
-
-MODO.plot <- ggplot(MODO.top, aes(x = Variable,
-                                  y = Coefficient)) +
-  geom_hline(yintercept = 0,
-             colour = gray(1/2), lty = 2) +
-  geom_point(aes(x = Variable,
-                 y = Coefficient),
-             size = 5) +
-  geom_errorbar(aes(x = Variable,
-                    ymin = lcl,
-                    ymax = ucl),
-                width = .5,
-                size = 1) +
-  ggtitle("MODO Beta Coefficient") +
-  theme(panel.grid.major = element_blank(),                   # remove the vertical grid lines
-        panel.grid.minor = element_blank(),                   # remove the horizontal grid lines
-        panel.background = element_rect(fill="white",           # make the interior background transparent
-                                        colour = NA),              # remove any other colors
-        plot.background = element_rect(fill="white",           # make the outer background transparent
-                                       colour=NA),               # remove any other colors
-        axis.line = element_line(colour = "black"),               # color the x and y axis
-        axis.text = element_text(size=12, colour = "black"),          # color the axis text
-        axis.ticks = element_line(colour = "black"),              # change the colors of the axis tick marks
-        text=element_text(size=12,                       # change the size of the axis titles
-                          colour = "black")) +                  # change the color of the axis titles
-  coord_flip()
 
 # Creating predictive plots -----------------------------------------------
 
-MODO.ddl <- make.design.data(MODO.pr)
-MODO.ddl <- as.data.frame(MODO.ddl)
 
-plotdata <- MODO4.results$S.kbglitdep
+MODO.ddl <- make.design.data(MODO.pr) |> 
+  as.data.frame()
 
-minkbg <- min(MODO.surv$KBG)
-maxkbg <- max(MODO.surv$KBG)
-kbg.values = seq(from = minkbg, 
-                 to = maxkbg, 
+plotdata <- MODO4.results$S.kbg
+
+kbg.values <- seq(from = min(MODO.surv$KBG), 
+                 to = max(MODO.surv$KBG), 
                  length = 100)
 
-minlitdep <- min(MODO.surv$LitterD)
-maxlitdep <- max(MODO.surv$LitterD)
-litdep.values = seq(from = minlitdep, 
-                    to = maxlitdep, 
-                    length = 100)
+incub.values <- c(0,1)
+
+time.pred <- covariate.predictions(plotdata,
+                                   data = data.frame(KBG = mean(kbg.values),
+                                                     Incub = 0),
+                                   indices = c(1:72))
+
+(MODOtime.plot <- ggplot(time.pred$estimates, 
+                        aes(x = par.index, 
+                            y = estimate)) +
+    geom_line(linewidth = 1.5,
+              aes(color = "model.index")) +
+    scale_colour_manual(values = c('#D4A634')) +
+    scale_fill_manual(values = c('#D4A634')) +
+    theme(plot.title = element_text(family="my_font",                             # select the font for the title
+                                    size=16,
+                                    hjust=.5),
+          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+          panel.background = element_rect(fill=NA,                                # make the interior background transparent
+                                          colour = NA),                           # remove any other colors
+          plot.background = element_rect(fill=NA,                                 # make the outer background transparent
+                                         colour=NA),                              # remove any other colors
+          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size=12, colour = "black"),
+          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          text=element_text(size=12,                                              # change the size of the axis titles
+                            colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill=NA),
+          legend.position = "none") +
+    labs(title = "Mourning Dove",
+         color = "Year",
+         x = "Julian Day",
+         y = "Daily Survival Rate"))
+
+
+stage.pred <- covariate.predictions(plotdata,
+                                    data = data.frame(KBG = mean(kbg.values),
+                                                      Incub = incub.values,
+                                                      Time = 30),
+                                    indices = c(1:72))
+
+(MODOstage.plot <- ggplot(stage.pred$estimates, 
+                         aes(x = par.index, 
+                             y = estimate,
+                             groups = factor(Incub,
+                                             levels = c(0,1)))) +
+    geom_line(linewidth = 1.5,
+              aes(color = factor(Incub,
+                                 levels = c(0,1)))) +
+    scale_colour_manual(values = c('#717F5B',
+                                   '#D4A634')) +
+    scale_fill_manual(values = c('#717F5B',
+                                 '#D4A634')) +
+    theme(plot.title = element_text(family = "my_font",                             # select the font for the title
+                                    size = 16,
+                                    hjust = .5),
+          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+          panel.background = element_rect(fill = NA,                                # make the interior background transparent
+                                          colour = NA),                           # remove any other colors
+          plot.background = element_rect(fill = NA,                                 # make the outer background transparent
+                                         colour = NA),                              # remove any other colors
+          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.text.y = element_text(size = 12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size = 12, colour = "black"),
+          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          text=element_text(size = 12,                                              # change the size of the axis titles
+                            colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill = NA),
+          legend.position = "none") +
+    labs(title = "Mourning Dove",
+         color = "Year",
+         x = "Stage",
+         y = "Daily Survival Rate"))
+
 
 kbg.pred <- covariate.predictions(plotdata,
-                                  data=data.frame(KBG=kbg.values,
-                                                  LitterD=mean(litdep.values)),
-                                  indices = c(6, 21, 41, 61))
+                                  data = data.frame(KBG = kbg.values,
+                                                    Incub = 0),
+                                  indices = c(1, 18, 36, 54, 72))
 
-Day5 <- which(kbg.pred$estimates$par.index == 6)
-Day20 <- which(kbg.pred$estimates$par.index == 21)
-Day40 <- which(kbg.pred$estimates$par.index == 41)
-Day60 <- which(kbg.pred$estimates$par.index == 61)
+Day1 <- which(kbg.pred$estimates$par.index == 1)
+Day18 <- which(kbg.pred$estimates$par.index == 18)
+Day36 <- which(kbg.pred$estimates$par.index == 36)
+Day54 <- which(kbg.pred$estimates$par.index == 54)
+Day72 <- which(kbg.pred$estimates$par.index == 72)
 
-kbg.pred$estimates$Date <- NA
-kbg.pred$estimates$Date[Day5] <- "Early"
-kbg.pred$estimates$Date[Day20] <- "Mid1"
-kbg.pred$estimates$Date[Day40] <- "Mid2"
-kbg.pred$estimates$Date[Day60] <- "Late"
+kbg.pred$estimates$Day <- NA
+kbg.pred$estimates$Day[Day1] <- "Day 1"
+kbg.pred$estimates$Day[Day18] <- "Day 18"
+kbg.pred$estimates$Day[Day36] <- "Day 36"
+kbg.pred$estimates$Day[Day54] <- "Day 54"
+kbg.pred$estimates$Day[Day72] <- "Day 72"
 
-MODOkbg.plot <- ggplot(transform(kbg.pred$estimates,
-                                 Date = factor(Date, levels=c("Early", "Mid1", "Mid2" , "Late"))), 
-                       aes(x = KBG, 
-                           y = estimate,
-                           groups = Date)) +
-  geom_line(size = 1.5,
-            aes(linetype = Date)) +
-  geom_ribbon(aes(ymin = lcl, 
-                  ymax = ucl), 
-              alpha = 0.1) +
-  scale_colour_manual(values = c('black')) +
-  scale_fill_manual(values = c('black')) +
-  xlab("KBG Cover") +
-  ylab("Estimated DSR") +
-  ylim(0, 1) + 
-  theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                  size=16,
-                                  hjust=.5),
-        panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-        panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-        panel.background = element_rect(fill=NA,                     # make the interior background transparent
-                                        colour = NA),                           # remove any other colors
-        plot.background = element_rect(fill=NA,                      # make the outer background transparent
-                                       colour=NA),                              # remove any other colors
-        axis.line = element_line(colour = "black"),                             # color the x and y axis
-        axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-        axis.text.x = element_text(size=12, colour = "black"),
-        axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-        text=element_text(size=12,                                              # change the size of the axis titles
-                          colour = "black"),                                    # change the color of the axis titles
-        legend.background = element_rect(fill=NA),
-        legend.position = c(.1, .1),
-        legend.box = "horizontal") +
-  labs(title = "Mourning Dove")
+(MODOkbg.plot <- ggplot(kbg.pred$estimates, 
+                         aes(x = KBG, 
+                             y = estimate)) +
+    geom_line(linewidth = 1.5,
+              aes(color = "model.index")) +
+    scale_colour_manual(values = c('#D4A634')) +
+    scale_fill_manual(values = c('#D4A634')) +
+    theme(plot.title = element_text(family="my_font",                             # select the font for the title
+                                    size=16,
+                                    hjust=.5),
+          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+          panel.background = element_rect(fill=NA,                                # make the interior background transparent
+                                          colour = NA),                           # remove any other colors
+          plot.background = element_rect(fill=NA,                                 # make the outer background transparent
+                                         colour=NA),                              # remove any other colors
+          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size=12, colour = "black"),
+          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          text=element_text(size=12,                                              # change the size of the axis titles
+                            colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill=NA),
+          legend.position = "none") +
+    facet_grid(~Day) +
+    labs(title = "Mourning Dove",
+         color = "Year",
+         x = "Kentucky Bluegrass (Percent Cover)",
+         y = "Daily Survival Rate"))
 
-litdep.pred <- covariate.predictions(plotdata,
-                                     data=data.frame(LitterD=litdep.values,
-                                                     KBG=mean(kbg.values)),
-                                     indices = c(6, 21, 41, 61))
-
-Day5 <- which(litdep.pred$estimates$par.index == 6)
-Day20 <- which(litdep.pred$estimates$par.index == 21)
-Day40 <- which(litdep.pred$estimates$par.index == 41)
-Day60 <- which(litdep.pred$estimates$par.index == 61)
-
-litdep.pred$estimates$Date <- NA
-litdep.pred$estimates$Date[Day5] <- "Early"
-litdep.pred$estimates$Date[Day20] <- "Mid1"
-litdep.pred$estimates$Date[Day40] <- "Mid2"
-litdep.pred$estimates$Date[Day60] <- "Late"
-
-MODOlitdep.plot <- ggplot(transform(litdep.pred$estimates,
-                                    Date = factor(Date, levels=c("Early", "Mid1", "Mid2", "Late"))),
-                          aes(x = LitterD, 
-                              y = estimate,
-                              groups = Date)) +
-  geom_line(size = 1.5,
-            aes(linetype = Date)) +
-  geom_ribbon(aes(ymin = lcl, 
-                  ymax = ucl), 
-              alpha = 0.1) +
-  scale_colour_manual(values = c('black')) +
-  scale_fill_manual(values = c('black')) +
-  xlab("Litter Depth (mm)") +
-  ylab("Estimated DSR") +
-  ylim(0, 1) + 
-  theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                  size=16,
-                                  hjust=.5),
-        panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-        panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-        panel.background = element_rect(fill=NA,                     # make the interior background transparent
-                                        colour = NA),                           # remove any other colors
-        plot.background = element_rect(fill=NA,                      # make the outer background transparent
-                                       colour=NA),                              # remove any other colors
-        axis.line = element_line(colour = "black"),                             # color the x and y axis
-        axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-        axis.text.x = element_text(size=12, colour = "black"),
-        axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-        text=element_text(size=12,                                              # change the size of the axis titles
-                          colour = "black"),                                    # change the color of the axis titles
-        legend.background = element_rect(fill=NA),
-        legend.position = c(.1, .1),
-        legend.box = "horizontal") +
-  labs(title = "Mourning Dove")
-
-julian.pred <- covariate.predictions(plotdata,
-                                     data=data.frame(LitterD=mean(litdep.values),
-                                                     KBG=mean(kbg.values)),
-                                     indices = c(1:71))
-
-x <- which(julian.pred$estimates$par.index == c(1:71))
-
-julian.pred$estimates$Group[x] <- "MODO"
-
-julian.pred$estimates$Julian <- c(1:71)
-
-MODOjulian.plot <- ggplot(julian.pred$estimates, 
-                          aes(x = Julian, 
-                              y = estimate,
-                              fill = Group)) +
-  geom_line(size = 1.5,
-            aes(colour = Group)) +
-  geom_ribbon(aes(ymin = lcl, 
-                  ymax = ucl), 
-              alpha = 0.1) +
-  scale_colour_manual(values = c('black')) +
-  scale_fill_manual(values = c('black')) +
-  xlab("Julian Day") +
-  ylab("Estimated DSR") +
-  ylim(0, 1) + 
-  theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                  size=16,
-                                  hjust=.5),
-        panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-        panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-        panel.background = element_rect(fill=NA,                     # make the interior background transparent
-                                        colour = NA),                           # remove any other colors
-        plot.background = element_rect(fill=NA,                      # make the outer background transparent
-                                       colour=NA),                              # remove any other colors
-        axis.line = element_line(colour = "black"),                             # color the x and y axis
-        axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-        axis.text.x = element_text(size=12, colour = "black"),
-        axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-        text=element_text(size=12,                                              # change the size of the axis titles
-                          colour = "black"),                                    # change the color of the axis titles
-        legend.background = element_rect(fill=NA),
-        legend.position = "none",
-        legend.box = "horizontal") +                                             # remove the legend
-  labs(title = "Mourning Dove")
-
-MODO.plot
-MODOkbg.plot
-MODOlitdep.plot
-MODOjulian.plot
 
 ggsave(MODO.plot,
        filename = "outputs/figs/MODObeta.png",
@@ -449,6 +434,7 @@ ggsave(MODOjulian.plot,
        bg = "white",
        height = 6,
        width = 6)
+
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 # and .tmp files created by RMark in the working directory,

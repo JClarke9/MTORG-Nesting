@@ -3,7 +3,7 @@ library(vegan)
 library(tidyverse)
 source("scripts/Functions/Species_Grouping_Code.R")
 
-raw <- read.csv("working/community.csv")                                        # read in the data set
+raw <- read_csv("working/community.csv")                                        # read in the data set
 
 
 # Data Wrangling ----------------------------------------------------------
@@ -131,10 +131,10 @@ birds23 <- pivot_wider(totals23[c(1:3,5)],                                      
 
 # Saving all of the files -------------------------------------------------
 
-write.csv(totals21, "working/totals21.csv")
-write.csv(totals22, "working/totals22.csv")
-write.csv(totals23, "working/totals23.csv")
-write.csv(totals.mat, "working/totals.csv")
-write.csv(birds21, file = "working/birds21.csv")
-write.csv(birds22, file = "working/birds22.csv")
-write.csv(birds23, file = "working/birds23.csv")
+write_csv(totals21, "working/totals21.csv")
+write_csv(totals22, "working/totals22.csv")
+write_csv(totals23, "working/totals23.csv")
+write_csv(totals.mat, "working/totals.csv")
+write_csv(birds21, file = "working/birds21.csv")
+write_csv(birds22, file = "working/birds22.csv")
+write_csv(birds23, file = "working/birds23.csv")

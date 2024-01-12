@@ -5,14 +5,17 @@ library(lubridate)
 library(vegan)
 library(tidyverse)
 
+
 # Data import -------------------------------------------------------------
 
-raw <- read.csv("working/Community.csv",
-                row.names = 1)                                       # read in the data set
+
+raw <- read_csv("working/Community.csv",
+                col_names = T)                                       # read in the data set
 
 raw$Litter.Depth <- as.numeric(raw$Litter.Depth)
 raw$Veg.Height <- as.numeric(raw$Veg.Height)
 raw$AgeFound <- as.numeric(raw$AgeFound)
+raw$Bare <- as.numeric(raw$Bare)
 
 raw$id <- factor(raw$id)
 raw$Spec <- factor(raw$Spec)
@@ -22,7 +25,7 @@ raw$cTreat <- factor(raw$cTreat,
 raw$pTreat <- factor(raw$pTreat,
                      c("Rest", "Moderate", "Full", "Heavy"))
 raw$Stage <- factor(raw$Stage,
-                    c("Laying", "Incubating", "Nestling"))
+                    c("Incubating", "Nestling"))
 raw$Paddock <- factor(raw$Paddock,
                       c(1:16))
 raw$Replicate <- factor(raw$Replicate,
@@ -90,30 +93,43 @@ sum(MISSING)
 CCSP <- subset(CCSP, subset = !MISSING)
 
 CCSP <- CCSP |> 
-  filter(CCSP$Expos != 0)
+  filter(Expos != 0 & Stage != "Laying")
 
 CCSP$trials <- 1
+
+CCSP[,c(6,11, 19:31,38)] <- scale(CCSP[,c(6,11, 19:31,38)], 
+                              center = TRUE, 
+                              scale = TRUE)
 
 ## STEP 1a
 
 R1 <-glmer(Fate/trials ~ (1|id), 
            family = binomial(logexp(exposure = CCSP$Expos)),
+           control = glmerControl(optimizer = "bobyqa"),
            data = CCSP)
 
-R2 <-glmer(Fate/trials ~ ( 1|Paddock/id), 
-           family = binomial(logexp(exposure = CCSP$Expos)) ,
+R2 <-glmer(Fate/trials ~ (1|Paddock/id), 
+           family = binomial(logexp(exposure = CCSP$Expos)),
+           control = glmerControl(optimizer = "bobyqa",
+                                  tol = 1e-10),
            data = CCSP)
 
 R3<-glmer(Fate/trials ~ (1|Paddock/id) + (1|Year), 
           family = binomial(logexp(exposure = CCSP$Expos)),
+          control = glmerControl(optimizer = "bobyqa",
+                                 tol = 1e-10),
           data = CCSP)
 
 R4<-glmer(Fate/trials ~ (1|Replicate/Paddock/id), 
           family = binomial(logexp(exposure = CCSP$Expos)),
+          control = glmerControl(optimizer = "bobyqa",
+                                 tol = 1e-10),
           data = CCSP)
 
-R5 <-glmer(Fate/trials ~  (1|Replicate/Paddock/id) +(1|Year), 
+R5 <-glmer(Fate/trials ~ (1|Replicate/Paddock/id) +(1|Year), 
            family = binomial(logexp(exposure = CCSP$Expos)),
+           control = glmerControl(optimizer = "bobyqa",
+                                  tol = 1e-10),
            data = CCSP)
 
 ## AIC Table
@@ -133,19 +149,18 @@ aictab(cand.set = Cand.Rand.mods,
 R3
 summary(R3)
 coeffs(R3)
-confint(R3,
-        method = c("Wald"))
+confint(R3, method = c("Wald"))
 
 R5
 summary(R5)
 coeffs(R5)
-confint(R5,
-        method = c("Wald"))
+confint(R5, method = c("Wald"))
 
 Cp(R1)
 Cp(R2)
 Cp(R3)
 Cp(R4)
+Cp(R5)
 
 ##STEP 2
 
@@ -179,72 +194,77 @@ summary(T3)
 T3
 
 coeffs(T3)
-confint(T3,
-        method = c("Wald"))
+confint(T3, method = c("Wald"))
 
-Cp(R1)
+Cp(R3)
 Cp(T1)
 Cp(T2)
 Cp(T3)
-Cp(T4)
-Cp(T5)
 
 ## R-squared calculations
 r.squaredLR(R1,R1)
 r.squaredLR(T1,R1)
 r.squaredLR(T2,R1)
 r.squaredLR(T3,R1)
-r.squaredLR(T4,R1)
-r.squaredLR(T5,R1)
 
 ##Marginal and Conditional R-squared calculations from Nakagawa, S. & Schielzeth H. (2013)
 
-##fitted model = T2
+##fitted model = T3
 ##random effect name = “id”
 ## Calculation of the variance in fitted values
-VarF <- var(as.vector(fixef(T2) %*% t(model.matrix(T2))))
+VarF <- var(as.vector(fixef(T3) %*% t(model.matrix(T3))))
 
 ## R2GLMM(m) - marginal R2GLMM
-VarF/(VarF + VarCorr(T2)$id[1] + pi^2/3)
+VarF/(VarF + VarCorr(T3)$id[1] + pi^2/3)
 
 ## R2GLMM(c) - conditional R2GLMM for full model
-(VarF + VarCorr(T2)$id[1])/(VarF + VarCorr(T2)$id[1] + pi^2/3)
+(VarF + VarCorr(T3)$id[1])/(VarF + VarCorr(T3)$id[1] + pi^2/3)
 
 ## Proportion Change in Variance (PCV) for fitted model (rand.ef1)
-100*(1 - (VarCorr(T2)$id[1])/(VarCorr(R1)$id[1]))
+100*(1 - (VarCorr(T3)$id[1])/(VarCorr(R1)$id[1]))
 
 ##STEP 3a
 
 N1 <- glmer(Fate/trials ~ (1|id) + Stage + KBG,
             family=binomial(logexp(exposure=CCSP$Expos)),
             data=CCSP)
+
 N2 <- glmer(Fate/trials ~ (1|id) + Stage + Smooth.Brome,
             family=binomial(logexp(exposure=CCSP$Expos)),
             data=CCSP)
+
 N3 <- glmer(Fate/trials ~ (1|id) + Stage + Litter,
             family=binomial(logexp(exposure=CCSP$Expos)),
             data=CCSP)
+
 N4 <- glmer(Fate/trials ~ (1|id) + Stage + Bare,
             family=binomial(logexp(exposure=CCSP$Expos)),
             data=CCSP)
+
 N5 <- glmer(Fate/trials ~ (1|id) + Stage + Forb,
             family=binomial(logexp(exposure=CCSP$Expos)),
             data=CCSP)
+
 N6 <- glmer(Fate/trials ~ (1|id) + Stage + Grasslike,
             family=binomial(logexp(exposure=CCSP$Expos)),
             data=CCSP)
+
 N7 <- glmer(Fate/trials ~ (1|id) + Stage + Woody,
             family=binomial(logexp(exposure=CCSP$Expos)),
             data=CCSP)
+
 N8 <- glmer(Fate/trials ~ (1|id) + Stage + Litter.Depth,
             family=binomial(logexp(exposure=CCSP$Expos)),
             data=CCSP)
+
 N9 <- glmer(Fate/trials ~ (1|id) + Stage + Veg.Height,
             family=binomial(logexp(exposure=CCSP$Expos)),
             data=CCSP)
+
 N10<- glmer(Fate/trials ~ (1|id) + Stage + aRobel,
             family=binomial(logexp(exposure=CCSP$Expos)),
             data=CCSP)
+
 N11 <- glmer(Fate/trials ~ (1|id) + Stage + Litter.Depth + aRobel,
              family=binomial(logexp(exposure=CCSP$Expos)),
              data=CCSP)

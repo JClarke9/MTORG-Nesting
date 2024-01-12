@@ -1,5 +1,6 @@
 # Loading libraries -------------------------------------------------------
 
+
 library(ggplot2)
 library(vegan)
 library(tidyverse)
@@ -9,12 +10,16 @@ source("scripts/Functions/RMark_Stage_Code.R")
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
+
 # Data import -------------------------------------------------------------
+
 
 nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
 
+
 # Subsetting data ---------------------------------------------------------
+
 
 BRBL.surv <- filter(nest, 
                     Spec=="BRBL")                                         # select out only BRBL nest
@@ -44,7 +49,9 @@ BRBL.surv$Year <- factor(BRBL.surv$Year,
 
 str(BRBL.surv)
 
+
 # Creating stage variable -------------------------------------------------
+
 
 x <- create.stage.var(BRBL.surv, 
                       "AgeDay1", 
@@ -56,7 +63,9 @@ BRBL.surv <- bind_cols(BRBL.surv, x)
 
 rm(list = ls()[!ls() %in% c("BRBL.surv")])
 
+
 # Daily survival rate models ----------------------------------------------
+
 
 BRBL.pr <- process.data(BRBL.surv,
                         nocc=max(BRBL.surv$LastChecked),
@@ -266,16 +275,19 @@ str(BRBL.beta)
          x = "Percent Cover",
          y = expression("Beta " (beta))))
 
+
 # Creating Predictive Plots -----------------------------------------------
+
 
 plotdata <- BRBL4.results$S.lit
 
 BRBL.ddl <- make.design.data(BRBL.pr)
 BRBL.ddl <- as.data.frame(BRBL.ddl)
 
-lit.values = seq(from = min(BRBL.surv$Litter), 
+lit.values <- seq(from = min(BRBL.surv$Litter), 
                  to = max(BRBL.surv$Litter), 
                  length = 100)
+
 
 lit.pred <- covariate.predictions(plotdata,
                                   data = data.frame(Litter = lit.values),
@@ -291,7 +303,7 @@ lit.pred$estimates$Year[`2022`] <- "2022"
 lit.pred$estimates$Year[`2023`] <- "2023"
 
 (BRBLlit.plot <- ggplot(transform(lit.pred$estimates,
-                                  Year = factor(Year, levels=c("2021", "2022", "2023"))), 
+                                  Year = factor(Year, levels = c("2021", "2022", "2023"))), 
                         aes(x = covdata, 
                             y = estimate,
                             groups = Year,
@@ -302,7 +314,7 @@ lit.pred$estimates$Year[`2023`] <- "2023"
     scale_colour_manual(values = c('#A2A4A2',
                                    '#717F5B',
                                    '#D4A634')) +
-    scale_fill_manual(values = c('black',
+    scale_fill_manual(values = c('#A2A4A2',
                                  '#717F5B',
                                  '#D4A634')) +
     theme(plot.title = element_text(family="my_font",                             # select the font for the title
@@ -325,7 +337,7 @@ lit.pred$estimates$Year[`2023`] <- "2023"
           legend.box = "horizontal") +
     labs(title = "Brewer's Blackbird",
          color = "Year",
-         x = "Percent Litter Cover",
+         x = "Litter (Percent Cover)",
          y = "Daily Survival Rate"))
 
 

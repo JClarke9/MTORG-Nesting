@@ -1,5 +1,6 @@
 # Loading libraries -------------------------------------------------------
 
+
 library(ggplot2)
 library(vegan)
 library(tidyverse)
@@ -9,12 +10,16 @@ source("scripts/Functions/RMark_Stage_Code.R")
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
+
 # Data import -------------------------------------------------------------
+
 
 nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
 
+
 # Subsetting data ---------------------------------------------------------
+
 
 NOPI.surv <- filter(nest, 
                     Spec=="NOPI")                                         # select out only NOPI nest
@@ -44,7 +49,9 @@ NOPI.surv$Year <- factor(NOPI.surv$Year,
 
 str(NOPI.surv)
 
+
 # Creating stage variable -------------------------------------------------
+
 
 x <- create.stage.var(NOPI.surv, 
                       "AgeDay1", 
@@ -56,7 +63,9 @@ NOPI.surv <- bind_cols(NOPI.surv, x)
 
 rm(list = ls()[!ls() %in% c("NOPI.surv")])
 
+
 # Daily survival rate models ----------------------------------------------
+
 
 NOPI.pr <- process.data(NOPI.surv,
                         nocc=max(NOPI.surv$LastChecked),
@@ -82,7 +91,7 @@ NOPI1.run <- function()
   NOPI1.results = mark.wrapper(NOPI.model.list,
                                data = NOPI.pr,
                                adjust = FALSE,
-                               delete = FALSE)
+                               delete =TRUE)
 }
 
 # Results of candidate model set
@@ -129,9 +138,6 @@ NOPI3.run <- function()
   # 4. DSR varies with the previous  + NestAges grazing intensity
   S.pTreat = list(formula = ~1 + pTreat)
   
-  # 4. DSR varies with the previous  + NestAges grazing intensity
-  S.grazedpTreat = list(formula = ~1 + grazed + pTreat)
-  
   NOPI.model.list = create.model.list("Nest")
   NOPI3.results = mark.wrapper(NOPI.model.list,
                                data = NOPI.pr,
@@ -144,6 +150,7 @@ NOPI3.results <- NOPI3.run()
 NOPI3.results
 
 coef(NOPI3.results$S.null)
+
 
 # Vegetation candidate model set
 NOPI4.run <- function()
@@ -202,109 +209,175 @@ NOPI.avg <- model.avg(NOPI4.results$S.vor,
                       NOPI4.results$S.lit)
 
 summary(NOPI.avg)
-coef(NOPI.avg)
-confint(NOPI.avg, level = 0.85)
+coef(NOPI.avg, full = T)
+confint(NOPI.avg, level = 0.85, full = T)
+
+
+# Vegetation candidate model set
+NOPI.run <- function()
+{
+  # 4. DSR varies with Litter (correlated with KBG)
+  S.lit = list(formula =  ~1 + Litter)
+  
+  # 11. DSR varies with VOR
+  S.vor = list(formula =  ~1 + VOR)
+  
+  NOPI.model.list = create.model.list("Nest")
+  NOPI.results = mark.wrapper(NOPI.model.list,
+                              data = NOPI.pr,
+                              adjust = FALSE,
+                              delete = TRUE)
+}
+
+NOPI.results <- NOPI.run()
+NOPI.results
+
+NOPI.dsr <- model.average(NOPI.results) |> 
+  summarise(estimate = mean(estimate))
+
 
 # Plotting beta coefficients ----------------------------------------------
 
-NOPI.mod <- mark(NOPI.surv, 
-                 nocc=max(NOPI.surv$LastChecked), 
-                 model = "Nest", 
-                 model.parameters = list(S = list(formula =  ~1 + Litter)))
 
-NOPI4.beta <- NOPI4.results$S.lit$results$beta
-NOPI4.beta
+NOPI.avg
 
-NOPI.top <- rownames_to_column(NOPI4.beta, 
-                               "Variable")
-NOPI.top <- rename(NOPI.top, 
-                   "Coefficient"="estimate")
+(NOPI.beta <- as.data.frame(t(NOPI.avg$coefficients)))
 
-NOPI.top[,1] <- gsub("S:", "", NOPI.top[,1])
+NOPI.beta <- as.data.frame(t(NOPI.avg$coefficients)) |> 
+  cbind(confint(NOPI.avg, level = 0.85, full = T)) |> 
+  select(full, `7.5 %`, `92.5 %`) |> 
+  rownames_to_column(var = "Variable") |> 
+  rename(c("Coefficient" = "full",
+           "lcl" = "7.5 %",
+           "ucl" = "92.5 %"))
 
-str(NOPI.top)
+NOPI.beta$Variable <- case_match(NOPI.beta$Variable,
+                                 "S((Intercept))" ~ "Intercept",
+                                 "S(VOR)" ~ "VOR",
+                                 "S(Litter)" ~ "Litter")
 
-NOPI.top$SEup <- NOPI.top$Coefficient + NOPI.top$se
-NOPI.top$SElow <- NOPI.top$Coefficient - NOPI.top$se
+str(NOPI.beta)
 
-NOPI.plot <- ggplot(NOPI.top, aes(x = Variable, 
-                                  y = Coefficient)) +
-  geom_hline(yintercept = 0,
-             colour = gray(1/2), 
-             lty = 2) +
-  geom_point(aes(x = Variable,
-                 y = Coefficient),
-             size = 5) +
-  geom_errorbar(aes(x = Variable,
-                    ymin = lcl,
-                    ymax = ucl),
-                width = .5,
-                size = 1) +
-  ggtitle("NOPI Beta Coefficient") +
-  theme(panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-        panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-        panel.background = element_rect(fill="white",                     # make the interior background transparent
-                                        colour = NA),                           # remove any other colors
-        plot.background = element_rect(fill="white",                      # make the outer background transparent
-                                       colour=NA),                              # remove any other colors
-        axis.line = element_line(colour = "black"),                             # color the x and y axis
-        axis.text = element_text(size=12, 
-                                 colour = "black"),                    # color the axis text
-        axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-        text=element_text(size=12,                                              # change the size of the axis titles
-                          colour = "black")) +                                    # change the color of the axis titles
-  coord_flip()
+(NOPI.plot <- ggplot(NOPI.beta[2:3,], 
+                     aes(x = Variable,
+                         y = Coefficient)) +
+    geom_hline(yintercept = 0,
+               colour = gray(1/2), 
+               lty = 2) +
+    geom_point(aes(x = Variable,
+                   y = Coefficient),
+               size = 4) +
+    geom_errorbar(aes(x = Variable,
+                      ymin = lcl,
+                      ymax = ucl),
+                  width = .5,
+                  linewidth = 1) +
+    theme(plot.title = element_text(family = "my_font",
+                                    hjust = .5,
+                                    size = 20,
+                                    vjust = 1,
+                                    colour = "black"),
+          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+          panel.background = element_rect(fill = NA,                     # make the interior background transparent
+                                          colour = NA),                           # remove any other colors
+          plot.background = element_rect(fill = NA,                      # make the outer background transparent
+                                         colour = NA),                              # remove any other colors
+          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.text = element_text(size=12, 
+                                   colour = "black"),                    # color the axis text
+          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          text=element_text(size=12,                                              # change the size of the axis titles
+                            colour = "black")) +                                    # change the color of the axis titles
+    labs(title = "Northern Pintail",
+         x = NULL,
+         y = expression("Beta " (beta))))
+
 
 # Creating predictive plots -----------------------------------------------
 
-plotdata <- NOPI4.results$S.lit
 
-minlitter <- min(NOPI.surv$Litter)
-maxlitter <- max(NOPI.surv$Litter)
-litter.values = seq(from = minlitter, 
-                    to = maxlitter, 
-                    length = 100)
+NOPI.ddl <- make.design.data(NOPI.pr) |> 
+  as.data.frame()
 
-litter.pred <- covariate.predictions(plotdata,
-                                     data=data.frame(Litter=litter.values),
-                                     indices = 1)
+Litvalues <- seq(from = min(NOPI.surv$Litter),
+                  to = max(NOPI.surv$Litter),
+                  length = 100)
 
-litter.pred$estimates$Group <- "NOPI"
+VORvalues <- seq(from = min(NOPI.surv$VOR),
+                 to = max(NOPI.surv$VOR),
+                 length = 100)
 
-NOPIlitter.plot <- ggplot(litter.pred$estimates, 
-                          aes(x = covdata, 
-                              y = estimate,
-                              fill = Group)) +
-  geom_line(size = 1.5,
-            aes(colour = Group)) +
-  geom_ribbon(aes(ymin = lcl, 
-                  ymax = ucl), 
-              alpha = 0.1) +
-  scale_colour_manual(values = c('black')) +
-  scale_fill_manual(values = c('black')) +
-  xlab("Litter Cover") +
-  ylab("Estimated DSR") +
-  ylim(.3, 1) + 
-  theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                  size=16,
-                                  hjust=.5),
-        panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-        panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-        panel.background = element_rect(fill=NA,                     # make the interior background transparent
-                                        colour = NA),                           # remove any other colors
-        plot.background = element_rect(fill=NA,                      # make the outer background transparent
-                                       colour=NA),                              # remove any other colors
-        axis.line = element_line(colour = "black"),                             # color the x and y axis
-        axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-        axis.text.x = element_text(size=12, colour = "black"),
-        axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-        text=element_text(size=12,                                              # change the size of the axis titles
-                          colour = "black"),                                    # change the color of the axis titles
-        legend.position = "none") +                                             # remove the legend
-  labs(title = "Northern Pintail")
 
-NOPI.plot
-NOPIlitter.plot
+Lit.pred <- covariate.predictions(NOPI.results,
+                                  data = data.frame(Litter = Litvalues,
+                                                    VOR = mean(VORvalues)),
+                                  indices = 1)
+
+(NOPIlit.plot <- ggplot(Lit.pred$estimates, 
+                         aes(x = Litter, 
+                             y = estimate)) +
+    geom_line(linewidth = 1.5,
+              aes(color = "model.index")) +
+    scale_colour_manual(values = c('#D4A634')) +
+    scale_fill_manual(values = c('#D4A634')) +
+    theme(plot.title = element_text(family="my_font",                             # select the font for the title
+                                    size=16,
+                                    hjust=.5),
+          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+          panel.background = element_rect(fill=NA,                                # make the interior background transparent
+                                          colour = NA),                           # remove any other colors
+          plot.background = element_rect(fill=NA,                                 # make the outer background transparent
+                                         colour=NA),                              # remove any other colors
+          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size=12, colour = "black"),
+          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          text=element_text(size=12,                                              # change the size of the axis titles
+                            colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill=NA),
+          legend.position = "none") +
+    labs(title = "Northern Pintail",
+         color = "Year",
+         x = "Litter (Percent Cover)",
+         y = "Daily Survival Rate"))
+
+
+VOR.pred <- covariate.predictions(NOPI.results,
+                                  data = data.frame(Litter = mean(Litvalues),
+                                                    VOR = VORvalues),
+                                  indices = 1)
+
+(NOPIvor.plot <- ggplot(VOR.pred$estimates, 
+                        aes(x = VOR, 
+                            y = estimate)) +
+    geom_line(linewidth = 1.5,
+              aes(color = "model.index")) +
+    scale_colour_manual(values = c('#D4A634')) +
+    scale_fill_manual(values = c('#D4A634')) +
+    theme(plot.title = element_text(family="my_font",                             # select the font for the title
+                                    size=16,
+                                    hjust=.5),
+          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+          panel.background = element_rect(fill=NA,                                # make the interior background transparent
+                                          colour = NA),                           # remove any other colors
+          plot.background = element_rect(fill=NA,                                 # make the outer background transparent
+                                         colour=NA),                              # remove any other colors
+          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size=12, colour = "black"),
+          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          text=element_text(size=12,                                              # change the size of the axis titles
+                            colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill=NA),
+          legend.position = "none") +
+    labs(title = "Northern Pintail",
+         color = "Year",
+         x = "Visual Obstruction (dm)",
+         y = "Daily Survival Rate"))
+
 
 ggsave(NOPI.plot,
        filename = "outputs/figs/NOPIbeta.png",
@@ -313,8 +386,15 @@ ggsave(NOPI.plot,
        height = 6,
        width = 6)
 
-ggsave(NOPIlitter.plot,
+ggsave(NOPIlit.plot,
        filename = "outputs/figs/NOPIlitter.png",
+       dpi = "print",
+       bg = "white",
+       height = 6,
+       width = 6)
+
+ggsave(NOPIvor.plot,
+       filename = "outputs/figs/NOPIvor.png",
        dpi = "print",
        bg = "white",
        height = 6,

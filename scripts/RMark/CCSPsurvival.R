@@ -1,5 +1,6 @@
 # Loading libraries -------------------------------------------------------
 
+
 library(ggplot2)
 library(vegan)
 library(tidyverse)
@@ -9,15 +10,18 @@ source("scripts/Functions/RMark_Stage_Code.R")
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
+
 # Data import -------------------------------------------------------------
 
-nest <- read.csv("working/RMarknesting.csv", 
-                 row.names=1)
+
+nest <- read.csv("working/RMarknesting.csv")
+
 
 # Subsetting data ---------------------------------------------------------
 
+
 CCSP.surv <- filter(nest, 
-                    Spec=="CCSP")                                         # select out only CCSP nest
+                    Spec == "CCSP" & Stage != "Laying")                                         # select out only CCSP nest
 
 test <- filter(CCSP.surv,
                is.na(KBG) |
@@ -42,9 +46,14 @@ CCSP.surv <- subset(CCSP.surv,
 CCSP.surv$Year <- factor(CCSP.surv$Year,
                          levels = c("2021", "2022", "2023"))
 
+CCSP.surv$Nestling <- factor(CCSP.surv$Nestling,
+                             level = c("0", "1"))
+
 str(CCSP.surv)
 
+
 # Creating stage variable -------------------------------------------------
+
 
 x <- create.stage.var(CCSP.surv, 
                       "AgeDay1", 
@@ -56,11 +65,14 @@ CCSP.surv <- bind_cols(CCSP.surv, x)
 
 rm(list = ls()[!ls() %in% c("CCSP.surv")])
 
+
 # Daily survival rate models ----------------------------------------------
+
 
 CCSP.pr <- process.data(CCSP.surv,
                         nocc=max(CCSP.surv$LastChecked),
-                        groups = c("Year"),
+                        groups = c("Year",
+                                   "Nestling"),
                         model="Nest")
 
 # Temporal candidate model set
@@ -109,7 +121,7 @@ CCSP2.run <- function()
   S.age = list(formula = ~1 + Year + NestAge)
   
   # 5. DSR varies with nest age
-  S.stage = list(formula = ~1 + Year + Incub)
+  S.stage = list(formula = ~1 + Year + Nestling)
   
   CCSP.model.list = create.model.list("Nest")
   CCSP2.results = mark.wrapper(CCSP.model.list,
@@ -122,24 +134,24 @@ CCSP2.run <- function()
 CCSP2.results <- CCSP2.run()
 CCSP2.results
 
-coef(CCSP2.results$S.bhcon)
-confint(CCSP2.results$S.bhcon, level = 0.85)
+coef(CCSP2.results$S.stage)
+confint(CCSP2.results$S.stage, level = 0.85)
 
 
 # Grazing candidate model set
 CCSP3.run <- function()
 {
-  # 1. DSR varies with BHCO number
-  S.bhcon = list(formula = ~1 + Year + BHCONum)
+  # 5. DSR varies with nest age
+  S.stage = list(formula = ~1 + Year + Nestling)
   
   # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + Year + BHCONum + grazed)
+  S.grazed = list(formula = ~1 + Year + Nestling + grazed)
   
   # 3. DSR varies with the number of days a nest experienced grazing
-  S.grazep = list(formula = ~1 + Year + BHCONum + grazep)
+  S.grazep = list(formula = ~1 + Year + Nestling + grazep)
   
   # 4. DSR varies with the previous years grazing intensity
-  S.pTreat = list(formula = ~1 + Year + BHCONum + pTreat)
+  S.pTreat = list(formula = ~1 + Year + Nestling + pTreat)
   
   CCSP.model.list = create.model.list("Nest")
   CCSP3.results = mark.wrapper(CCSP.model.list,
@@ -152,45 +164,45 @@ CCSP3.run <- function()
 CCSP3.results <- CCSP3.run()
 CCSP3.results
 
-coef(CCSP2.results$S.bhcon)
-confint(CCSP2.results$S.bhcon, level = 0.85)
+coef(CCSP3.results$S.stage)
+confint(CCSP3.results$S.stage, level = 0.85)
 
 
 # Vegetation candidate model set
 CCSP4.run <- function()
 {
-  # 1. DSR varies with BHCO number
-  S.bhcon = list(formula = ~1 + Year + BHCONum)
+  # 5. DSR varies with nest age
+  S.stage = list(formula = ~1 + Year + Nestling)
   
   # 2. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + Year + BHCONum + KBG)
+  S.kbg = list(formula =  ~1 + Year + Nestling + KBG)
   
   # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.brome = list(formula = ~1 + Year + BHCONum + SmoothB)
+  S.brome = list(formula = ~1 + Year + Nestling + SmoothB)
   
   # 4. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + Year + BHCONum + Litter)
+  S.lit = list(formula =  ~1 + Year + Nestling + Litter)
   
   # 5. DSR varies with Bare
-  S.bare = list(formula =  ~1 + Year + BHCONum + Bare)
+  S.bare = list(formula =  ~1 + Year + Nestling + Bare)
   
   # 6. DSR varies with Forb
-  S.forb = list(formula =  ~1 + Year + BHCONum + Forb)
+  S.forb = list(formula =  ~1 + Year + Nestling + Forb)
   
   # 7. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + Year + BHCONum + Grasslike)
+  S.grass = list(formula =  ~1 + Year + Nestling + Grasslike)
   
   # 8. DSR varies with Woody
-  S.woody = list(formula =  ~1 + Year + BHCONum + Woody)
+  S.woody = list(formula =  ~1 + Year + Nestling + Woody)
   
   # 9. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + Year + BHCONum + LitterD)
+  S.litdep = list(formula =  ~1 + Year + Nestling + LitterD)
   
   # 10. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Year + BHCONum + Veg.Height)
+  S.height = list(formula =  ~1 + Year + Nestling + Veg.Height)
   
   # 11. DSR varies with VOR
-  S.vor = list(formula =  ~1 + Year + BHCONum + VOR)
+  S.vor = list(formula =  ~1 + Year + Nestling + VOR)
   
   CCSP.model.list = create.model.list("Nest")
   CCSP4.results = mark.wrapper(CCSP.model.list,
@@ -203,11 +215,11 @@ CCSP4.run <- function()
 CCSP4.results <- CCSP4.run()
 CCSP4.results
 
-coef(CCSP4.results$S.bhcon)
-confint(CCSP4.results$S.bhcon, level = 0.85)
+coef(CCSP4.results$S.stage)
+confint(CCSP4.results$S.stage, level = 0.85)
 
 
-CCSP.real <- as.data.frame(CCSP4.results$S.bhcon$results$real) |> 
+CCSP.real <- as.data.frame(CCSP4.results$S.stage$results$real) |> 
   rownames_to_column(var = "Group") |> 
   mutate(Year = case_when(
     grepl("2021", Group) ~ "2021",
@@ -266,16 +278,19 @@ str(CCSP.beta)
          x = NULL,
          y = expression("Beta " (beta))))
 
+
 # Creating predictive plots -----------------------------------------------
+
 
 CCSP.ddl <- make.design.data(CCSP.pr) |> 
   as.data.frame()
 
 plotdata <- CCSP4.results$S.bhcon
 
-BHCOvalues = seq(from = min(CCSP.surv$BHCONum),
+BHCOvalues <- seq(from = min(CCSP.surv$BHCONum),
                  to = max(CCSP.surv$BHCONum),
                  length = 100)
+
 
 BHCO.pred <- covariate.predictions(plotdata,
                                    data = data.frame(BHCONum = BHCOvalues),
@@ -302,7 +317,7 @@ BHCO.pred$estimates$Year[`2023`] <- "2023"
     scale_colour_manual(values = c('#A2A4A2',
                                    '#717F5B',
                                    '#D4A634')) +
-    scale_fill_manual(values = c('black',
+    scale_fill_manual(values = c('#A2A4A2',
                                  '#717F5B',
                                  '#D4A634')) +
     theme(plot.title = element_text(family="my_font",                             # select the font for the title

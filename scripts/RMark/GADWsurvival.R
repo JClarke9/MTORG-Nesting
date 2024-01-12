@@ -1,5 +1,6 @@
 # Loading libraries -------------------------------------------------------
 
+
 library(ggplot2)
 library(vegan)
 library(tidyverse)
@@ -9,12 +10,16 @@ source("scripts/Functions/RMark_Stage_Code.R")
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
+
 # Data import -------------------------------------------------------------
+
 
 nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
 
+
 # Subsetting data ---------------------------------------------------------
+
 
 GADW.surv <- filter(nest, 
                     Spec=="GADW")                                         # select out only GADW nest
@@ -44,7 +49,9 @@ GADW.surv$Year <- factor(GADW.surv$Year,
 
 str(GADW.surv)
 
+
 # Creating stage variable -------------------------------------------------
+
 
 x <- create.stage.var(GADW.surv, 
                       "AgeDay1", 
@@ -56,7 +63,9 @@ GADW.surv <- bind_cols(GADW.surv, x)
 
 rm(list = ls()[!ls() %in% c("GADW.surv")])
 
+
 # Daily survival rate models ----------------------------------------------
+
 
 GADW.pr <- process.data(GADW.surv,
                         nocc=max(GADW.surv$LastChecked),
@@ -209,7 +218,10 @@ GADW.real <- as.data.frame(GADW4.results$S.forb$results$real) |>
 
 GADW.dsr <- GADW.real |> 
   group_by(Year) |> 
-  summarise(estimate = mean(estimate))
+  summarise(estimate = mean(estimate),
+            se = mean(se),
+            lcl = mean(lcl),
+            ucl = mean(ucl))
 
 
 # Plotting beta coefficients ----------------------------------------------
@@ -275,6 +287,7 @@ Forbvalues <- seq(from = min(GADW.surv$Forb),
                   to = max(GADW.surv$Forb),
                   length = 100)
 
+
 Forb.pred <- covariate.predictions(plotdata,
                                    data = data.frame(Forb = Forbvalues),
                                    indices = c(2, 16, 28,
@@ -325,7 +338,7 @@ Forb.pred$estimates$Day[D27Y2023] <- "Day27"
     scale_colour_manual(values = c('#A2A4A2',
                                    '#717F5B',
                                    '#D4A634')) +
-    scale_fill_manual(values = c('black',
+    scale_fill_manual(values = c('#A2A4A2',
                                  '#717F5B',
                                  '#D4A634')) +
     theme(plot.title = element_text(family="my_font",                             # select the font for the title
@@ -345,11 +358,11 @@ Forb.pred$estimates$Day[D27Y2023] <- "Day27"
                             colour = "black"),                                    # change the color of the axis titles
           legend.background = element_rect(fill=NA),
           legend.position = c(.85, .1),
-          legend.box = "none") +
+          legend.box = "horizontal") +
     facet_grid(~Day) +
     labs(title = "Gadwall",
          color = "Year",
-         x = "Forb Percent Cover",
+         x = "Forb (Percent Cover)",
          y = "Daily Survival Rate"))
 
 
@@ -384,7 +397,7 @@ AGE.pred$estimates$Day <- c(1:27)
     scale_colour_manual(values = c('#A2A4A2',
                                    '#717F5B',
                                    '#D4A634')) +
-    scale_fill_manual(values = c('black',
+    scale_fill_manual(values = c('#A2A4A2',
                                  '#717F5B',
                                  '#D4A634')) +
     theme(plot.title = element_text(family="my_font",                             # select the font for the title
@@ -404,11 +417,12 @@ AGE.pred$estimates$Day <- c(1:27)
                             colour = "black"),                                    # change the color of the axis titles
           legend.background = element_rect(fill=NA),
           legend.position = c(.85, .1),
-          legend.box = "none") +
+          legend.box = "horizontal") +
     labs(title = "Gadwall",
          color = "Year",
          x = "Nest Age",
          y = "Daily Survival Rate"))
+
 
 ggsave(GADW.plot,
        filename = "~/Git/NDSU/RMARK/Figures/GADWbeta.png",
@@ -430,6 +444,7 @@ ggsave(GADWage.plot,
        bg = "white",
        height = 6,
        width = 6)
+
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,

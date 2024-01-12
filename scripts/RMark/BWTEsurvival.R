@@ -1,5 +1,6 @@
 # Loading libraries -------------------------------------------------------
 
+
 library(ggplot2)
 library(vegan)
 library(tidyverse)
@@ -9,12 +10,16 @@ source("scripts/Functions/RMark_Stage_Code.R")
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
+
 # Data import -------------------------------------------------------------
+
 
 nest <- read.csv("working/RMarknesting.csv", 
                  row.names=1)
 
+
 # Subsetting data ---------------------------------------------------------
+
 
 BWTE.surv <- filter(nest, 
                     Spec=="BWTE")                                         # select out only BWTE nest
@@ -44,7 +49,9 @@ BWTE.surv$Year <- factor(BWTE.surv$Year,
 
 str(BWTE.surv)
 
+
 # Creating stage variable -------------------------------------------------
+
 
 x <- create.stage.var(BWTE.surv, 
                       "AgeDay1", 
@@ -56,7 +63,9 @@ BWTE.surv <- bind_cols(BWTE.surv, x)
 
 rm(list = ls()[!ls() %in% c("BWTE.surv")])
 
+
 # Daily survival rate models ----------------------------------------------
+
 
 BWTE.pr <- process.data(BWTE.surv,
                         nocc=max(BWTE.surv$LastChecked),
@@ -96,7 +105,7 @@ confint(BWTE1.results$S.year, level = 0.85)
 # Biological candidate model set
 BWTE2.run <- function()
 {
-  # 1. DSR varies with year
+  # 4. DSR varies with year
   S.year = list(formula = ~1 + Year)
   
   # 4. DSR varies with nest age
@@ -145,6 +154,7 @@ BWTE3.results
 
 coef(BWTE3.results$S.grazep)
 confint(BWTE3.results$S.grazep, level = 0.85)
+
 
 # Vegetation candidate model set
 BWTE4.run <- function()
@@ -206,8 +216,9 @@ BWTE.avg <- model.avg(BWTE4.results$S.height,
                       BWTE4.results$S.vor)
 
 summary(BWTE.avg)
-coef(BWTE.avg)
-confint(BWTE.avg, level = 0.85)
+coef(BWTE.avg, full = T)
+confint(BWTE.avg, level = 0.85, full = T)
+
 
 # Vegetation candidate model set
 BWTE.run <- function()
@@ -249,6 +260,7 @@ BWTE.dsr <- BWTE.dsr |>
 
 
 # Plotting beta coefficients ----------------------------------------------
+
 
 BWTE.avg
 
@@ -384,7 +396,7 @@ LitD.pred$estimates$Day[D24Y2023] <- "Day24"
     scale_colour_manual(values = c('#A2A4A2',
                                    '#717F5B',
                                    '#D4A634')) +
-    scale_fill_manual(values = c('black',
+    scale_fill_manual(values = c('#A2A4A2',
                                  '#717F5B',
                                  '#D4A634')) +
     theme(plot.title = element_text(family="my_font",                             # select the font for the title
@@ -404,7 +416,7 @@ LitD.pred$estimates$Day[D24Y2023] <- "Day24"
                             colour = "black"),                                    # change the color of the axis titles
           legend.background = element_rect(fill=NA),
           legend.position = c(.85, .1),
-          legend.box = "none") +
+          legend.box = "horizontal") +
     facet_grid(~Day) +
     labs(title = "Blue-winged Teal",
          color = "Year",
@@ -466,7 +478,7 @@ grazep.pred$estimates$Day[D24Y2023] <- "Day24"
     scale_colour_manual(values = c('#A2A4A2',
                                    '#717F5B',
                                    '#D4A634')) +
-    scale_fill_manual(values = c('black',
+    scale_fill_manual(values = c('#A2A4A2',
                                  '#717F5B',
                                  '#D4A634')) +
     theme(plot.title = element_text(family="my_font",                             # select the font for the title
@@ -486,11 +498,11 @@ grazep.pred$estimates$Day[D24Y2023] <- "Day24"
                             colour = "black"),                                    # change the color of the axis titles
           legend.background = element_rect(fill=NA),
           legend.position = c(.85, .1),
-          legend.box = "none") +
+          legend.box = "horizontal") +
     facet_grid(~Day) +
     labs(title = "Blue-winged Teal",
          color = "Year",
-         x = "Vegetation Height (mm)",
+         x = "Grazing Presence",
          y = "Daily Survival Rate"))
 
 
@@ -547,7 +559,7 @@ VegH.pred$estimates$Day[D24Y2023] <- "Day24"
     scale_colour_manual(values = c('#A2A4A2',
                                    '#717F5B',
                                    '#D4A634')) +
-    scale_fill_manual(values = c('black',
+    scale_fill_manual(values = c('#A2A4A2',
                                  '#717F5B',
                                  '#D4A634')) +
     theme(plot.title = element_text(family="my_font",                             # select the font for the title
@@ -567,7 +579,7 @@ VegH.pred$estimates$Day[D24Y2023] <- "Day24"
                             colour = "black"),                                    # change the color of the axis titles
           legend.background = element_rect(fill=NA),
           legend.position = c(.85, .1),
-          legend.box = "none") +
+          legend.box = "horizontal") +
     facet_grid(~Day) +
     labs(title = "Blue-winged Teal",
          color = "Year",
@@ -628,7 +640,7 @@ VOR.pred$estimates$Day[D24Y2023] <- "Day24"
     scale_colour_manual(values = c('#A2A4A2',
                                    '#717F5B',
                                    '#D4A634')) +
-    scale_fill_manual(values = c('black',
+    scale_fill_manual(values = c('#A2A4A2',
                                  '#717F5B',
                                  '#D4A634')) +
     theme(plot.title = element_text(family="my_font",                             # select the font for the title
@@ -648,7 +660,7 @@ VOR.pred$estimates$Day[D24Y2023] <- "Day24"
                             colour = "black"),                                    # change the color of the axis titles
           legend.background = element_rect(fill=NA),
           legend.position = c(.85, .1),
-          legend.box = "none") +
+          legend.box = "horizontal") +
     facet_grid(~Day) +
     labs(title = "Blue-winged Teal",
          color = "Year",
@@ -690,7 +702,7 @@ AGE.pred$estimates$Day <- c(1:24)
     scale_colour_manual(values = c('#A2A4A2',
                                    '#717F5B',
                                    '#D4A634')) +
-    scale_fill_manual(values = c('black',
+    scale_fill_manual(values = c('#A2A4A2',
                                  '#717F5B',
                                  '#D4A634')) +
     theme(plot.title = element_text(family="my_font",                             # select the font for the title
@@ -710,7 +722,7 @@ AGE.pred$estimates$Day <- c(1:24)
                             colour = "black"),                                    # change the color of the axis titles
           legend.background = element_rect(fill=NA),
           legend.position = c(.85, .1),
-          legend.box = "none") +
+          legend.box = "horizontal") +
     labs(title = "Blue-winged Teal",
          color = "Year",
          x = "Nest Age",
@@ -758,6 +770,7 @@ ggsave(BWTEage.plot,
        bg = "white",
        height = 6,
        width = 6)
+
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,
