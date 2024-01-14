@@ -14,14 +14,11 @@ library(wesanderson)
 # Data import -------------------------------------------------------------
 
 
-totals21 <- read.csv("working/totals21.csv", 
-                    row.names = 1)                             # read in the data set
+totals21 <- read.csv("working/totals21.csv")                             # read in the data set
 
-totals22 <- read.csv("working/totals22.csv", 
-                    row.names = 1)                             # read in the data set
+totals22 <- read.csv("working/totals22.csv")                             # read in the data set
 
-totals23 <- read.csv("working/totals23.csv", 
-                    row.names = 1)                             # read in the data set
+totals23 <- read.csv("working/totals23.csv")                             # read in the data set
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
@@ -446,6 +443,8 @@ emmeans(fac.model23,
 # Combing OBL and FAC bar plots -------------------------------------------
 
 
+library(patchwork)
+
 (birds21.bar <- (obl.plot21/fac.plot21))
 
 (birds22.bar <- (obl.plot22/fac.plot22))
@@ -526,12 +525,12 @@ ggsave(birds.bar,
        filename = "outputs/figs/BirdsBarYear.png",  
        dpi = "print", 
        bg = "black",
-       width = 15,
-       height = 10)
+       height = 10,
+       width = 15)
 
 ggsave(totalbirds.bar, 
        filename = "outputs/figs/BirdsBar.png",  
        dpi = "print", 
        bg = "black",
-       width = 15,
-       height = 10)
+       height = 10,
+       width = 15)

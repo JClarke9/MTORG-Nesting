@@ -20,6 +20,11 @@ totals <- totals |>
 
 # Data Wrangling ----------------------------------------------------------
 
+check_failed <- filter(raw, Fate == 1 & Fate2 == "Survive")
+check_survive <- filter(raw, Fate == 0 & Fate2 != "Survive")
+
+CCSP <- filter(raw, Spec == "CCSP")
+
 raw <- filter(raw, Treatment == "MTORG")
 raw <- filter(raw, Spec != "DUCK" & Spec != "UNKN")
 
@@ -148,16 +153,20 @@ raw <- select(raw, Year:LastChecked, LastPresent,
               cTreat:pTreat)
 
 raw$Nestling <- ifelse(raw$Stage == "Nestling", 
-                       1, 0)                           # 1 is nestling, zero is not
+                       1, 0)                           # 1 is nestling, 0 is not
 
 raw$Incubating <- ifelse(raw$Stage == "Nestling", 1,
                          ifelse(raw$Stage == "Incubating", 1,
-                                0))                    # 1 is incubating, zero is not
+                                0))                    # 1 is incubating, 0 is not
 
 raw$Laying <- ifelse(raw$Stage == "Nestling", 1, 
                      ifelse(raw$Stage == "Incubating", 1,
                             ifelse(raw$Stage == "Laying", 1,
-                                   0)))                # 1 is laying, zero is not
+                                   0)))                # 1 is laying, 0 is not
+
+check_lay <- filter(raw, Stage == "Laying")
+check_inc <- filter(raw, Stage == "Incubating")
+check_nst <- filter(raw, Stage == "Nestling")
 
 str(raw)                                               # show the structure of the raw data
 
@@ -232,6 +241,8 @@ failed$id[duplicated(failed$id)]
 
 nest <- bind_rows(success, failed)                     # combine the list of unique successful and failed nests
 
+nest$id[duplicated(nest$id)]
+
 # this is just to verify that I have the correct number
 # of nests and there aren't any duplicates. Don't forget
 # to include the number of unknown nests removed when
@@ -248,9 +259,11 @@ nest$LastChecked <- ifelse(nest$Fate == 0,             # if Fate2=0 (i.e. succes
                            nest$LastPresent,           # set the day last checked equal to last day present
                            nest$LastChecked)           # if Fate2 < 1 don't change the day last checked
 
-data <- select(raw, Year:id, Visit.Interval, Fate2, DateChecked, Stage, 
+data <- select(raw, Year:id, Visit.Interval, DateChecked,
                InitBHCO:InitClutch, Open:pTreat) |>    # select the other data columns from the altered raw data 
   distinct(id, .keep_all = TRUE)                       # select only unique nest ID and keep all other columns
+
+data$id[duplicated(data$id)]
 
 nest <- left_join(nest,                                # select data frame 1
                   data,                                # select data frame 2
@@ -258,6 +271,14 @@ nest <- left_join(nest,                                # select data frame 1
                   keep = FALSE)                        # remove duplicate "Nest.ID" column
 
 nest <- full_join(nest, sched, by = c("Year", "cTreat"="Intensity"))
+
+nest$Stage <- ifelse(nest$Nestling == 1, "Nestling",
+                     ifelse(nest$Incubating == 1, "Incubating",
+                            "Laying"))
+
+nest <- relocate(nest,
+                 Stage,
+                 .after = DateChecked)
 
 nest$AgeFound <- as.numeric(nest$AgeFound)
 
@@ -358,7 +379,7 @@ for (i in unique(nest$Spec)) {
   
   spec.surv <- relocate(spec.surv,
                         Freq,
-                        .after = Fate2)
+                        .after = Fate)
   
   #standardizing dates so each column starts at the first day a nest was found
   spec.surv$LastPresent <- spec.surv$LastPresent - min(spec.surv$FirstFound) + 1
@@ -390,7 +411,7 @@ for (i in unique(nest$Spec)) {
 }
 
 spec.nest <- select(spec.nest, Year, id, Spec, FirstFound, LastPresent, 
-                    LastChecked, Fate, Fate2, Freq, Expos, AgeFound, AgeDay1, Stage, 
+                    LastChecked, Fate, Freq, Expos, AgeFound, AgeDay1, Stage, 
                     Laying, Incubating, Nestling, InitBHCO, BHCONum, BHCOPres, 
                     InitClutch, Clutch, Open, KBG:grazep, start, end)
 

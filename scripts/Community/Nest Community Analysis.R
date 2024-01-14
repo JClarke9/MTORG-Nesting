@@ -21,19 +21,13 @@ windowsFonts(my_font = windowsFont("Gandhi Sans"))
 # Data import -------------------------------------------------------------
 
 
-totals21 <- read.csv("working/totals21.csv", 
-                     row.names = 1)
-totals22 <- read.csv("working/totals22.csv", 
-                     row.names = 1)
-totals23 <- read.csv("working/totals23.csv",
-                     row.names = 1)
+totals21 <- read.csv("working/totals21.csv")
+totals22 <- read.csv("working/totals22.csv")
+totals23 <- read.csv("working/totals23.csv")
 
-birds21 <- read.csv("working/birds21.csv", 
-                    row.names = 1)                             # read in the data set
-birds22 <- read.csv("working/birds22.csv", 
-                    row.names = 1)                             # read in the data set
-birds23 <- read.csv("working/birds23.csv", 
-                    row.names = 1)                             # read in the data set
+birds21 <- read.csv("working/birds21.csv")                             # read in the data set
+birds22 <- read.csv("working/birds22.csv")                             # read in the data set
+birds23 <- read.csv("working/birds23.csv")                             # read in the data set
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
@@ -552,4 +546,3 @@ ggsave(ordination.veg22,                                                        
        bg = "white",                                                            # set the background to transparent
        height = 12.32, 
        width = 15.5)
-```

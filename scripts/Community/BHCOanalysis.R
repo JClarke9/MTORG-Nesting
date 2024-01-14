@@ -1,6 +1,6 @@
 # Data import -------------------------------------------------------------
 
-raw <- read.csv("working/RAWadjusted.csv")
+raw <- read.csv("working/Community.csv")
 
 cowbird <- raw |>                                                               # select the data frame
   group_by(id,                                                                  # group the data by Nest.ID

@@ -1,0 +1,322 @@
+# Load libraries ----------------------------------------------------------
+
+
+library(tidyverse)
+library(RMark)
+
+
+# Read in Data ------------------------------------------------------------
+
+
+nest <- read.csv("working/RMarknesting.csv")
+
+
+# Data Wrangling ----------------------------------------------------------
+
+
+nest$Nestling <- factor(nest$Nestling,
+                        levels = c("0", "1"))
+
+nest$Year <- factor(nest$Year,
+                    levels = c("2021", "2022", "2023"))
+
+# This loop creates a new data frame for each species and removes any
+# dataframes from the environment that aren't over 30 observations.
+
+
+for (i in unique(nest$Spec)) {
+  
+  #Create a dataframe name based on the cleaned species name with ".surv" appended
+  df_name <- paste0(i, ".surv")
+  
+  # Filter the data based on the condition for the current species
+  current_df <- filter(nest, Spec == i & Stage != "Laying")
+  
+  # Remove NA values from the dataframe
+  MISSING <- is.na(current_df$AgeFound)
+  
+  sum(MISSING)
+  
+  current_df <- subset(current_df, 
+                       subset = !MISSING)
+  
+  # Assign the cleaned and filtered dataframe to the dynamically generated name
+  assign(df_name, current_df)
+}
+
+
+# List all objects in the environment
+all_objects <- ls()
+
+# Identify dataframes ending with ".surv" and having more than 30 observations
+surv_dataframes_to_keep <- all_objects[sapply(all_objects, function(df) {
+  inherits(get(df), "data.frame") && grepl("\\.surv$", df) && nrow(get(df)) > 30
+})]
+
+# Remove all objects except those meeting the criteria
+objects_to_remove <- setdiff(all_objects, surv_dataframes_to_keep)
+if (length(objects_to_remove) > 0) {
+  rm(list = objects_to_remove)
+}
+
+
+# Run the top models ------------------------------------------------------
+
+
+WEME.trt <- mark(WEME.surv, 
+                 nocc = max(WEME.surv$LastChecked), 
+                 model = "Nest", 
+                 groups = "Nestling",
+                 adjust = FALSE,
+                 delete = TRUE, 
+                 model.parameters = list(S = list(formula =  ~1 + Nestling)))
+
+BRBL.trt <- mark(BRBL.surv, 
+                 nocc = max(BRBL.surv$LastChecked), 
+                 model = "Nest", 
+                 groups = c("Year",
+                            "Nestling"),
+                 adjust = FALSE,
+                 delete = TRUE, 
+                 model.parameters = list(S = list(formula =  ~1 + Year + Nestling + Litter)))
+
+CCSP.trt <- mark(CCSP.surv, 
+                 nocc = max(CCSP.surv$LastChecked), 
+                 model = "Nest", 
+                 groups = c("Year",
+                            "Nestling"),
+                 adjust = FALSE,
+                 delete = TRUE, 
+                 model.parameters = list(S = list(formula =  ~1 + Year + Nestling)))
+
+MODO.trt <- mark(MODO.surv, 
+                 nocc = max(MODO.surv$LastChecked), 
+                 model = "Nest", 
+                 groups = "Nestling",
+                 adjust = FALSE,
+                 delete = TRUE, 
+                 model.parameters = list(S = list(formula =  ~1 + Time + I(Time^2) + Nestling + KBG)))
+
+RWBL.trt <- mark(RWBL.surv, 
+                 nocc = max(RWBL.surv$LastChecked), 
+                 model = "Nest", 
+                 groups = "Nestling",
+                 adjust = FALSE,
+                 delete = TRUE, 
+                 model.parameters = list(S = list(formula =  ~1 + Time + I(Time^2) + Nestling + grazed)))
+
+GADW.trt <- mark(GADW.surv, 
+                 nocc = max(GADW.surv$LastChecked), 
+                 model = "Nest", 
+                 groups = "Year",
+                 adjust = FALSE,
+                 delete = TRUE, 
+                 model.parameters = list(S = list(formula =  ~1 + Year + NestAge + Forb)))
+
+NOPI.trt <- mark(NOPI.surv, 
+                 nocc = max(NOPI.surv$LastChecked), 
+                 model = "Nest",
+                 adjust = FALSE,
+                 delete = TRUE, 
+                 model.parameters = list(S = list(formula =  ~1 + VOR)))
+
+BWTE.pr <- process.data(BWTE.surv,
+                        nocc = max(BWTE.surv$LastChecked),
+                        groups ="Year",
+                        model = "Nest")
+
+# Vegetation candidate model set
+BWTE.run <- function()
+{
+  # 10. DSR varies with Veg Height (correlated with VOR)
+  S.height = list(formula =  ~1 + Year + NestAge + grazep + Veg.Height)
+  
+  # 11. DSR varies with VOR
+  S.vor = list(formula =  ~1 + Year + NestAge + grazep + VOR)
+  
+  BWTE.model.list = create.model.list("Nest")
+  BWTE.results = mark.wrapper(BWTE.model.list,
+                              data = BWTE.pr,
+                              adjust = FALSE,
+                              delete = TRUE)
+}
+
+BWTE.results <- BWTE.run()
+BWTE.results
+
+BWTE.avg <- model.avg(BWTE.results$S.height,
+                      BWTE.results$S.vor)
+
+
+# Pull out Beta coefficients ----------------------------------------------
+
+
+WEME.beta <- coef(WEME.trt) |>
+  cbind(confint(WEME.trt, level = 0.85)) |> 
+  select(estimate, `7.5 %`, `92.5 %`) |> 
+  rownames_to_column(var = "Variable") |> 
+  rename(c("Coefficient" = "estimate",
+           "lcl" = "7.5 %",
+           "ucl" = "92.5 %")) |> 
+  mutate(Species = "WEME")
+
+BRBL.beta <- coef(BRBL.trt) |>
+  cbind(confint(BRBL.trt, level = 0.85)) |> 
+  select(estimate, `7.5 %`, `92.5 %`) |> 
+  rownames_to_column(var = "Variable") |> 
+  rename(c("Coefficient" = "estimate",
+           "lcl" = "7.5 %",
+           "ucl" = "92.5 %")) |> 
+  mutate(Species = "BRBL")
+
+CCSP.beta <- coef(CCSP.trt) |>
+  cbind(confint(CCSP.trt, level = 0.85)) |> 
+  select(estimate, `7.5 %`, `92.5 %`) |> 
+  rownames_to_column(var = "Variable") |> 
+  rename(c("Coefficient" = "estimate",
+           "lcl" = "7.5 %",
+           "ucl" = "92.5 %")) |> 
+  mutate(Species = "CCSP")
+
+MODO.beta <- coef(MODO.trt) |>
+  cbind(confint(MODO.trt, level = 0.85)) |> 
+  select(estimate, `7.5 %`, `92.5 %`) |> 
+  rownames_to_column(var = "Variable") |> 
+  rename(c("Coefficient" = "estimate",
+           "lcl" = "7.5 %",
+           "ucl" = "92.5 %")) |> 
+  mutate(Species = "MODO")
+
+RWBL.beta <- coef(RWBL.trt) |>
+  cbind(confint(RWBL.trt, level = 0.85)) |> 
+  select(estimate, `7.5 %`, `92.5 %`) |> 
+  rownames_to_column(var = "Variable") |> 
+  rename(c("Coefficient" = "estimate",
+           "lcl" = "7.5 %",
+           "ucl" = "92.5 %")) |> 
+  mutate(Species = "RWBL")
+
+GADW.beta <- coef(GADW.trt) |>
+  cbind(confint(GADW.trt, level = 0.85)) |> 
+  select(estimate, `7.5 %`, `92.5 %`) |> 
+  rownames_to_column(var = "Variable") |> 
+  rename(c("Coefficient" = "estimate",
+           "lcl" = "7.5 %",
+           "ucl" = "92.5 %")) |> 
+  mutate(Species = "GADW")
+
+NOPI.beta <- coef(NOPI.trt) |>
+  cbind(confint(NOPI.trt, level = 0.85)) |> 
+  select(estimate, `7.5 %`, `92.5 %`) |> 
+  rownames_to_column(var = "Variable") |> 
+  rename(c("Coefficient" = "estimate",
+           "lcl" = "7.5 %",
+           "ucl" = "92.5 %")) |> 
+  mutate(Species = "NOPI")
+
+BWTE.beta <- as.data.frame(t(BWTE.avg$coefficients)) |> 
+  cbind(confint(BWTE.avg, level = 0.85, full = T)) |> 
+  select(full, `7.5 %`, `92.5 %`) |> 
+  rownames_to_column(var = "Variable") |> 
+  rename(c("Coefficient" = "full",
+           "lcl" = "7.5 %",
+           "ucl" = "92.5 %")) |> 
+  mutate(Species = "BWTE")
+
+beta <- bind_rows(WEME.beta,
+                  BRBL.beta,
+                  CCSP.beta, 
+                  MODO.beta,
+                  RWBL.beta,
+                  GADW.beta,
+                  NOPI.beta,
+                  BWTE.beta)
+
+beta$Variable <- case_match(BWTE.beta$Variable,
+                            "S:(Intercept)" ~ "Intercept",
+                            "S:Nestling" ~ "Nestling",
+                            "S:Year2022" ~ "Year2022",
+                            "S:Year2023" ~ "Year2023",
+                            "S:Litter" ~ "S:Litter",
+                            "S:TIme" ~ "S:Time",
+                            "S:I(Time^2)" ~ "Time^2",
+                            "S:KBG" ~ "KBG",
+                            "S:grazed" ~ "grazed",
+                            "S:NestAge" ~ "NestAge",
+                            "S:Forb" ~ "Forb",
+                            "S:VOR" ~ "VOR",
+                            "S((Intercept))" ~ "Intercept",
+                            "S(Year2022)" ~ "Year2022",
+                            "S(Year2023)" ~ "Year2023",
+                            "S(NestAge)" ~ "NestAge",
+                            "S(grazep)" ~ "Grazing_Presence",
+                            "S(Veg.Height)" ~ "Veg_Height",
+                            "S(VOR)" ~ "VOR")
+
+
+# Plot the data -----------------------------------------------------------
+
+
+beta <- filter(beta, Variable != "Intercept" & Variable != "Year2022" & Variable != "Year2023")
+
+(beta.plot <- ggplot(beta, 
+                     aes(x = Variable,
+                         y = Coefficient,
+                         fill = Species)) +
+    geom_hline(yintercept = 0,
+               colour = gray(1/2), 
+               lty = 2) +
+    geom_bar(position = "dodge",
+             stat = "identity",
+             colour = "black",
+             width = 0.7) +
+    scale_fill_manual(values = c("#1f78b4", 
+                                 "#33a02c", 
+                                 "#e31a1c", 
+                                 "#ff7f00", 
+                                 "#6a3d9a", 
+                                 "#a6cee3", 
+                                 "#b2df8a", 
+                                 "#fb9a99")) +
+    geom_errorbar(aes(ymin = lcl,
+                      ymax = ucl),
+                  position = position_dodge(0.7),
+                  width = 0.25,
+                  colour = "black") +
+    theme(plot.title = element_text(family = "my_font",
+                                    hjust = 0.5,
+                                    size = 20,
+                                    vjust = 1,
+                                    colour = "black"),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill = NA,
+                                          colour = NA),
+          plot.background = element_rect(fill = NA,
+                                         colour = NA),
+          axis.line = element_line(colour = "black"),
+          axis.text = element_text(size = 12, 
+                                   colour = "black"),
+          axis.ticks = element_line(colour = "black"),
+          text = element_text(size = 12,
+                              colour = "black")) +
+    labs(title = "Top Model Effect Sizes",
+         x = NULL,
+         y = expression("Beta " (beta))))
+
+ggsave(beta.plot,
+       filename = "outputs/figs/beta.png",
+       dpi = "print",
+       bg = "white",
+       height = 6,
+       width = 15)
+
+
+# If you want to clean up the mark*.inp, .vcv, .res and .out
+#  and .tmp files created by RMark in the working directory,
+#  execute 'rm(list = ls(all = TRUE))' - see 2 lines below.
+# NOTE: this will delete all objects in the R session.
+rm(list = ls(all = TRUE))
+# Then, execute 'cleanup(ask = FALSE)' to delete orphaned output
+#  files from MARK. Execute '?cleanup' to learn more
+cleanup(ask = FALSE)

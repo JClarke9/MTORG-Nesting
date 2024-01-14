@@ -14,14 +14,11 @@ library(wesanderson)
 # Data import -------------------------------------------------------------
 
 
-birds21 <- read.csv("working/birds21.csv", 
-                     row.names = 1)                             # read in the data set
+birds21 <- read.csv("working/birds21.csv")                             # read in the data set
 
-birds22 <- read.csv("working/birds22.csv", 
-                     row.names = 1)                             # read in the data set
+birds22 <- read.csv("working/birds22.csv")                             # read in the data set
 
-birds23 <- read.csv("working/birds23.csv", 
-                     row.names = 1)                             # read in the data set
+birds23 <- read.csv("working/birds23.csv")                             # read in the data set
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
@@ -610,14 +607,5 @@ ggsave(box.rich,
        filename = "outputs/figs/RichnessBox.png",  
        dpi = "retina", 
        bg = "white",
-       width = 6,
-       height = 6.5)
-
-(birds.div <- plot_grid(box.rich, box.simp))
-
-ggsave(birds.div, 
-       filename = "outputs/figs/AvianDiversity.png",  
-       dpi = "print", 
-       bg = "transparent",
-       width = 12.36,
-       height = 11)
+       height = 6.5,
+       width = 6)

@@ -203,7 +203,3 @@ b <- a + theme_bw() +                                    # change the theme of t
 
 b
 
-ggsave("outputs/figs/WEMEcorrelations.jpg", 
-       plot = b, 
-       width = 10, 
-       height = 10)

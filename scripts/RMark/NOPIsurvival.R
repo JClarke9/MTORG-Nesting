@@ -14,15 +14,13 @@ windowsFonts(my_font = windowsFont("Gandhi Sans"))
 # Data import -------------------------------------------------------------
 
 
-nest <- read.csv("working/RMarknesting.csv", 
-                 row.names=1)
+nest <- read.csv("working/RMarknesting.csv")
 
 
 # Subsetting data ---------------------------------------------------------
 
 
-NOPI.surv <- filter(nest, 
-                    Spec=="NOPI")                                         # select out only NOPI nest
+NOPI.surv <- filter(nest, Spec=="NOPI" & Stage != "Laying")                                         # select out only NOPI nest
 
 test <- filter(NOPI.surv,
                is.na(KBG) |
@@ -49,6 +47,9 @@ NOPI.surv$Year <- factor(NOPI.surv$Year,
 
 str(NOPI.surv)
 
+NOPI.surv$Nestling <- factor(NOPI.surv$Nestling,
+                             levels = c("0", "1"))
+
 
 # Creating stage variable -------------------------------------------------
 
@@ -68,9 +69,9 @@ rm(list = ls()[!ls() %in% c("NOPI.surv")])
 
 
 NOPI.pr <- process.data(NOPI.surv,
-                        nocc=max(NOPI.surv$LastChecked),
+                        nocc = max(NOPI.surv$LastChecked),
                         groups = c("Year"),
-                        model="Nest")
+                        model = "Nest")
 
 # Temporal candidate model set
 NOPI1.run <- function()
@@ -200,65 +201,27 @@ NOPI4.results <- NOPI4.run()
 NOPI4.results
 
 coef(NOPI4.results$S.vor)
-coef(NOPI4.results$S.lit)
-
 confint(NOPI4.results$S.vor, level = 0.85)
-confint(NOPI4.results$S.lit, level = 0.85)
 
-NOPI.avg <- model.avg(NOPI4.results$S.vor,
-                      NOPI4.results$S.lit)
-
-summary(NOPI.avg)
-coef(NOPI.avg, full = T)
-confint(NOPI.avg, level = 0.85, full = T)
-
-
-# Vegetation candidate model set
-NOPI.run <- function()
-{
-  # 4. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + Litter)
-  
-  # 11. DSR varies with VOR
-  S.vor = list(formula =  ~1 + VOR)
-  
-  NOPI.model.list = create.model.list("Nest")
-  NOPI.results = mark.wrapper(NOPI.model.list,
-                              data = NOPI.pr,
-                              adjust = FALSE,
-                              delete = TRUE)
-}
-
-NOPI.results <- NOPI.run()
-NOPI.results
-
-NOPI.dsr <- model.average(NOPI.results) |> 
-  summarise(estimate = mean(estimate))
+(NOPI.dsr <- as.data.frame(NOPI4.results$S.vor$results$real))
 
 
 # Plotting beta coefficients ----------------------------------------------
 
 
-NOPI.avg
-
-(NOPI.beta <- as.data.frame(t(NOPI.avg$coefficients)))
-
-NOPI.beta <- as.data.frame(t(NOPI.avg$coefficients)) |> 
-  cbind(confint(NOPI.avg, level = 0.85, full = T)) |> 
-  select(full, `7.5 %`, `92.5 %`) |> 
+NOPI.beta <- coef(NOPI4.results$S.vor) |>
+  cbind(confint(NOPI4.results$S.vor, level = 0.85)) |> 
+  select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
-  rename(c("Coefficient" = "full",
+  rename(c("Coefficient" = "estimate",
            "lcl" = "7.5 %",
            "ucl" = "92.5 %"))
 
-NOPI.beta$Variable <- case_match(NOPI.beta$Variable,
-                                 "S((Intercept))" ~ "Intercept",
-                                 "S(VOR)" ~ "VOR",
-                                 "S(Litter)" ~ "Litter")
+NOPI.beta$Variable <- gsub("S:", "", NOPI.beta$Variable)
 
 str(NOPI.beta)
 
-(NOPI.plot <- ggplot(NOPI.beta[2:3,], 
+(NOPI.plot <- ggplot(NOPI.beta[2,], 
                      aes(x = Variable,
                          y = Coefficient)) +
     geom_hline(yintercept = 0,
@@ -284,11 +247,11 @@ str(NOPI.beta)
           plot.background = element_rect(fill = NA,                      # make the outer background transparent
                                          colour = NA),                              # remove any other colors
           axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text = element_text(size=12, 
+          axis.text = element_text(size = 12, 
                                    colour = "black"),                    # color the axis text
           axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text=element_text(size=12,                                              # change the size of the axis titles
-                            colour = "black")) +                                    # change the color of the axis titles
+          text = element_text(size = 12,                                              # change the size of the axis titles
+                              colour = "black")) +                                    # change the color of the axis titles
     labs(title = "Northern Pintail",
          x = NULL,
          y = expression("Beta " (beta))))
@@ -300,78 +263,38 @@ str(NOPI.beta)
 NOPI.ddl <- make.design.data(NOPI.pr) |> 
   as.data.frame()
 
-Litvalues <- seq(from = min(NOPI.surv$Litter),
-                  to = max(NOPI.surv$Litter),
-                  length = 100)
-
 VORvalues <- seq(from = min(NOPI.surv$VOR),
                  to = max(NOPI.surv$VOR),
                  length = 100)
 
 
-Lit.pred <- covariate.predictions(NOPI.results,
-                                  data = data.frame(Litter = Litvalues,
-                                                    VOR = mean(VORvalues)),
-                                  indices = 1)
-
-(NOPIlit.plot <- ggplot(Lit.pred$estimates, 
-                         aes(x = Litter, 
-                             y = estimate)) +
-    geom_line(linewidth = 1.5,
-              aes(color = "model.index")) +
-    scale_colour_manual(values = c('#D4A634')) +
-    scale_fill_manual(values = c('#D4A634')) +
-    theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                    size=16,
-                                    hjust=.5),
-          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-          panel.background = element_rect(fill=NA,                                # make the interior background transparent
-                                          colour = NA),                           # remove any other colors
-          plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                         colour=NA),                              # remove any other colors
-          axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-          axis.text.x = element_text(size=12, colour = "black"),
-          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text=element_text(size=12,                                              # change the size of the axis titles
-                            colour = "black"),                                    # change the color of the axis titles
-          legend.background = element_rect(fill=NA),
-          legend.position = "none") +
-    labs(title = "Northern Pintail",
-         color = "Year",
-         x = "Litter (Percent Cover)",
-         y = "Daily Survival Rate"))
-
-
-VOR.pred <- covariate.predictions(NOPI.results,
-                                  data = data.frame(Litter = mean(Litvalues),
-                                                    VOR = VORvalues),
+VOR.pred <- covariate.predictions(NOPI4.results$S.vor,
+                                  data = data.frame(VOR = VORvalues),
                                   indices = 1)
 
 (NOPIvor.plot <- ggplot(VOR.pred$estimates, 
-                        aes(x = VOR, 
+                        aes(x = covdata, 
                             y = estimate)) +
     geom_line(linewidth = 1.5,
               aes(color = "model.index")) +
     scale_colour_manual(values = c('#D4A634')) +
     scale_fill_manual(values = c('#D4A634')) +
-    theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                    size=16,
-                                    hjust=.5),
+    theme(plot.title = element_text(family = "my_font",                             # select the font for the title
+                                    size = 16,
+                                    hjust = .5),
           panel.grid.major = element_blank(),                                     # remove the vertical grid lines
           panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-          panel.background = element_rect(fill=NA,                                # make the interior background transparent
+          panel.background = element_rect(fill = NA,                                # make the interior background transparent
                                           colour = NA),                           # remove any other colors
-          plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                         colour=NA),                              # remove any other colors
+          plot.background = element_rect(fill = NA,                                 # make the outer background transparent
+                                         colour = NA),                              # remove any other colors
           axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-          axis.text.x = element_text(size=12, colour = "black"),
+          axis.text.y = element_text(size = 12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size = 12, colour = "black"),
           axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text=element_text(size=12,                                              # change the size of the axis titles
-                            colour = "black"),                                    # change the color of the axis titles
-          legend.background = element_rect(fill=NA),
+          text = element_text(size = 12,                                              # change the size of the axis titles
+                              colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill = NA),
           legend.position = "none") +
     labs(title = "Northern Pintail",
          color = "Year",
@@ -380,31 +303,25 @@ VOR.pred <- covariate.predictions(NOPI.results,
 
 
 ggsave(NOPI.plot,
-       filename = "outputs/figs/NOPIbeta.png",
-       dpi = "print",
-       bg = "white",
-       height = 6,
-       width = 6)
-
-ggsave(NOPIlit.plot,
-       filename = "outputs/figs/NOPIlitter.png",
+       filename = "outputs/figs/betaNOPI.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
 ggsave(NOPIvor.plot,
-       filename = "outputs/figs/NOPIvor.png",
+       filename = "outputs/figs/vorNOPI.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
+
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,
 #  execute 'rm(list = ls(all = TRUE))' - see 2 lines below.
 # NOTE: this will delete all objects in the R session.
-rm(list = ls(all=TRUE))
+rm(list = ls(all = TRUE))
 # Then, execute 'cleanup(ask = FALSE)' to delete orphaned output
 #  files from MARK. Execute '?cleanup' to learn more
 cleanup(ask = FALSE)

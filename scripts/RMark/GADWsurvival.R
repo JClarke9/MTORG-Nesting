@@ -14,15 +14,13 @@ windowsFonts(my_font = windowsFont("Gandhi Sans"))
 # Data import -------------------------------------------------------------
 
 
-nest <- read.csv("working/RMarknesting.csv", 
-                 row.names=1)
+nest <- read.csv("working/RMarknesting.csv")
 
 
 # Subsetting data ---------------------------------------------------------
 
 
-GADW.surv <- filter(nest, 
-                    Spec=="GADW")                                         # select out only GADW nest
+GADW.surv <- filter(nest, Spec=="GADW" & Stage != "Laying")                                         # select out only GADW nest
 
 test <- filter(GADW.surv,
                is.na(KBG) |
@@ -68,9 +66,9 @@ rm(list = ls()[!ls() %in% c("GADW.surv")])
 
 
 GADW.pr <- process.data(GADW.surv,
-                        nocc=max(GADW.surv$LastChecked),
+                        nocc = max(GADW.surv$LastChecked),
                         groups = c("Year"),
-                        model="Nest")
+                        model = "Nest")
 
 # Temporal candidate model set
 GADW1.run <- function()
@@ -265,11 +263,11 @@ str(GADW.beta)
           plot.background = element_rect(fill = NA,                      # make the outer background transparent
                                          colour = NA),                              # remove any other colors
           axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text = element_text(size=12, 
+          axis.text = element_text(size = 12, 
                                    colour = "black"),                    # color the axis text
           axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text=element_text(size=12,                                              # change the size of the axis titles
-                            colour = "black")) +                                    # change the color of the axis titles
+          text = element_text(size = 12,                                              # change the size of the axis titles
+                              colour = "black")) +                                    # change the color of the axis titles
     labs(title = "Gadwall",
          x = NULL,
          y = expression("Beta " (beta))))
@@ -327,7 +325,7 @@ Forb.pred$estimates$Day[D15Y2023] <- "Day15"
 Forb.pred$estimates$Day[D27Y2023] <- "Day27"
 
 (GADWforb.plot <- ggplot(transform(Forb.pred$estimates,
-                                   Year = factor(Year, levels=c("2021", "2022", "2023"))), 
+                                   Year = factor(Year, levels = c("2021", "2022", "2023"))), 
                          aes(x = covdata, 
                              y = estimate,
                              groups = Year,
@@ -341,21 +339,21 @@ Forb.pred$estimates$Day[D27Y2023] <- "Day27"
     scale_fill_manual(values = c('#A2A4A2',
                                  '#717F5B',
                                  '#D4A634')) +
-    theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                    size=16,
-                                    hjust=.5),
+    theme(plot.title = element_text(family = "my_font",                             # select the font for the title
+                                    size = 16,
+                                    hjust = .5),
           panel.grid.major = element_blank(),                                     # remove the vertical grid lines
           panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-          panel.background = element_rect(fill=NA,                                # make the interior background transparent
+          panel.background = element_rect(fill = NA,                                # make the interior background transparent
                                           colour = NA),                           # remove any other colors
-          plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                         colour=NA),                              # remove any other colors
+          plot.background = element_rect(fill = NA,                                 # make the outer background transparent
+                                         colour = NA),                              # remove any other colors
           axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-          axis.text.x = element_text(size=12, colour = "black"),
+          axis.text.y = element_text(size = 12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size = 12, colour = "black"),
           axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text=element_text(size=12,                                              # change the size of the axis titles
-                            colour = "black"),                                    # change the color of the axis titles
+          text = element_text(size = 12,                                              # change the size of the axis titles
+                              colour = "black"),                                    # change the color of the axis titles
           legend.background = element_rect(fill=NA),
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
@@ -386,7 +384,7 @@ AGE.pred$estimates <- fill(AGE.pred$estimates, Year, .direction = "down")
 AGE.pred$estimates$Day <- c(1:27)
 
 (GADWage.plot <- ggplot(transform(AGE.pred$estimates,
-                                  Year = factor(Year, levels=c("2021", "2022", "2023"))), 
+                                  Year = factor(Year, levels = c("2021", "2022", "2023"))), 
                         aes(x = Day, 
                             y = estimate,
                             groups = Year,
@@ -400,22 +398,22 @@ AGE.pred$estimates$Day <- c(1:27)
     scale_fill_manual(values = c('#A2A4A2',
                                  '#717F5B',
                                  '#D4A634')) +
-    theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                    size=16,
-                                    hjust=.5),
+    theme(plot.title = element_text(family = "my_font",                             # select the font for the title
+                                    size = 16,
+                                    hjust = .5),
           panel.grid.major = element_blank(),                                     # remove the vertical grid lines
           panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-          panel.background = element_rect(fill=NA,                                # make the interior background transparent
+          panel.background = element_rect(fill = NA,                                # make the interior background transparent
                                           colour = NA),                           # remove any other colors
-          plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                         colour=NA),                              # remove any other colors
+          plot.background = element_rect(fill = NA,                                 # make the outer background transparent
+                                         colour = NA),                              # remove any other colors
           axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-          axis.text.x = element_text(size=12, colour = "black"),
+          axis.text.y = element_text(size = 12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size = 12, colour = "black"),
           axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text=element_text(size=12,                                              # change the size of the axis titles
-                            colour = "black"),                                    # change the color of the axis titles
-          legend.background = element_rect(fill=NA),
+          text = element_text(size = 12,                                              # change the size of the axis titles
+                              colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill = NA),
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
     labs(title = "Gadwall",
@@ -425,21 +423,21 @@ AGE.pred$estimates$Day <- c(1:27)
 
 
 ggsave(GADW.plot,
-       filename = "~/Git/NDSU/RMARK/Figures/GADWbeta.png",
+       filename = "outputs/figs/betaGADW.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
 ggsave(GADWforb.plot,
-       filename = "outputs/figs/GADWforb.png",
+       filename = "outputs/figs/forbGADW.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
 ggsave(GADWage.plot,
-       filename = "outputs/figs/GADWage.png",
+       filename = "outputs/figs/ageGADW.png",
        dpi = "print",
        bg = "white",
        height = 6,
@@ -450,8 +448,7 @@ ggsave(GADWage.plot,
 #  and .tmp files created by RMark in the working directory,
 #  execute 'rm(list = ls(all = TRUE))' - see 2 lines below.
 # NOTE: this will delete all objects in the R session.
-rm(list = ls(all=TRUE))
+rm(list = ls(all = TRUE))
 # Then, execute 'cleanup(ask = FALSE)' to delete orphaned output
 #  files from MARK. Execute '?cleanup' to learn more
 cleanup(ask = FALSE)
-

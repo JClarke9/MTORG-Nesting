@@ -8,11 +8,9 @@ windowsFonts(my_font = windowsFont("Arial"))
 
 # Data import -------------------------------------------------------------
 
-tot.rich <- read.csv("working/TotalRichness.csv",
-                     row.names=1)
+tot.rich <- read.csv("working/TotalRichness.csv")
 
-tot.simp <- read.csv("working/SimpsonTotal.csv",
-                     row.names=1)
+tot.simp <- read.csv("working/SimpsonTotal.csv")
 
 tot.rich$Year <- as.factor(tot.rich$Year)
 tot.rich$Treat <- as.factor(tot.rich$Treat)
@@ -23,25 +21,25 @@ tot.simp$Treat <- as.factor(tot.simp$Treat)
 # Creating violin plots ---------------------------------------------------
 
 
-my_theme <- theme(plot.title = element_text(family="my_font",
-                                              hjust=.5), 
+my_theme <- theme(plot.title = element_text(family = "my_font",
+                                              hjust = .5), 
                   panel.grid.major = element_blank(),                           # remove the vertical grid lines
                   panel.grid.minor = element_blank(),                           # remove the horizontal grid lines
-                  panel.background = element_rect(fill="transparent",           # make the interior background transparent
+                  panel.background = element_rect(fill = "transparent",           # make the interior background transparent
                                                   colour = NA),
-                  plot.background = element_rect(fill="transparent",            # make the outer background transparent
-                                                 colour=NA),
+                  plot.background = element_rect(fill = "transparent",            # make the outer background transparent
+                                                 colour = NA),
                   axis.line = element_line(colour = "black"),                   # color the x and y axis
-                  axis.text.x = element_text(family="my_font",
-                                             size=8, 
+                  axis.text.x = element_text(family = "my_font",
+                                             size = 20, 
                                              colour = "black"),                 # color the axis text
                   axis.text.y = element_text(colour = "black",
-                                             size = 8),
+                                             size = 20),
                   axis.ticks = element_line(colour = "black"),
-                  text = element_text(family="my_font",
-                                    size=8,                                    # change the size of the axis titles
+                  text = element_text(family = "my_font",
+                                    size = 20,                                    # change the size of the axis titles
                                     colour = "black"),                          # change the color of the axis titles
-                  legend.position = "none")
+                  legend.position = "right")
 
 rich.viol <- ggplot(tot.rich,
                     aes(fill=Year,
@@ -52,7 +50,9 @@ rich.viol <- ggplot(tot.rich,
                                .75),
               colour= "black",
               linewidth=.5) +
-  scale_fill_manual(values=c("#798E87", "#CCC591")) +
+  scale_fill_manual(values=c('#A2A4A2',
+                             '#717F5B',
+                             '#D4A634')) +
   my_theme +
   labs(title = "Avian Nesting Richness", 
        x = NULL, 
@@ -64,6 +64,8 @@ rich.viol <- ggplot(tot.rich,
 
 rich.viol
 
+# old colors - "#798E87", "#CCC591"
+
 simp.viol <- ggplot(tot.simp, 
                     aes(fill=Year,
                         x=Treat, 
@@ -73,7 +75,9 @@ simp.viol <- ggplot(tot.simp,
                                .75),
               colour= "black",
               linewidth=.5) +
-  scale_fill_manual(values=c("#798E87", "#CCC591")) +
+  scale_fill_manual(values=c('#A2A4A2',
+                             '#717F5B',
+                             '#D4A634')) +
   my_theme +
   labs(title = "Avian Nesting Diversity", 
        x = NULL, 
@@ -97,7 +101,8 @@ birds.viol
 
 ggsave(birds.viol, 
        filename = "outputs/figs/AvianDiversityViolin.png",  
-       dpi = 600,
-       width = 3.06,
-       height = 4.32,
+       dpi = 300,
+       bg = "white",
+       height = 12,
+       width = 15,
        units = "in")

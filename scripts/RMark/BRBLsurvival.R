@@ -6,6 +6,7 @@ library(vegan)
 library(tidyverse)
 library(RMark)
 library(MuMIn)
+library(cowplot)
 source("scripts/Functions/RMark_Stage_Code.R")
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
@@ -14,15 +15,14 @@ windowsFonts(my_font = windowsFont("Gandhi Sans"))
 # Data import -------------------------------------------------------------
 
 
-nest <- read.csv("working/RMarknesting.csv", 
-                 row.names=1)
+nest <- read.csv("working/RMarknesting.csv")
 
 
 # Subsetting data ---------------------------------------------------------
 
 
 BRBL.surv <- filter(nest, 
-                    Spec=="BRBL")                                         # select out only BRBL nest
+                    Spec == "BRBL" & Stage != "Laying")
 
 test <- filter(BRBL.surv,
                is.na(KBG) |
@@ -47,6 +47,9 @@ BRBL.surv <- subset(BRBL.surv,
 BRBL.surv$Year <- factor(BRBL.surv$Year,
                          levels = c("2021", "2022", "2023"))
 
+BRBL.surv$Nestling <- factor(BRBL.surv$Nestling,
+                             level = c("0", "1"))
+
 str(BRBL.surv)
 
 
@@ -68,9 +71,10 @@ rm(list = ls()[!ls() %in% c("BRBL.surv")])
 
 
 BRBL.pr <- process.data(BRBL.surv,
-                        nocc=max(BRBL.surv$LastChecked),
-                        groups = c("Year"),
-                        model="Nest")
+                        nocc = max(BRBL.surv$LastChecked),
+                        groups = c("Year",
+                                   "Nestling"),
+                        model = "Nest")
 
 # Temporal candidate model set
 BRBL1.run <- function()
@@ -118,7 +122,7 @@ BRBL2.run <- function()
   S.age = list(formula = ~1 + Year + NestAge)
   
   # 5. DSR varies with nest age
-  S.stage = list(formula = ~1 + Year + Incub)
+  S.stage = list(formula = ~1 + Year + Nestling)
   
   BRBL.model.list = create.model.list("Nest")
   BRBL2.results = mark.wrapper(BRBL.model.list,
@@ -131,24 +135,24 @@ BRBL2.run <- function()
 BRBL2.results <- BRBL2.run()
 BRBL2.results
 
-coef(BRBL2.results$S.year)
-confint(BRBL2.results$S.year, level = 0.85)
+coef(BRBL2.results$S.stage)
+confint(BRBL2.results$S.stage, level = 0.85)
 
 
 # Grazing candidate model set
 BRBL3.run <- function()
 {
-  # 1. DSR varies with year
-  S.year = list(formula = ~1 + Year)
+  # 5. DSR varies with nest age
+  S.stage = list(formula = ~1 + Year + Nestling)
   
   # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + Year + grazed)
+  S.grazed = list(formula = ~1 + Year + Nestling + grazed)
   
   # 3. DSR varies with the number of days a nest experienced grazing
-  S.grazep = list(formula = ~1 + Year + grazep)
+  S.grazep = list(formula = ~1 + Year + Nestling + grazep)
   
-  # 4. DSR varies with the previous years grazing intensity
-  S.pTreat = list(formula = ~1 + Year + pTreat)
+  # 4. DSR varies with the previous Year + Nestlings grazing intensity
+  S.pTreat = list(formula = ~1 + Year + Nestling + pTreat)
   
   BRBL.model.list = create.model.list("Nest")
   BRBL3.results = mark.wrapper(BRBL.model.list,
@@ -161,45 +165,45 @@ BRBL3.run <- function()
 BRBL3.results <- BRBL3.run()
 BRBL3.results
 
-coef(BRBL3.results$S.year)
-confint(BRBL3.results$S.year, level = 0.85)
+coef(BRBL3.results$S.stage)
+confint(BRBL3.results$S.stage, level = 0.85)
 
 
 # Vegetation candidate model set
 BRBL4.run <- function()
 {
-  # 1. DSR varies with year
-  S.year = list(formula = ~1 + Year)
+  # 5. DSR varies with nest age
+  S.stage = list(formula = ~1 + Year + Nestling)
   
   # 2. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + Year + KBG)
+  S.kbg = list(formula =  ~1 + Year + Nestling + KBG)
   
   # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.brome = list(formula = ~1 + Year + SmoothB)
+  S.brome = list(formula = ~1 + Year + Nestling + SmoothB)
   
   # 4. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + Year + Litter)
+  S.lit = list(formula =  ~1 + Year + Nestling + Litter)
   
   # 5. DSR varies with Bare
-  S.bare = list(formula =  ~1 + Year + Bare)
+  S.bare = list(formula =  ~1 + Year + Nestling + Bare)
   
   # 6. DSR varies with Forb
-  S.forb = list(formula =  ~1 + Year + Forb)
+  S.forb = list(formula =  ~1 + Year + Nestling + Forb)
   
   # 7. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + Year + Grasslike)
+  S.grass = list(formula =  ~1 + Year + Nestling + Grasslike)
   
   # 8. DSR varies with Woody
-  S.woody = list(formula =  ~1 + Year + Woody)
+  S.woody = list(formula =  ~1 + Year + Nestling + Woody)
   
   # 9. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + Year + LitterD)
+  S.litdep = list(formula =  ~1 + Year + Nestling + LitterD)
   
   # 10. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Year + Veg.Height)
+  S.height = list(formula =  ~1 + Year + Nestling + Veg.Height)
   
   # 11. DSR varies with VOR
-  S.vor = list(formula =  ~1 + Year + VOR)
+  S.vor = list(formula =  ~1 + Year + Nestling + VOR)
   
   BRBL.model.list = create.model.list("Nest")
   BRBL4.results = mark.wrapper(BRBL.model.list,
@@ -216,13 +220,20 @@ coef(BRBL4.results$S.lit)
 confint(BRBL4.results$S.lit, level = 0.85)
 
 
-BRBL.real <- as.data.frame(BRBL4.results$S.lit$results$real) |>
-  rownames_to_column(var = "Group") |> 
-  mutate(Year = case_when(
-    grepl("2021", Group) ~ "2021",
-    grepl("2022", Group) ~ "2022",
-    grepl("2023", Group) ~ "2023")) |> 
-  select(Year, estimate, se, lcl, ucl)
+(BRBL.real <- as.data.frame(BRBL4.results$S.lit$results$real) |> 
+    rownames_to_column(var = "Group") |> 
+    mutate(Year = case_when(
+      grepl("2021", Group) ~ "2021",
+      grepl("2022", Group) ~ "2022",
+      grepl("2023", Group) ~ "2023"),
+      Stage = case_when(
+        grepl("20210", Group) ~ "Incubating",
+        grepl("20220", Group) ~ "Incubating",
+        grepl("20230", Group) ~ "Incubating",
+        grepl("20211", Group) ~ "Nestling",
+        grepl("20221", Group) ~ "Nestling",
+        grepl("20231", Group) ~ "Nestling")) |> 
+    select(Year, Stage, estimate, se, lcl, ucl))
 
 
 # Plotting Beta Coefficients ----------------------------------------------
@@ -240,7 +251,7 @@ BRBL.beta$Variable <- gsub("S:", "", BRBL.beta$Variable)
 
 str(BRBL.beta)
 
-(BRBL.plot <- ggplot(BRBL.beta[4,], 
+(BRBL.plot <- ggplot(BRBL.beta[4:5,], 
                      aes(x = Variable,
                          y = Coefficient)) +
     geom_hline(yintercept = 0,
@@ -266,41 +277,55 @@ str(BRBL.beta)
           plot.background = element_rect(fill = NA,                      # make the outer background transparent
                                          colour = NA),                              # remove any other colors
           axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text = element_text(size=12, 
+          axis.text = element_text(size = 12, 
                                    colour = "black"),                    # color the axis text
           axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text=element_text(size=12,                                              # change the size of the axis titles
-                            colour = "black")) +                                    # change the color of the axis titles
+          text = element_text(size = 12,                                              # change the size of the axis titles
+                              colour = "black")) +                                    # change the color of the axis titles
     labs(title = "BRBL",
-         x = "Percent Cover",
+         x = NULL,
          y = expression("Beta " (beta))))
 
 
 # Creating Predictive Plots -----------------------------------------------
 
 
+BRBL.ddl <- make.design.data(BRBL.pr) |> 
+  as.data.frame()
+
+filter(BRBL.ddl, S.age == 0)
+
 plotdata <- BRBL4.results$S.lit
 
-BRBL.ddl <- make.design.data(BRBL.pr)
-BRBL.ddl <- as.data.frame(BRBL.ddl)
-
 lit.values <- seq(from = min(BRBL.surv$Litter), 
-                 to = max(BRBL.surv$Litter), 
-                 length = 100)
+                  to = max(BRBL.surv$Litter), 
+                  length = 100)
 
 
 lit.pred <- covariate.predictions(plotdata,
                                   data = data.frame(Litter = lit.values),
-                                  indices = c(1, 88, 175))
+                                  indices = c(1, 77,
+                                              153, 229, 305))
 
-`2021` <- which(lit.pred$estimates$par.index == 1)
-`2022` <- which(lit.pred$estimates$par.index == 88)
-`2023` <- which(lit.pred$estimates$par.index == 175)
+inc2021 <- which(lit.pred$estimates$par.index == 1)
+inc2023 <- which(lit.pred$estimates$par.index == 77)
+nst2021 <- which(lit.pred$estimates$par.index == 153)
+nst2022 <- which(lit.pred$estimates$par.index == 229)
+nst2023 <- which(lit.pred$estimates$par.index == 305)
 
 lit.pred$estimates$Year <- NA
-lit.pred$estimates$Year[`2021`] <- "2021"
-lit.pred$estimates$Year[`2022`] <- "2022"
-lit.pred$estimates$Year[`2023`] <- "2023"
+lit.pred$estimates$Year[inc2021] <- "2021"
+lit.pred$estimates$Year[inc2023] <- "2023"
+lit.pred$estimates$Year[nst2021] <- "2021"
+lit.pred$estimates$Year[nst2022] <- "2022"
+lit.pred$estimates$Year[nst2023] <- "2023"
+
+lit.pred$estimates$Stage <- NA
+lit.pred$estimates$Stage[inc2021] <- "Incubating"
+lit.pred$estimates$Stage[inc2023] <- "Incubating"
+lit.pred$estimates$Stage[nst2021] <- "Nestling"
+lit.pred$estimates$Stage[nst2022] <- "Nestling"
+lit.pred$estimates$Stage[nst2023] <- "Nestling"
 
 (BRBLlit.plot <- ggplot(transform(lit.pred$estimates,
                                   Year = factor(Year, levels = c("2021", "2022", "2023"))), 
@@ -317,24 +342,25 @@ lit.pred$estimates$Year[`2023`] <- "2023"
     scale_fill_manual(values = c('#A2A4A2',
                                  '#717F5B',
                                  '#D4A634')) +
-    theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                    size=16,
-                                    hjust=.5),
+    theme(plot.title = element_text(family = "my_font",                             # select the font for the title
+                                    size = 16,
+                                    hjust = .5),
           panel.grid.major = element_blank(),                                     # remove the vertical grid lines
           panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-          panel.background = element_rect(fill=NA,                                # make the interior background transparent
+          panel.background = element_rect(fill = NA,                                # make the interior background transparent
                                           colour = NA),                           # remove any other colors
-          plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                         colour=NA),                              # remove any other colors
+          plot.background = element_rect(fill = NA,                                 # make the outer background transparent
+                                         colour = NA),                              # remove any other colors
           axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-          axis.text.x = element_text(size=12, colour = "black"),
+          axis.text.y = element_text(size = 12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size = 12, colour = "black"),
           axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text=element_text(size=12,                                              # change the size of the axis titles
-                            colour = "black"),                                    # change the color of the axis titles
-          legend.background = element_rect(fill=NA),
+          text = element_text(size = 12,                                              # change the size of the axis titles
+                              colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill = NA),
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
+    facet_grid(~Stage) + 
     labs(title = "Brewer's Blackbird",
          color = "Year",
          x = "Litter (Percent Cover)",
@@ -342,14 +368,14 @@ lit.pred$estimates$Year[`2023`] <- "2023"
 
 
 ggsave(BRBL.plot,
-       filename = "outputs/figs/BRBLbeta.png",
+       filename = "outputs/figs/betaBRBL.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
 ggsave(BRBLlit.plot,
-       filename = "outputs/figs/BRBLlit.png",
+       filename = "outputs/figs/litBRBL.png",
        dpi = "print",
        bg = "white",
        height = 6,
@@ -360,7 +386,7 @@ ggsave(BRBLlit.plot,
 #  and .tmp files created by RMark in the working directory,
 #  execute 'rm(list = ls(all = TRUE))' - see 2 lines below.
 # NOTE: this will delete all objects in the R session.
-rm(list = ls(all=TRUE))
+rm(list = ls(all = TRUE))
 # Then, execute 'cleanup(ask = FALSE)' to delete orphaned output
 #  files from MARK. Execute '?cleanup' to learn more
 cleanup(ask = FALSE)

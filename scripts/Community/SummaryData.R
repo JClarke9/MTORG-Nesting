@@ -7,11 +7,9 @@ library(tidyverse)
 # Importing Data ----------------------------------------------------------
 
 
-totals21 <- read.csv("working/totals21.csv", 
-                     row.names = 1)                             # read in the data set
+totals21 <- read.csv("working/totals21.csv")                             # read in the data set
 
-totals22 <- read.csv("working/totals22.csv", 
-                     row.names = 1)                             # read in the data set
+totals22 <- read.csv("working/totals22.csv")                             # read in the data set
 
 
 # Calculating species totals ----------------------------------------------

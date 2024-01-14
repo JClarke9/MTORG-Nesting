@@ -242,7 +242,7 @@ simp.div <- full_join(simpson21.group,
          "2022 Diversity" = "simpson22.group",
          "2023 Diversity" = "simpson23.group")
 
-write.csv(simp.total, "outputs/figs/SimpsonTotal.csv")
+write.csv(simp.total, "working/SimpsonTotal.csv")
 
 
 # Creating diversity plot -------------------------------------------------
@@ -285,5 +285,15 @@ ggsave(box.simp,
        filename = "outputs/figs/SimpsonsBox.png",  
        dpi = "retina", 
        bg = "white",
-       width = 6,
-       height = 6.5)
+       height = 6.5,
+       width = 6)
+
+
+(birds.div <- plot_grid(box.rich, box.simp))
+
+ggsave(birds.div, 
+       filename = "outputs/figs/AvianDiversity.png",  
+       dpi = "print", 
+       bg = "white",
+       height = 10,
+       width = 15)

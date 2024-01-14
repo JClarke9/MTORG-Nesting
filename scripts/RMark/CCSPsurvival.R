@@ -6,6 +6,7 @@ library(vegan)
 library(tidyverse)
 library(RMark)
 library(MuMIn)
+library(cowplot)
 source("scripts/Functions/RMark_Stage_Code.R")
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
@@ -21,7 +22,7 @@ nest <- read.csv("working/RMarknesting.csv")
 
 
 CCSP.surv <- filter(nest, 
-                    Spec == "CCSP" & Stage != "Laying")                                         # select out only CCSP nest
+                    Spec == "CCSP" & Stage != "Laying")
 
 test <- filter(CCSP.surv,
                is.na(KBG) |
@@ -70,10 +71,10 @@ rm(list = ls()[!ls() %in% c("CCSP.surv")])
 
 
 CCSP.pr <- process.data(CCSP.surv,
-                        nocc=max(CCSP.surv$LastChecked),
+                        nocc = max(CCSP.surv$LastChecked),
                         groups = c("Year",
                                    "Nestling"),
-                        model="Nest")
+                        model = "Nest")
 
 # Temporal candidate model set
 CCSP1.run <- function()
@@ -219,20 +220,27 @@ coef(CCSP4.results$S.stage)
 confint(CCSP4.results$S.stage, level = 0.85)
 
 
-CCSP.real <- as.data.frame(CCSP4.results$S.stage$results$real) |> 
-  rownames_to_column(var = "Group") |> 
-  mutate(Year = case_when(
-    grepl("2021", Group) ~ "2021",
-    grepl("2022", Group) ~ "2022",
-    grepl("2023", Group) ~ "2023")) |> 
-  select(Year, estimate, se, lcl, ucl)
+(CCSP.real <- as.data.frame(CCSP4.results$S.stage$results$real) |> 
+    rownames_to_column(var = "Group") |> 
+    mutate(Year = case_when(
+      grepl("2021", Group) ~ "2021",
+      grepl("2022", Group) ~ "2022",
+      grepl("2023", Group) ~ "2023"),
+      Stage = case_when(
+        grepl("20210", Group) ~ "Incubating",
+        grepl("20220", Group) ~ "Incubating",
+        grepl("20230", Group) ~ "Incubating",
+        grepl("20211", Group) ~ "Nestling",
+        grepl("20221", Group) ~ "Nestling",
+        grepl("20231", Group) ~ "Nestling")) |> 
+    select(Year, Stage, estimate, se, lcl, ucl))
 
 
 # Plotting beta coefficients ----------------------------------------------
 
 
-CCSP.beta <- coef(CCSP4.results$S.bhcon) |>
-  cbind(confint(CCSP4.results$S.bhcon, level = 0.85)) |> 
+CCSP.beta <- coef(CCSP4.results$S.stage) |>
+  cbind(confint(CCSP4.results$S.stage, level = 0.85)) |> 
   select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
@@ -269,11 +277,11 @@ str(CCSP.beta)
           plot.background = element_rect(fill = NA,                      # make the outer background transparent
                                          colour = NA),                              # remove any other colors
           axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text = element_text(size=12, 
+          axis.text = element_text(size = 12, 
                                    colour = "black"),                    # color the axis text
           axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text=element_text(size=12,                                              # change the size of the axis titles
-                            colour = "black")) +                                    # change the color of the axis titles
+          text = element_text(size = 12,                                              # change the size of the axis titles
+                              colour = "black")) +                                    # change the color of the axis titles
     labs(title = "Clay-colored Sparrow",
          x = NULL,
          y = expression("Beta " (beta))))
@@ -285,34 +293,45 @@ str(CCSP.beta)
 CCSP.ddl <- make.design.data(CCSP.pr) |> 
   as.data.frame()
 
-plotdata <- CCSP4.results$S.bhcon
+filter(CCSP.ddl, S.age == 0)
 
-BHCOvalues <- seq(from = min(CCSP.surv$BHCONum),
-                 to = max(CCSP.surv$BHCONum),
-                 length = 100)
+plotdata <- CCSP4.results$S.stage
 
+stage.pred <- covariate.predictions(plotdata,
+                                    indices = c(1, 79, 157,
+                                                235, 313, 391))
 
-BHCO.pred <- covariate.predictions(plotdata,
-                                   data = data.frame(BHCONum = BHCOvalues),
-                                   indices = c(1, 88, 175))
+inc2021 <- which(stage.pred$estimates$par.index == 1)
+inc2022 <- which(stage.pred$estimates$par.index == 79)
+inc2023 <- which(stage.pred$estimates$par.index == 157)
+nst2021 <- which(stage.pred$estimates$par.index == 235)
+nst2022 <- which(stage.pred$estimates$par.index == 313)
+nst2023 <- which(stage.pred$estimates$par.index == 391)
 
-`2021` <- which(BHCO.pred$estimates$par.index == 1)
-`2022` <- which(BHCO.pred$estimates$par.index == 88)
-`2023` <- which(BHCO.pred$estimates$par.index == 175)
+stage.pred$estimates$Year <- NA
+stage.pred$estimates$Year[inc2021] <- "2021"
+stage.pred$estimates$Year[inc2022] <- "2022"
+stage.pred$estimates$Year[inc2023] <- "2023"
+stage.pred$estimates$Year[nst2021] <- "2021"
+stage.pred$estimates$Year[nst2022] <- "2022"
+stage.pred$estimates$Year[nst2023] <- "2023"
 
-BHCO.pred$estimates$Year <- NA
-BHCO.pred$estimates$Year[`2021`] <- "2021"
-BHCO.pred$estimates$Year[`2022`] <- "2022"
-BHCO.pred$estimates$Year[`2023`] <- "2023"
+stage.pred$estimates$Stage <- NA
+stage.pred$estimates$Stage[inc2021] <- "Incubating"
+stage.pred$estimates$Stage[inc2022] <- "Incubating"
+stage.pred$estimates$Stage[inc2023] <- "Incubating"
+stage.pred$estimates$Stage[nst2021] <- "Nestling"
+stage.pred$estimates$Stage[nst2022] <- "Nestling"
+stage.pred$estimates$Stage[nst2023] <- "Nestling"
 
-(CCSPbhco.plot <- ggplot(transform(BHCO.pred$estimates,
-                                  Year = factor(Year, levels=c("2021", "2022", "2023"))), 
-                        aes(x = covdata, 
-                            y = estimate,
-                            groups = Year,
-                            fill = Year)) +
-    geom_line(linewidth = 1.5,
-              aes(color = Year)) +
+(CCSPstage.plot <- ggplot(transform(stage.pred$estimates,
+                                    Year = factor(Year, levels = c("2021", "2022", "2023"))), 
+                          aes(x = Stage, 
+                              y = estimate,
+                              groups = Year,
+                              fill = Year)) +
+    geom_point(size = 4,
+               aes(color = Year)) +
     scale_linetype_manual(values = c(1, 3, 2)) +
     scale_colour_manual(values = c('#A2A4A2',
                                    '#717F5B',
@@ -320,39 +339,39 @@ BHCO.pred$estimates$Year[`2023`] <- "2023"
     scale_fill_manual(values = c('#A2A4A2',
                                  '#717F5B',
                                  '#D4A634')) +
-    theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                    size=16,
-                                    hjust=.5),
+    theme(plot.title = element_text(family = "my_font",                             # select the font for the title
+                                    size = 16,
+                                    hjust = .5),
           panel.grid.major = element_blank(),                                     # remove the vertical grid lines
           panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-          panel.background = element_rect(fill=NA,                                # make the interior background transparent
+          panel.background = element_rect(fill = NA,                                # make the interior background transparent
                                           colour = NA),                           # remove any other colors
-          plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                         colour=NA),                              # remove any other colors
+          plot.background = element_rect(fill = NA,                                 # make the outer background transparent
+                                         colour = NA),                              # remove any other colors
           axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-          axis.text.x = element_text(size=12, colour = "black"),
+          axis.text.y = element_text(size = 12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size = 12, colour = "black"),
           axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text=element_text(size=12,                                              # change the size of the axis titles
-                            colour = "black"),                                    # change the color of the axis titles
-          legend.background = element_rect(fill=NA),
+          text = element_text(size = 12,                                              # change the size of the axis titles
+                              colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill = NA),
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
     labs(title = "Clay-colored Sparrow",
          color = "Year",
-         x = "Number of BHCO Eggs",
+         x = "Stage",
          y = "Daily Survival Rate"))
 
 
 ggsave(CCSP.plot,
-       filename = "outputs/figs/CCSPbeta.png",
+       filename = "outputs/figs/betaCCSP.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
-ggsave(CCSPbhco.plot,
-       filename = "outputs/figs/CCSPbhco.png",
+ggsave(CCSPstage.plot,
+       filename = "outputs/figs/stageCCSP.png",
        dpi = "print",
        bg = "white",
        height = 6,
@@ -363,7 +382,7 @@ ggsave(CCSPbhco.plot,
 #  and .tmp files created by RMark in the working directory,
 #  execute 'rm(list = ls(all = TRUE))' - see 2 lines below.
 # NOTE: this will delete all objects in the R session.
-rm(list = ls(all=TRUE))
+rm(list = ls(all = TRUE))
 # Then, execute 'cleanup(ask = FALSE)' to delete orphaned output
 #  files from MARK. Execute '?cleanup' to learn more
 cleanup(ask = FALSE)

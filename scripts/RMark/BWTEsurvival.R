@@ -14,15 +14,13 @@ windowsFonts(my_font = windowsFont("Gandhi Sans"))
 # Data import -------------------------------------------------------------
 
 
-nest <- read.csv("working/RMarknesting.csv", 
-                 row.names=1)
+nest <- read.csv("working/RMarknesting.csv")
 
 
 # Subsetting data ---------------------------------------------------------
 
 
-BWTE.surv <- filter(nest, 
-                    Spec=="BWTE")                                         # select out only BWTE nest
+BWTE.surv <- filter(nest, Spec == "BWTE" & Stage != "Laying")                                         # select out only BWTE nest
 
 test <- filter(BWTE.surv,
                is.na(KBG) |
@@ -50,6 +48,10 @@ BWTE.surv$Year <- factor(BWTE.surv$Year,
 str(BWTE.surv)
 
 
+BWTE.surv$Nestling <- factor(BWTE.surv$Nestling,
+                             levels = c("0", "1"))
+
+
 # Creating stage variable -------------------------------------------------
 
 
@@ -68,9 +70,9 @@ rm(list = ls()[!ls() %in% c("BWTE.surv")])
 
 
 BWTE.pr <- process.data(BWTE.surv,
-                        nocc=max(BWTE.surv$LastChecked),
-                        groups = c("Year"),
-                        model="Nest")
+                        nocc = max(BWTE.surv$LastChecked),
+                        groups = "Year",
+                        model = "Nest")
 
 # Temporal candidate model set
 BWTE1.run <- function()
@@ -152,45 +154,45 @@ BWTE3.run <- function()
 BWTE3.results <- BWTE3.run()
 BWTE3.results
 
-coef(BWTE3.results$S.grazep)
-confint(BWTE3.results$S.grazep, level = 0.85)
+coef(BWTE3.results$S.age)
+confint(BWTE3.results$S.age, level = 0.85)
 
 
 # Vegetation candidate model set
 BWTE4.run <- function()
 {
-  # 3. DSR varies with the number of days a nest experienced grazing
-  S.grazep = list(formula = ~1 + Year + NestAge + grazep)
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + Year + NestAge)
   
   # 2. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + Year + NestAge + grazep + KBG)
+  S.kbg = list(formula =  ~1 + Year + NestAge + KBG)
   
   # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.brome = list(formula = ~1 + Year + NestAge + grazep + SmoothB)
+  S.brome = list(formula = ~1 + Year + NestAge + SmoothB)
   
   # 4. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + Year + NestAge + grazep + Litter)
+  S.lit = list(formula =  ~1 + Year + NestAge + Litter)
   
   # 5. DSR varies with Bare
-  S.bare = list(formula =  ~1 + Year + NestAge + grazep + Bare)
+  S.bare = list(formula =  ~1 + Year + NestAge + Bare)
   
   # 6. DSR varies with Forb
-  S.forb = list(formula =  ~1 + Year + NestAge + grazep + Forb)
+  S.forb = list(formula =  ~1 + Year + NestAge + Forb)
   
   # 7. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + Year + NestAge + grazep + Grasslike)
+  S.grass = list(formula =  ~1 + Year + NestAge + Grasslike)
   
   # 8. DSR varies with Woody
-  S.woody = list(formula =  ~1 + Year + NestAge + grazep + Woody)
+  S.woody = list(formula =  ~1 + Year + NestAge + Woody)
   
   # 9. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + Year + NestAge + grazep + LitterD)
+  S.litdep = list(formula =  ~1 + Year + NestAge + LitterD)
   
   # 10. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Year + NestAge + grazep + Veg.Height)
+  S.height = list(formula =  ~1 + Year + NestAge + Veg.Height)
   
   # 11. DSR varies with VOR
-  S.vor = list(formula =  ~1 + Year + NestAge + grazep + VOR)
+  S.vor = list(formula =  ~1 + Year + NestAge + VOR)
   
   BWTE.model.list = create.model.list("Nest")
   BWTE4.results = mark.wrapper(BWTE.model.list,
@@ -204,28 +206,15 @@ BWTE4.results <- BWTE4.run()
 BWTE4.results
 
 coef(BWTE4.results$S.height)
-coef(BWTE4.results$S.litdep)
 coef(BWTE4.results$S.vor)
 
 confint(BWTE4.results$S.height, level = 0.85)
-confint(BWTE4.results$S.litdep, level = 0.85)
 confint(BWTE4.results$S.vor, level = 0.85)
-
-BWTE.avg <- model.avg(BWTE4.results$S.height,
-                      BWTE4.results$S.litdep,
-                      BWTE4.results$S.vor)
-
-summary(BWTE.avg)
-coef(BWTE.avg, full = T)
-confint(BWTE.avg, level = 0.85, full = T)
 
 
 # Vegetation candidate model set
 BWTE.run <- function()
 {
-    # 9. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + Year + NestAge + grazep + LitterD)
-  
   # 10. DSR varies with Veg Height (correlated with VOR)
   S.height = list(formula =  ~1 + Year + NestAge + grazep + Veg.Height)
   
@@ -242,9 +231,15 @@ BWTE.run <- function()
 BWTE.results <- BWTE.run()
 BWTE.results
 
-BWTE.dsr <- model.average(BWTE.results)
+BWTE.avg <- model.avg(BWTE.results$S.height,
+                      BWTE.results$S.vor)
 
-BWTE.dsr <- as.data.frame(BWTE.dsr) |> 
+summary(BWTE.avg)
+coef(BWTE.avg, full = T)
+confint(BWTE.avg, level = 0.85, full = T)
+
+BWTE.dsr <- model.average(BWTE.results) |> 
+  as.data.frame() |> 
   rename("Year" = "par.index")
 
 BWTE.dsr$Year <- case_match(BWTE.dsr$Year,
@@ -254,17 +249,13 @@ BWTE.dsr$Year <- case_match(BWTE.dsr$Year,
 
 BWTE.dsr <- fill(BWTE.dsr, Year, .direction = "down")
 
-BWTE.dsr <- BWTE.dsr |> 
-  group_by(Year) |> 
-  summarise(estimate = mean(estimate))
+(BWTE.dsr <- BWTE.dsr |> 
+    group_by(Year) |> 
+    summarise(estimate = mean(estimate)))
 
 
 # Plotting beta coefficients ----------------------------------------------
 
-
-BWTE.avg
-
-(BWTE.beta <- as.data.frame(t(BWTE.avg$coefficients)))
 
 BWTE.beta <- as.data.frame(t(BWTE.avg$coefficients)) |> 
   cbind(confint(BWTE.avg, level = 0.85, full = T)) |> 
@@ -281,12 +272,11 @@ BWTE.beta$Variable <- case_match(BWTE.beta$Variable,
                                  "S(NestAge)" ~ "NestAge",
                                  "S(grazep)" ~ "Grazing_Presence",
                                  "S(Veg.Height)" ~ "Veg_Height",
-                                 "S(LitterD)" ~ "Litter_Depth",
                                  "S(VOR)" ~ "VOR")
 
 str(BWTE.beta)
 
-(BWTE.plot <- ggplot(BWTE.beta[4:8,], 
+(BWTE.plot <- ggplot(BWTE.beta[4:6,], 
                      aes(x = Variable,
                          y = Coefficient)) +
     geom_hline(yintercept = 0,
@@ -312,11 +302,11 @@ str(BWTE.beta)
           plot.background = element_rect(fill = NA,                      # make the outer background transparent
                                          colour = NA),                              # remove any other colors
           axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text = element_text(size=12, 
+          axis.text = element_text(size = 12, 
                                    colour = "black"),                    # color the axis text
           axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text=element_text(size=12,                                              # change the size of the axis titles
-                            colour = "black")) +                                    # change the color of the axis titles
+          text = element_text(size = 12,                                              # change the size of the axis titles
+                              colour = "black")) +                                    # change the color of the axis titles
     labs(title = "Blue-winged Teal",
          x = NULL,
          y = expression("Beta " (beta))))
@@ -328,68 +318,41 @@ str(BWTE.beta)
 BWTE.ddl <- make.design.data(BWTE.pr) |> 
   as.data.frame()
 
-LitDvalues <- seq(from = min(BWTE.surv$LitterD),
-                 to = max(BWTE.surv$LitterD),
-                 length = 100)
-
-grazep.values <- c(0,1)
-
 VegHvalues <- seq(from = min(BWTE.surv$Veg.Height),
-                 to = max(BWTE.surv$Veg.Height),
-                 length = 100)
+                  to = max(BWTE.surv$Veg.Height),
+                  length = 100)
 
 VORvalues <- seq(from = min(BWTE.surv$VOR),
                  to = max(BWTE.surv$VOR),
                  length = 100)
 
 
-LitD.pred <- covariate.predictions(BWTE.results,
-                                   data = data.frame(LitterD = LitDvalues,
-                                                     grazep = 0,
-                                                     Veg.Height = mean(VegHvalues),
-                                                     VOR = mean(VORvalues)),
-                                   indices = c(2, 15, 25,
-                                               68, 82, 91,
-                                               134, 147, 157))
+AGE.pred <- covariate.predictions(BWTE.results,
+                                  data = data.frame(Veg.Height = mean(VegHvalues),
+                                                    VOR = mean(VORvalues)),
+                                  indices = c(2:25,
+                                              68:91,
+                                              134:157))
 
-D1Y2021 <- which(LitD.pred$estimates$par.index == 2)
-D14Y2021 <- which(LitD.pred$estimates$par.index == 15)
-D24Y2021 <- which(LitD.pred$estimates$par.index == 25)
-D1Y2022 <- which(LitD.pred$estimates$par.index == 68)
-D14Y2022 <- which(LitD.pred$estimates$par.index == 82)
-D24Y2022 <- which(LitD.pred$estimates$par.index == 91)
-D1Y2023 <- which(LitD.pred$estimates$par.index == 134)
-D14Y2023 <- which(LitD.pred$estimates$par.index == 147)
-D24Y2023 <- which(LitD.pred$estimates$par.index == 157)
+D1Y2021 <- which(AGE.pred$estimates$par.index == 2)
+D1Y2022 <- which(AGE.pred$estimates$par.index == 68)
+D1Y2023 <- which(AGE.pred$estimates$par.index == 134)
 
-LitD.pred$estimates$Year <- NA
-LitD.pred$estimates$Year[D1Y2021] <- "2021"
-LitD.pred$estimates$Year[D14Y2021] <- "2021"
-LitD.pred$estimates$Year[D24Y2021] <- "2021"
-LitD.pred$estimates$Year[D1Y2022] <- "2022"
-LitD.pred$estimates$Year[D14Y2022] <- "2022"
-LitD.pred$estimates$Year[D24Y2022] <- "2022"
-LitD.pred$estimates$Year[D1Y2023] <- "2023"
-LitD.pred$estimates$Year[D14Y2023] <- "2023"
-LitD.pred$estimates$Year[D24Y2023] <- "2023"
+AGE.pred$estimates$Year <- NA
+AGE.pred$estimates$Year[D1Y2021] <- "2021"
+AGE.pred$estimates$Year[D1Y2022] <- "2022"
+AGE.pred$estimates$Year[D1Y2023] <- "2023"
 
-LitD.pred$estimates$Day <- NA
-LitD.pred$estimates$Day[D1Y2021] <- "Day1"
-LitD.pred$estimates$Day[D14Y2021] <- "Day14"
-LitD.pred$estimates$Day[D24Y2021] <- "Day24"
-LitD.pred$estimates$Day[D1Y2022] <- "Day1"
-LitD.pred$estimates$Day[D14Y2022] <- "Day14"
-LitD.pred$estimates$Day[D24Y2022] <- "Day24"
-LitD.pred$estimates$Day[D1Y2023] <- "Day1"
-LitD.pred$estimates$Day[D14Y2023] <- "Day14"
-LitD.pred$estimates$Day[D24Y2023] <- "Day24"
+AGE.pred$estimates <- fill(AGE.pred$estimates, Year, .direction = "down")
 
-(BWTElitd.plot <- ggplot(transform(LitD.pred$estimates,
-                                   Year = factor(Year, levels=c("2021", "2022", "2023"))), 
-                         aes(x = LitterD, 
-                             y = estimate,
-                             groups = Year,
-                             fill = Year)) +
+AGE.pred$estimates$Day <- c(1:24)
+
+(BWTEage.plot <- ggplot(transform(AGE.pred$estimates,
+                                  Year = factor(Year, levels = c("2021", "2022", "2023"))), 
+                        aes(x = Day, 
+                            y = estimate,
+                            groups = Year,
+                            fill = Year)) +
     geom_line(linewidth = 1.5,
               aes(color = Year)) +
     scale_linetype_manual(values = c(1, 3, 2)) +
@@ -399,117 +362,32 @@ LitD.pred$estimates$Day[D24Y2023] <- "Day24"
     scale_fill_manual(values = c('#A2A4A2',
                                  '#717F5B',
                                  '#D4A634')) +
-    theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                    size=16,
-                                    hjust=.5),
+    theme(plot.title = element_text(family = "my_font",                             # select the font for the title
+                                    size = 16,
+                                    hjust = .5),
           panel.grid.major = element_blank(),                                     # remove the vertical grid lines
           panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-          panel.background = element_rect(fill=NA,                                # make the interior background transparent
+          panel.background = element_rect(fill = NA,                                # make the interior background transparent
                                           colour = NA),                           # remove any other colors
-          plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                         colour=NA),                              # remove any other colors
+          plot.background = element_rect(fill = NA,                                 # make the outer background transparent
+                                         colour = NA),                              # remove any other colors
           axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-          axis.text.x = element_text(size=12, colour = "black"),
+          axis.text.y = element_text(size = 12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size = 12, colour = "black"),
           axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text=element_text(size=12,                                              # change the size of the axis titles
-                            colour = "black"),                                    # change the color of the axis titles
-          legend.background = element_rect(fill=NA),
+          text = element_text(size = 12,                                              # change the size of the axis titles
+                              colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill = NA),
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
-    facet_grid(~Day) +
     labs(title = "Blue-winged Teal",
          color = "Year",
-         x = "Litter Depth (mm)",
-         y = "Daily Survival Rate"))
-
-
-grazep.pred <- covariate.predictions(BWTE.results,
-                                     data = data.frame(LitterD = mean(LitDvalues),
-                                                       grazep = factor(grazep.values,
-                                                                       levels = c(0,1)),
-                                                       Veg.Height = mean(VegHvalues),
-                                                       VOR = mean(VORvalues)),
-                                     indices = c(2, 15, 25,
-                                                 68, 82, 91,
-                                                 134, 147, 157))
-
-D1Y2021 <- which(grazep.pred$estimates$par.index == 2)
-D14Y2021 <- which(grazep.pred$estimates$par.index == 15)
-D24Y2021 <- which(grazep.pred$estimates$par.index == 25)
-D1Y2022 <- which(grazep.pred$estimates$par.index == 68)
-D14Y2022 <- which(grazep.pred$estimates$par.index == 82)
-D24Y2022 <- which(grazep.pred$estimates$par.index == 91)
-D1Y2023 <- which(grazep.pred$estimates$par.index == 134)
-D14Y2023 <- which(grazep.pred$estimates$par.index == 147)
-D24Y2023 <- which(grazep.pred$estimates$par.index == 157)
-
-grazep.pred$estimates$Year <- NA
-grazep.pred$estimates$Year[D1Y2021] <- "2021"
-grazep.pred$estimates$Year[D14Y2021] <- "2021"
-grazep.pred$estimates$Year[D24Y2021] <- "2021"
-grazep.pred$estimates$Year[D1Y2022] <- "2022"
-grazep.pred$estimates$Year[D14Y2022] <- "2022"
-grazep.pred$estimates$Year[D24Y2022] <- "2022"
-grazep.pred$estimates$Year[D1Y2023] <- "2023"
-grazep.pred$estimates$Year[D14Y2023] <- "2023"
-grazep.pred$estimates$Year[D24Y2023] <- "2023"
-
-grazep.pred$estimates$Day <- NA
-grazep.pred$estimates$Day[D1Y2021] <- "Day1"
-grazep.pred$estimates$Day[D14Y2021] <- "Day14"
-grazep.pred$estimates$Day[D24Y2021] <- "Day24"
-grazep.pred$estimates$Day[D1Y2022] <- "Day1"
-grazep.pred$estimates$Day[D14Y2022] <- "Day14"
-grazep.pred$estimates$Day[D24Y2022] <- "Day24"
-grazep.pred$estimates$Day[D1Y2023] <- "Day1"
-grazep.pred$estimates$Day[D14Y2023] <- "Day14"
-grazep.pred$estimates$Day[D24Y2023] <- "Day24"
-
-(BWTEgrazep.plot <- ggplot(transform(grazep.pred$estimates,
-                                   Year = factor(Year, levels=c("2021", "2022", "2023"))), 
-                         aes(x = grazep, 
-                             y = estimate,
-                             groups = Year,
-                             fill = Year)) +
-    geom_point(size = 4,
-               aes(color = Year)) +
-    scale_linetype_manual(values = c(1, 3, 2)) +
-    scale_colour_manual(values = c('#A2A4A2',
-                                   '#717F5B',
-                                   '#D4A634')) +
-    scale_fill_manual(values = c('#A2A4A2',
-                                 '#717F5B',
-                                 '#D4A634')) +
-    theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                    size=16,
-                                    hjust=.5),
-          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-          panel.background = element_rect(fill=NA,                                # make the interior background transparent
-                                          colour = NA),                           # remove any other colors
-          plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                         colour=NA),                              # remove any other colors
-          axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-          axis.text.x = element_text(size=12, colour = "black"),
-          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text=element_text(size=12,                                              # change the size of the axis titles
-                            colour = "black"),                                    # change the color of the axis titles
-          legend.background = element_rect(fill=NA),
-          legend.position = c(.85, .1),
-          legend.box = "horizontal") +
-    facet_grid(~Day) +
-    labs(title = "Blue-winged Teal",
-         color = "Year",
-         x = "Grazing Presence",
+         x = "Nest Age",
          y = "Daily Survival Rate"))
 
 
 VegH.pred <- covariate.predictions(BWTE.results,
-                                   data = data.frame(LitterD = mean(LitDvalues),
-                                                     grazep = 0,
-                                                     Veg.Height = VegHvalues,
+                                   data = data.frame(Veg.Height = VegHvalues,
                                                      VOR = mean(VORvalues)),
                                    indices = c(2, 15, 25,
                                                68, 82, 91,
@@ -548,7 +426,7 @@ VegH.pred$estimates$Day[D14Y2023] <- "Day14"
 VegH.pred$estimates$Day[D24Y2023] <- "Day24"
 
 (BWTEVegH.plot <- ggplot(transform(VegH.pred$estimates,
-                                   Year = factor(Year, levels=c("2021", "2022", "2023"))), 
+                                   Year = factor(Year, levels = c("2021", "2022", "2023"))), 
                          aes(x = Veg.Height, 
                              y = estimate,
                              groups = Year,
@@ -562,22 +440,22 @@ VegH.pred$estimates$Day[D24Y2023] <- "Day24"
     scale_fill_manual(values = c('#A2A4A2',
                                  '#717F5B',
                                  '#D4A634')) +
-    theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                    size=16,
-                                    hjust=.5),
+    theme(plot.title = element_text(family = "my_font",                             # select the font for the title
+                                    size = 16,
+                                    hjust = .5),
           panel.grid.major = element_blank(),                                     # remove the vertical grid lines
           panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-          panel.background = element_rect(fill=NA,                                # make the interior background transparent
+          panel.background = element_rect(fill = NA,                                # make the interior background transparent
                                           colour = NA),                           # remove any other colors
-          plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                         colour=NA),                              # remove any other colors
+          plot.background = element_rect(fill = NA,                                 # make the outer background transparent
+                                         colour = NA),                              # remove any other colors
           axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-          axis.text.x = element_text(size=12, colour = "black"),
+          axis.text.y = element_text(size = 12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size = 12, colour = "black"),
           axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text=element_text(size=12,                                              # change the size of the axis titles
-                            colour = "black"),                                    # change the color of the axis titles
-          legend.background = element_rect(fill=NA),
+          text = element_text(size = 12,                                              # change the size of the axis titles
+                              colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill = NA),
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
     facet_grid(~Day) +
@@ -588,9 +466,7 @@ VegH.pred$estimates$Day[D24Y2023] <- "Day24"
 
 
 VOR.pred <- covariate.predictions(BWTE.results,
-                                  data = data.frame(LitterD = mean(LitDvalues),
-                                                    grazep = 0,
-                                                    Veg.Height = mean(VegHvalues),
+                                  data = data.frame(Veg.Height = mean(VegHvalues),
                                                     VOR = VORvalues),
                                   indices = c(2, 15, 25,
                                               68, 82, 91,
@@ -629,70 +505,8 @@ VOR.pred$estimates$Day[D14Y2023] <- "Day14"
 VOR.pred$estimates$Day[D24Y2023] <- "Day24"
 
 (BWTEVOR.plot <- ggplot(transform(VOR.pred$estimates,
-                                   Year = factor(Year, levels=c("2021", "2022", "2023"))), 
-                         aes(x = VOR, 
-                             y = estimate,
-                             groups = Year,
-                             fill = Year)) +
-    geom_line(linewidth = 1.5,
-              aes(color = Year)) +
-    scale_linetype_manual(values = c(1, 3, 2)) +
-    scale_colour_manual(values = c('#A2A4A2',
-                                   '#717F5B',
-                                   '#D4A634')) +
-    scale_fill_manual(values = c('#A2A4A2',
-                                 '#717F5B',
-                                 '#D4A634')) +
-    theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                    size=16,
-                                    hjust=.5),
-          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-          panel.background = element_rect(fill=NA,                                # make the interior background transparent
-                                          colour = NA),                           # remove any other colors
-          plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                         colour=NA),                              # remove any other colors
-          axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-          axis.text.x = element_text(size=12, colour = "black"),
-          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text=element_text(size=12,                                              # change the size of the axis titles
-                            colour = "black"),                                    # change the color of the axis titles
-          legend.background = element_rect(fill=NA),
-          legend.position = c(.85, .1),
-          legend.box = "horizontal") +
-    facet_grid(~Day) +
-    labs(title = "Blue-winged Teal",
-         color = "Year",
-         x = "Visual Obstruction Reading (dm)",
-         y = "Daily Survival Rate"))
-
-
-AGE.pred <- covariate.predictions(BWTE.results,
-                                  data = data.frame(LitterD = mean(LitDvalues),
-                                                    grazep = 0,
-                                                    Veg.Height = mean(VegHvalues),
-                                                    VOR = mean(VORvalues)),
-                                  indices = c(2:25,
-                                              68:91,
-                                              134:157))
-
-D1Y2021 <- which(AGE.pred$estimates$par.index == 2)
-D1Y2022 <- which(AGE.pred$estimates$par.index == 68)
-D1Y2023 <- which(AGE.pred$estimates$par.index == 134)
-
-AGE.pred$estimates$Year <- NA
-AGE.pred$estimates$Year[D1Y2021] <- "2021"
-AGE.pred$estimates$Year[D1Y2022] <- "2022"
-AGE.pred$estimates$Year[D1Y2023] <- "2023"
-
-AGE.pred$estimates <- fill(AGE.pred$estimates, Year, .direction = "down")
-
-AGE.pred$estimates$Day <- c(1:24)
-
-(BWTEage.plot <- ggplot(transform(AGE.pred$estimates,
-                                  Year = factor(Year, levels=c("2021", "2022", "2023"))), 
-                        aes(x = Day, 
+                                  Year = factor(Year, levels = c("2021", "2022", "2023"))), 
+                        aes(x = VOR, 
                             y = estimate,
                             groups = Year,
                             fill = Year)) +
@@ -705,67 +519,54 @@ AGE.pred$estimates$Day <- c(1:24)
     scale_fill_manual(values = c('#A2A4A2',
                                  '#717F5B',
                                  '#D4A634')) +
-    theme(plot.title = element_text(family="my_font",                             # select the font for the title
-                                    size=16,
-                                    hjust=.5),
+    theme(plot.title = element_text(family = "my_font",                             # select the font for the title
+                                    size = 16,
+                                    hjust = .5),
           panel.grid.major = element_blank(),                                     # remove the vertical grid lines
           panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-          panel.background = element_rect(fill=NA,                                # make the interior background transparent
+          panel.background = element_rect(fill = NA,                                # make the interior background transparent
                                           colour = NA),                           # remove any other colors
-          plot.background = element_rect(fill=NA,                                 # make the outer background transparent
-                                         colour=NA),                              # remove any other colors
+          plot.background = element_rect(fill = NA,                                 # make the outer background transparent
+                                         colour = NA),                              # remove any other colors
           axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-          axis.text.x = element_text(size=12, colour = "black"),
+          axis.text.y = element_text(size = 12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size = 12, colour = "black"),
           axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text=element_text(size=12,                                              # change the size of the axis titles
-                            colour = "black"),                                    # change the color of the axis titles
-          legend.background = element_rect(fill=NA),
+          text = element_text(size = 12,                                              # change the size of the axis titles
+                              colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill = NA),
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
+    facet_grid(~Day) +
     labs(title = "Blue-winged Teal",
          color = "Year",
-         x = "Nest Age",
+         x = "Visual Obstruction Reading (dm)",
          y = "Daily Survival Rate"))
 
 
 ggsave(BWTE.plot,
-       filename = "~/Git/NDSU/RMARK/Figures/BWTEbeta.png",
-       dpi = "print",
-       bg = "white",
-       height = 6,
-       width = 6)
-
-ggsave(BWTElitdep.plot,
-       filename = "outputs/figs/BWTElitdep.png",
-       dpi = "print",
-       bg = "white",
-       height = 6,
-       width = 6)
-
-ggsave(BWTEgrazep.plot,
-       filename = "outputs/figs/BWTEgrazep.png",
-       dpi = "print",
-       bg = "white",
-       height = 6,
-       width = 6)
-
-ggsave(BWTEvegh.plot,
-       filename = "outputs/figs/BWTEvegh.png",
-       dpi = "print",
-       bg = "white",
-       height = 6,
-       width = 6)
-
-ggsave(BWTEvor.plot,
-       filename = "outputs/figs/BWTEvor.png",
+       filename = "outputs/figs/betaBWTE.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
 ggsave(BWTEage.plot,
-       filename = "outputs/figs/BWTEage.png",
+       filename = "outputs/figs/ageBWTE.png",
+       dpi = "print",
+       bg = "white",
+       height = 6,
+       width = 6)
+
+ggsave(BWTEVegH.plot,
+       filename = "outputs/figs/veghBWTE.png",
+       dpi = "print",
+       bg = "white",
+       height = 6,
+       width = 6)
+
+ggsave(BWTEVOR.plot,
+       filename = "outputs/figs/vorBWTE.png",
        dpi = "print",
        bg = "white",
        height = 6,
@@ -776,7 +577,7 @@ ggsave(BWTEage.plot,
 #  and .tmp files created by RMark in the working directory,
 #  execute 'rm(list = ls(all = TRUE))' - see 2 lines below.
 # NOTE: this will delete all objects in the R session.
-rm(list = ls(all=TRUE))
+rm(list = ls(all = TRUE))
 # Then, execute 'cleanup(ask = FALSE)' to delete orphaned output
 #  files from MARK. Execute '?cleanup' to learn more
 cleanup(ask = FALSE)
