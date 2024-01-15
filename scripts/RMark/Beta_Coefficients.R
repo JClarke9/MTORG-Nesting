@@ -3,6 +3,7 @@
 
 library(tidyverse)
 library(RMark)
+library(MuMIn)
 
 
 # Read in Data ------------------------------------------------------------
@@ -232,34 +233,40 @@ beta <- bind_rows(WEME.beta,
                   NOPI.beta,
                   BWTE.beta)
 
-beta$Variable <- case_match(BWTE.beta$Variable,
+beta$Variable <- case_match(beta$Variable,
                             "S:(Intercept)" ~ "Intercept",
-                            "S:Nestling" ~ "Nestling",
-                            "S:Year2022" ~ "Year2022",
-                            "S:Year2023" ~ "Year2023",
-                            "S:Litter" ~ "S:Litter",
-                            "S:TIme" ~ "S:Time",
+                            "S:Nestling1" ~ "Nestling",
+                            "S:Year2022" ~ "Year_2022",
+                            "S:Year2023" ~ "Year_2023",
+                            "S:Litter" ~ "Litter",
+                            "S:Time" ~ "Time",
                             "S:I(Time^2)" ~ "Time^2",
                             "S:KBG" ~ "KBG",
-                            "S:grazed" ~ "grazed",
-                            "S:NestAge" ~ "NestAge",
+                            "S:grazed" ~ "Days_Grazed",
+                            "S:NestAge" ~ "Nest_Age",
                             "S:Forb" ~ "Forb",
                             "S:VOR" ~ "VOR",
                             "S((Intercept))" ~ "Intercept",
-                            "S(Year2022)" ~ "Year2022",
-                            "S(Year2023)" ~ "Year2023",
-                            "S(NestAge)" ~ "NestAge",
+                            "S(Year2022)" ~ "Year_2022",
+                            "S(Year2023)" ~ "Year_2023",
+                            "S(NestAge)" ~ "Nest_Age",
                             "S(grazep)" ~ "Grazing_Presence",
                             "S(Veg.Height)" ~ "Veg_Height",
                             "S(VOR)" ~ "VOR")
+
+unique(beta$Variable)
+
+beta$Variable <- factor(beta$Variable,
+                        levels = c("Intercept", "Year_2022", "Year_2023", "Time",
+                                   "Time^2", "Nest_Age", "Nestling", "Grazing_Presence",
+                                   "Days_Grazed", "KBG", "Forb", "Litter", "Veg_Height",
+                                   "VOR"))
 
 
 # Plot the data -----------------------------------------------------------
 
 
-beta <- filter(beta, Variable != "Intercept" & Variable != "Year2022" & Variable != "Year2023")
-
-(beta.plot <- ggplot(beta, 
+(betaF.plot <- ggplot(beta, 
                      aes(x = Variable,
                          y = Coefficient,
                          fill = Species)) +
@@ -303,6 +310,63 @@ beta <- filter(beta, Variable != "Intercept" & Variable != "Year2022" & Variable
     labs(title = "Top Model Effect Sizes",
          x = NULL,
          y = expression("Beta " (beta))))
+
+
+beta_f <- filter(beta, Variable != "Intercept" & Variable != "Year_2022" & Variable != "Year_2023" &
+                   Variable != "Time" & Variable != "Time^2" & Variable != "Nestling" & Variable != "Nest_Age")
+
+(beta.plot <- ggplot(beta_f, 
+                     aes(x = Variable,
+                         y = Coefficient,
+                         fill = Species)) +
+    geom_hline(yintercept = 0,
+               colour = gray(1/2), 
+               lty = 2) +
+    geom_bar(position = "dodge",
+             stat = "identity",
+             colour = "black",
+             width = 0.7) +
+    scale_fill_manual(values = c("#1f78b4", 
+                                 "#33a02c", 
+                                 "#e31a1c", 
+                                 "#ff7f00", 
+                                 "#6a3d9a", 
+                                 "#a6cee3", 
+                                 "#b2df8a", 
+                                 "#fb9a99")) +
+    geom_errorbar(aes(ymin = lcl,
+                      ymax = ucl),
+                  position = position_dodge(0.7),
+                  width = 0.25,
+                  colour = "black") +
+    theme(plot.title = element_text(family = "my_font",
+                                    hjust = 0.5,
+                                    size = 20,
+                                    vjust = 1,
+                                    colour = "black"),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill = NA,
+                                          colour = NA),
+          plot.background = element_rect(fill = NA,
+                                         colour = NA),
+          axis.line = element_line(colour = "black"),
+          axis.text = element_text(size = 12, 
+                                   colour = "black"),
+          axis.ticks = element_line(colour = "black"),
+          text = element_text(size = 12,
+                              colour = "black")) +
+    labs(title = "Top Model Effect Sizes",
+         x = NULL,
+         y = expression("Beta " (beta))))
+
+
+ggsave(betaF.plot,
+       filename = "outputs/figs/betaFull.png",
+       dpi = "print",
+       bg = "white",
+       height = 6,
+       width = 25)
 
 ggsave(beta.plot,
        filename = "outputs/figs/beta.png",
