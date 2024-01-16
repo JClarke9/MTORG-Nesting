@@ -93,7 +93,8 @@ tot.simp$Treat <- factor(tot.simp$Treat,
           text = element_text(family = "my_font",
                               size = 30,                                    # change the size of the axis titles
                               colour = "black"),                          # change the color of the axis titles
-          legend.position = "bottom") +
+          legend.position = "bottom",
+          legend.background = element_blank()) +
     labs(title = "Avian Nesting Diversity", 
          x = NULL, 
          y = "Simpson's Diversity"))
