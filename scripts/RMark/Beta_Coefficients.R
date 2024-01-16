@@ -267,7 +267,7 @@ beta$Variable <- factor(beta$Variable,
                   colour = "black") +
     theme(plot.title = element_text(family = "my_font",
                                     hjust = 0.5,
-                                    size = 20,
+                                    size = 40,
                                     vjust = 1,
                                     colour = "black"),
           panel.grid.major = element_blank(),
@@ -277,10 +277,10 @@ beta$Variable <- factor(beta$Variable,
           plot.background = element_rect(fill = NA,
                                          colour = NA),
           axis.line = element_line(colour = "black"),
-          axis.text = element_text(size = 12, 
+          axis.text = element_text(size = 30, 
                                    colour = "black"),
           axis.ticks = element_line(colour = "black"),
-          text = element_text(size = 12,
+          text = element_text(size = 30,
                               colour = "black")) +
     labs(title = "Top Model Effect Sizes",
          x = NULL,
@@ -316,7 +316,7 @@ beta_f <- filter(beta, Variable != "Intercept" & Variable != "Year_2022" & Varia
                   colour = "black") +
     theme(plot.title = element_text(family = "my_font",
                                     hjust = 0.5,
-                                    size = 20,
+                                    size = 40,
                                     vjust = 1,
                                     colour = "black"),
           panel.grid.major = element_blank(),
@@ -326,11 +326,12 @@ beta_f <- filter(beta, Variable != "Intercept" & Variable != "Year_2022" & Varia
           plot.background = element_rect(fill = NA,
                                          colour = NA),
           axis.line = element_line(colour = "black"),
-          axis.text = element_text(size = 12, 
+          axis.text = element_text(size = 30, 
                                    colour = "black"),
           axis.ticks = element_line(colour = "black"),
-          text = element_text(size = 12,
-                              colour = "black")) +
+          text = element_text(size = 30,
+                              colour = "black"),
+          legend.background = element_blank()) +
     labs(title = "Top Model Effect Sizes",
          x = NULL,
          y = expression("Beta " (beta))))
@@ -346,9 +347,9 @@ ggsave(betaF.plot,
 ggsave(beta.plot,
        filename = "outputs/figs/beta.png",
        dpi = "print",
-       bg = "white",
-       height = 6,
-       width = 15)
+       bg = NULL,
+       height = 13,
+       width = 22.5)
 
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out

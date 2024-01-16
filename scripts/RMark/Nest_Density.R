@@ -186,27 +186,33 @@ for (object in all_objects) {
                       ymin = lcl,
                       ymax = ucl),
                   linewidth = 1) +
-    ggtitle("Avian Densities") +
-    theme(panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-          panel.background = element_rect(fill = "white",                           # make the interior background transparent
-                                          colour = NA),                           # remove any other colors
-          plot.background = element_rect(fill = "white",                            # make the outer background transparent
-                                         colour = NA),                              # remove any other colors
-          plot.title = element_text(hjust = 0.5),
-          axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text = element_text(size = 20, colour = "black"),                    # color the axis text
-          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text=element_text(size = 20,                                              # change the size of the axis titles
-                            colour = "black")) +                                  # change the color of the axis titles
-    labs(x = NULL, y = "Nests Per Ha"))
+    theme(plot.title = element_text(family = "my_font",
+                                    hjust = 0.5,
+                                    size = 40,
+                                    vjust = 1,
+                                    colour = "black"),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill = NA,
+                                          colour = NA),
+          plot.background = element_rect(fill = NA,
+                                         colour = NA),
+          axis.line = element_line(colour = "black"),
+          axis.text = element_text(size = 30, 
+                                   colour = "black"),
+          axis.ticks = element_line(colour = "black"),
+          text = element_text(size = 30,
+                              colour = "black")) +                                  # change the color of the axis titles
+    labs(title = "Avian Densities",
+         x = NULL, 
+         y = "Nests Per Ha"))
 
 ggsave(density.plot,
        filename = "outputs/figs/AvianDensity.png",
        dpi = "print",
-       bg = "white",
-       height = 6,
-       width = 15)
+       bg = NULL,
+       height = 13,
+       width = 22.5)
 
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out

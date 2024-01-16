@@ -56,7 +56,7 @@ totals23$cTreat <- factor(totals23$cTreat,
 
 
 my_theme <-  theme(plot.title = element_text(family = "my_font",                             # select the font for the title
-                                             size = 30,
+                                             size = 40,
                                              hjust = .5),
                    panel.grid = element_blank(),                                     # remove the horizontal grid lines
                    panel.background = element_blank(),
@@ -64,12 +64,12 @@ my_theme <-  theme(plot.title = element_text(family = "my_font",                
                    panel.border = element_rect(colour = NA),                               # remove colors
                    axis.line = element_line(colour = "black"),                             # color the x and y axis
                    axis.text.x = element_text(family = "my_font",
-                                              size = 20),                                          # color the axis text
+                                              size = 30),                                          # color the axis text
                    axis.text.y = element_text(family = "my_font",
-                                              size = 20),
+                                              size = 30),
                    axis.ticks = element_line(colour = "black"),                            # set axis tick color
                    text=element_text(family = "my_font",
-                                     size = 24,                                              # change the size of the axis titles
+                                     size = 30,                                              # change the size of the axis titles
                                      colour = "black"),                                    # change the color of the
                    legend.position="none") 
 
@@ -125,12 +125,12 @@ stressplot(birds21.ord)                                                         
                   y = 1.90,
                   label = c("Stress = 0.12")),
               family = "my_font",
-              size = 5) +
+              size = 12) +
     geom_text(aes(x = -1.2,
                   y = 1.65,
                   label = c("p = 0.03")),
               family = "my_font",
-              size = 5) +
+              size = 12) +
     my_theme +
     labs(title = "2021"))
 
@@ -215,12 +215,12 @@ stressplot(birds22.ord)                                                         
                   y = 1.90,
                   label = c("Stress = 0.10")),
               family = "my_font",
-              size = 5) +
+              size = 12) +
     geom_text(aes(x = -1.2,
                   y = 1.65,
                   label = c("p = 0.11")),
               family = "my_font",
-              size = 5) +
+              size = 12) +
     my_theme +
     labs(title = "2022"))
 
@@ -303,12 +303,12 @@ stressplot(birds23.ord)                                                         
                   y = 1.90,
                   label = c("Stress = 0.15")),
               family = "my_font",
-              size = 5) +
+              size = 12) +
     geom_text(aes(x = -1.2,
                   y = 1.65,
                   label = c("p = 0.304")),
               family = "my_font",
-              size = 5) +
+              size = 12) +
     my_theme +
     labs(title = "2023"))
 
@@ -352,9 +352,9 @@ birds23.dSe <- betadisper(birds23.PMr,                                          
 ggsave(avianord.year, 
        filename = "outputs/figs/AvianOrd.png",  
        dpi = "print", 
-       bg = "white",
-       width = 13,
-       height = 6.5)
+       bg = NULL,
+       width = 30,
+       height = 15)
 
 # Indicator species analysis ----------------------------------------------
 

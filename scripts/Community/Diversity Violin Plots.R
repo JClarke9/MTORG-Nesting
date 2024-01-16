@@ -39,7 +39,7 @@ tot.simp$Treat <- factor(tot.simp$Treat,
                                '#D4A634')) +
    theme(plot.title = element_text(family = "my_font",
                                    hjust = .5,
-                                   size = 30), 
+                                   size = 40), 
          panel.grid.major = element_blank(),                           # remove the vertical grid lines
          panel.grid.minor = element_blank(),                           # remove the horizontal grid lines
          panel.background = element_rect(fill = "transparent",           # make the interior background transparent
@@ -49,10 +49,10 @@ tot.simp$Treat <- factor(tot.simp$Treat,
          axis.line = element_line(colour = "black"),                   # color the x and y axis
          axis.text.x = element_blank(),                 # color the axis text
          axis.text.y = element_text(colour = "black",
-                                    size = 20),
+                                    size = 30),
          axis.ticks = element_line(colour = "black"),
          text = element_text(family = "my_font",
-                             size = 20,                                    # change the size of the axis titles
+                             size = 30,                                    # change the size of the axis titles
                              colour = "black"),                          # change the color of the axis titles
          legend.position = "none") +
     labs(title = "Avian Nesting Richness", 
@@ -76,7 +76,7 @@ tot.simp$Treat <- factor(tot.simp$Treat,
                                '#D4A634')) +
     theme(plot.title = element_text(family = "my_font",
                                     hjust = .5,
-                                    size = 30), 
+                                    size = 40), 
           panel.grid.major = element_blank(),                           # remove the vertical grid lines
           panel.grid.minor = element_blank(),                           # remove the horizontal grid lines
           panel.background = element_rect(fill = "transparent",           # make the interior background transparent
@@ -85,13 +85,13 @@ tot.simp$Treat <- factor(tot.simp$Treat,
                                          colour = NA),
           axis.line = element_line(colour = "black"),                   # color the x and y axis
           axis.text.x = element_text(family = "my_font",
-                                     size = 20, 
+                                     size = 30, 
                                      colour = "black"),                 # color the axis text
           axis.text.y = element_text(colour = "black",
-                                     size = 20),
+                                     size = 30),
           axis.ticks = element_line(colour = "black"),
           text = element_text(family = "my_font",
-                              size = 20,                                    # change the size of the axis titles
+                              size = 30,                                    # change the size of the axis titles
                               colour = "black"),                          # change the color of the axis titles
           legend.position = "bottom") +
     labs(title = "Avian Nesting Diversity", 
@@ -111,7 +111,7 @@ tot.simp$Treat <- factor(tot.simp$Treat,
 ggsave(birds.viol, 
        filename = "outputs/figs/AvianDiversityViolin.png",  
        dpi = 300,
-       bg = "white",
-       height = 12,
+       bg = NULL,
+       height = 20,
        width = 15,
        units = "in")
