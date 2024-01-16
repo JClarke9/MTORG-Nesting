@@ -125,12 +125,12 @@ stressplot(birds21.ord)                                                         
                   y = 1.90,
                   label = c("Stress = 0.12")),
               family = "my_font",
-              size = 12) +
+              size = 9) +
     geom_text(aes(x = -1.2,
                   y = 1.65,
                   label = c("p = 0.03")),
               family = "my_font",
-              size = 12) +
+              size = 9) +
     my_theme +
     labs(title = "2021"))
 
@@ -215,12 +215,12 @@ stressplot(birds22.ord)                                                         
                   y = 1.90,
                   label = c("Stress = 0.10")),
               family = "my_font",
-              size = 12) +
+              size = 9) +
     geom_text(aes(x = -1.2,
                   y = 1.65,
                   label = c("p = 0.11")),
               family = "my_font",
-              size = 12) +
+              size = 9) +
     my_theme +
     labs(title = "2022"))
 
@@ -303,12 +303,12 @@ stressplot(birds23.ord)                                                         
                   y = 1.90,
                   label = c("Stress = 0.15")),
               family = "my_font",
-              size = 12) +
+              size = 9) +
     geom_text(aes(x = -1.2,
                   y = 1.65,
                   label = c("p = 0.304")),
               family = "my_font",
-              size = 12) +
+              size = 9) +
     my_theme +
     labs(title = "2023"))
 
@@ -353,8 +353,8 @@ ggsave(avianord.year,
        filename = "outputs/figs/AvianOrd.png",  
        dpi = "print", 
        bg = NULL,
-       width = 30,
-       height = 15)
+       height = 9,
+       width = 22.5)
 
 # Indicator species analysis ----------------------------------------------
 
