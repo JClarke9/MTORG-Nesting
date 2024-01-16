@@ -287,8 +287,8 @@ beta$Variable <- factor(beta$Variable,
          y = expression("Beta " (beta))))
 
 
-beta_f <- filter(beta, Variable != "Intercept" & Variable != "Year_2022" & Variable != "Year_2023" &
-                   Variable != "Time" & Variable != "Time^2" & Variable != "Nestling" & Variable != "Nest_Age")
+beta_f <- filter(beta, Variable != "Intercept" & Variable != "Year 2022" & Variable != "Year 2023" &
+                   Variable != "Time" & Variable != "Time^2" & Variable != "Nestling" & Variable != "Nest Age")
 
 (beta.plot <- ggplot(beta_f, 
                      aes(x = Variable,
