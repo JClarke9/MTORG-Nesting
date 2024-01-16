@@ -138,7 +138,7 @@ GADW3.run <- function()
   S.grazep = list(formula = ~1 + Year + NestAge + grazep)
   
   # 4. DSR varies with the previous Year + NestAges grazing intensity
-  S.pTreat = list(formula = ~1 + Year + NestAge + pTreat)
+  S.pDoD = list(formula = ~1 + Year + NestAge + pDoD)
   
   GADW.model.list = create.model.list("Nest")
   GADW3.results = mark.wrapper(GADW.model.list,

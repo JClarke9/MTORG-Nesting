@@ -149,7 +149,7 @@ RWBL3.run <- function()
   S.grazep = list(formula = ~1 + Time + I(Time^2) + Nestling + grazep)
   
   # 4. DSR varies with the previous years grazing intensity
-  S.pTreat = list(formula = ~1 + Time + I(Time^2) + Nestling + pTreat)
+  S.pDoD = list(formula = ~1 + Time + I(Time^2) + Nestling + pDoD)
   
   RWBL.model.list = create.model.list("Nest")
   RWBL3.results = mark.wrapper(RWBL.model.list,

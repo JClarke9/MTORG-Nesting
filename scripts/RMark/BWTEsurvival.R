@@ -141,7 +141,7 @@ BWTE3.run <- function()
   S.grazep = list(formula = ~1 + Year + NestAge + grazep)
   
   # 4. DSR varies with the previous Year + NestAges grazing intensity
-  S.pTreat = list(formula = ~1 + Year + NestAge + pTreat)
+  S.pDoD = list(formula = ~1 + Year + NestAge + pDoD)
   
   BWTE.model.list = create.model.list("Nest")
   BWTE3.results = mark.wrapper(BWTE.model.list,

@@ -150,7 +150,7 @@ WEME3.run <- function()
   S.grazep = list(formula = ~1 + Nestling + grazep)
   
   # 4. DSR varies with the previous years grazing intensity
-  S.pTreat = list(formula = ~1 + Nestling + pTreat)
+  S.pDoD = list(formula = ~1 + Nestling + pDoD)
   
   WEME.model.list = create.model.list("Nest")
   WEME3.results = mark.wrapper(WEME.model.list,

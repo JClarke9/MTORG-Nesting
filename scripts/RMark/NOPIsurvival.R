@@ -137,7 +137,7 @@ NOPI3.run <- function()
   S.grazep = list(formula = ~1 + grazep)
   
   # 4. DSR varies with the previous  + NestAges grazing intensity
-  S.pTreat = list(formula = ~1 + pTreat)
+  S.pDoD = list(formula = ~1 + pDoD)
   
   NOPI.model.list = create.model.list("Nest")
   NOPI3.results = mark.wrapper(NOPI.model.list,

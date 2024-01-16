@@ -64,11 +64,39 @@ raw$cTreat <- ifelse(raw$Paddock == 1 & raw$Year == 2021 | raw$Paddock == 5 & ra
                                                                                            ifelse(raw$Paddock == 4 & raw$Year == 2023 | raw$Paddock == 8 & raw$Year == 2023 | raw$Paddock == 11 & raw$Year == 2023 | raw$Paddock == 15 & raw$Year == 2023, "Full",
                                                                                                   NA))))))))))))
 
+raw$cDoD <- ifelse(raw$Year == 2021 & raw$cTreat == "Heavy", 76.3,
+                   ifelse(raw$Year == 2021 & raw$cTreat == "Full", 52.3,
+                          ifelse(raw$Year == 2021 & raw$cTreat == "Moderate", 51.7,
+                                 ifelse(raw$Year == 2021 & raw$cTreat == "Rest", 0,
+                                        ifelse(raw$Year == 2022 & raw$cTreat == "Heavy", 65.3,
+                                               ifelse(raw$Year == 2022 & raw$cTreat == "Full", 45.3,
+                                                      ifelse(raw$Year == 2022 & raw$cTreat == "Moderate", 35.2,
+                                                             ifelse(raw$Year == 2022 & raw$cTreat == "Rest", 0,
+                                                                    ifelse(raw$Year == 2023 & raw$cTreat == "Heavy", NA,
+                                                                           ifelse(raw$Year == 2023 & raw$cTreat == "Full", NA,
+                                                                                  ifelse(raw$Year == 2023 & raw$cTreat == "Moderate", NA,
+                                                                                         ifelse(raw$Year == 2023 & raw$cTreat == "Rest", 0, 
+                                                                                                NA))))))))))))
+
 raw$pTreat <- ifelse(raw$cTreat == "Rest", "Moderate",
                      ifelse(raw$cTreat == "Moderate", "Full",
                             ifelse(raw$cTreat == "Full", "Heavy",
                                    ifelse(raw$cTreat == "Heavy", "Rest",
                                           NA))))
+
+raw$pDoD <- ifelse(raw$Year == 2021 & raw$pTreat == "Heavy", 60.6,
+                   ifelse(raw$Year == 2021 & raw$pTreat == "Full", 60.2,
+                          ifelse(raw$Year == 2021 & raw$pTreat == "Moderate", 33.7,
+                                 ifelse(raw$Year == 2021 & raw$pTreat == "Rest", 0,
+                                        ifelse(raw$Year == 2022 & raw$pTreat == "Heavy", 76.3,
+                                               ifelse(raw$Year == 2022 & raw$pTreat == "Full", 52.3,
+                                                      ifelse(raw$Year == 2022 & raw$pTreat == "Moderate", 51.7,
+                                                             ifelse(raw$Year == 2022 & raw$pTreat == "Rest", 0,
+                                                                    ifelse(raw$Year == 2023 & raw$pTreat == "Heavy", 65.3,
+                                                                           ifelse(raw$Year == 2023 & raw$pTreat == "Full", 45.3,
+                                                                                  ifelse(raw$Year == 2023 & raw$pTreat == "Moderate", 35.2,
+                                                                                         ifelse(raw$Year == 2023 & raw$pTreat == "Rest", 0, 
+                                                                                                NA))))))))))))
 
 raw$Fate <- as.factor(raw$Fate)                        # coerce survival (0-success, 1-fail) to a factor
 
@@ -147,7 +175,7 @@ raw <- rename(raw, "LastChecked" = "Date.y")
 
 raw <- select(raw, Year:DateChecked, LastChecked,
               Visit.Interval:Veg.Height, VOR, Paddock:Replicate, 
-              cTreat:pTreat)
+              cTreat:pDoD)
 
 # This is just used to calculate the date a nest last was confirmed occupied
 # its important only for failed nests because successful nests it's the same as 
@@ -179,7 +207,7 @@ raw <- rename(raw, "Expos" = "Expos.x")
 
 raw <- select(raw, Year:LastChecked, LastPresent,
               Visit.Interval:Veg.Height, VOR, Paddock:Replicate, 
-              cTreat:pTreat)
+              cTreat:pDoD)
 
 raw$Nestling <- ifelse(raw$Stage == "Nestling", 
                        1, 0)                           # 1 is nestling, 0 is not
@@ -289,7 +317,7 @@ nest$LastChecked <- ifelse(nest$Fate == 0,             # if Fate2=0 (i.e. succes
                            nest$LastChecked)           # if Fate2 < 1 don't change the day last checked
 
 data <- select(raw, Year:id, Visit.Interval, DateChecked,
-               InitBHCO:InitClutch, Open:pTreat) |>    # select the other data columns from the altered raw data 
+               InitBHCO:InitClutch, Open:pDoD) |>    # select the other data columns from the altered raw data 
   distinct(id, .keep_all = TRUE)                       # select only unique nest ID and keep all other columns
 
 data$id[duplicated(data$id)]

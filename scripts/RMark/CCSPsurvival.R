@@ -152,7 +152,7 @@ CCSP3.run <- function()
   S.grazep = list(formula = ~1 + Year + Nestling + grazep)
   
   # 4. DSR varies with the previous years grazing intensity
-  S.pTreat = list(formula = ~1 + Year + Nestling + pTreat)
+  S.pDoD = list(formula = ~1 + Year + Nestling + pDoD)
   
   CCSP.model.list = create.model.list("Nest")
   CCSP3.results = mark.wrapper(CCSP.model.list,
