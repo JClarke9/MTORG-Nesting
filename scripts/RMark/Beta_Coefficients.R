@@ -219,22 +219,22 @@ unique(beta$Variable)
 beta$Variable <- case_match(beta$Variable,
                             "S:(Intercept)" ~ "Intercept",
                             "S:Nestling1" ~ "Nestling",
-                            "S:Year2022" ~ "Year_2022",
-                            "S:Year2023" ~ "Year_2023",
+                            "S:Year2022" ~ "Year 2022",
+                            "S:Year2023" ~ "Year 2023",
                             "S:Litter" ~ "Litter",
                             "S:Time" ~ "Time",
                             "S:I(Time^2)" ~ "Time^2",
                             "S:KBG" ~ "KBG",
-                            "S:grazed" ~ "Days_Grazed",
-                            "S:NestAge" ~ "Nest_Age",
+                            "S:grazed" ~ "Days Grazed",
+                            "S:NestAge" ~ "Nest Age",
                             "S:Forb" ~ "Forb",
                             "S:VOR" ~ "VOR",
-                            "S:Veg.Height" ~ "Veg_Height")
+                            "S:Veg.Height" ~ "Veg Height")
 
 beta$Variable <- factor(beta$Variable,
-                        levels = c("Intercept", "Year_2022", "Year_2023", "Time",
-                                   "Time^2", "Nest_Age", "Nestling", "Grazing_Presence",
-                                   "Days_Grazed", "KBG", "Forb", "Litter", "Veg_Height",
+                        levels = c("Intercept", "Year 2022", "Year 2023", "Time",
+                                   "Time^2", "Nest Age", "Nestling", "Grazing Presence",
+                                   "Days Grazed", "KBG", "Forb", "Litter", "Veg Height",
                                    "VOR"))
 
 
