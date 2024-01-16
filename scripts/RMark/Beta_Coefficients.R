@@ -121,32 +121,13 @@ NOPI.trt <- mark(NOPI.surv,
                  delete = TRUE, 
                  model.parameters = list(S = list(formula =  ~1 + VOR)))
 
-BWTE.pr <- process.data(BWTE.surv,
-                        nocc = max(BWTE.surv$LastChecked),
-                        groups ="Year",
-                        model = "Nest")
-
-# Vegetation candidate model set
-BWTE.run <- function()
-{
-  # 10. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Year + NestAge + grazep + Veg.Height)
-  
-  # 11. DSR varies with VOR
-  S.vor = list(formula =  ~1 + Year + NestAge + grazep + VOR)
-  
-  BWTE.model.list = create.model.list("Nest")
-  BWTE.results = mark.wrapper(BWTE.model.list,
-                              data = BWTE.pr,
-                              adjust = FALSE,
-                              delete = TRUE)
-}
-
-BWTE.results <- BWTE.run()
-BWTE.results
-
-BWTE.avg <- model.avg(BWTE.results$S.height,
-                      BWTE.results$S.vor)
+BWTE.trt <- mark(BWTE.surv, 
+                 nocc = max(BWTE.surv$LastChecked), 
+                 model = "Nest",
+                 groups = "Year",
+                 adjust = FALSE,
+                 delete = TRUE, 
+                 model.parameters = list(S = list(formula =  ~1 + Year + NestAge + Veg.Height)))
 
 
 # Pull out Beta coefficients ----------------------------------------------
@@ -215,11 +196,11 @@ NOPI.beta <- coef(NOPI.trt) |>
            "ucl" = "92.5 %")) |> 
   mutate(Species = "NOPI")
 
-BWTE.beta <- as.data.frame(t(BWTE.avg$coefficients)) |> 
-  cbind(confint(BWTE.avg, level = 0.85, full = T)) |> 
-  select(full, `7.5 %`, `92.5 %`) |> 
+BWTE.beta <- coef(BWTE.trt) |>
+  cbind(confint(BWTE.trt, level = 0.85)) |> 
+  select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
-  rename(c("Coefficient" = "full",
+  rename(c("Coefficient" = "estimate",
            "lcl" = "7.5 %",
            "ucl" = "92.5 %")) |> 
   mutate(Species = "BWTE")
@@ -232,6 +213,8 @@ beta <- bind_rows(WEME.beta,
                   GADW.beta,
                   NOPI.beta,
                   BWTE.beta)
+
+unique(beta$Variable)
 
 beta$Variable <- case_match(beta$Variable,
                             "S:(Intercept)" ~ "Intercept",
@@ -246,15 +229,7 @@ beta$Variable <- case_match(beta$Variable,
                             "S:NestAge" ~ "Nest_Age",
                             "S:Forb" ~ "Forb",
                             "S:VOR" ~ "VOR",
-                            "S((Intercept))" ~ "Intercept",
-                            "S(Year2022)" ~ "Year_2022",
-                            "S(Year2023)" ~ "Year_2023",
-                            "S(NestAge)" ~ "Nest_Age",
-                            "S(grazep)" ~ "Grazing_Presence",
-                            "S(Veg.Height)" ~ "Veg_Height",
-                            "S(VOR)" ~ "VOR")
-
-unique(beta$Variable)
+                            "S:Veg.Height" ~ "Veg_Height")
 
 beta$Variable <- factor(beta$Variable,
                         levels = c("Intercept", "Year_2022", "Year_2023", "Time",

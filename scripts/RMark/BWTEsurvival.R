@@ -206,77 +206,41 @@ BWTE4.results <- BWTE4.run()
 BWTE4.results
 
 coef(BWTE4.results$S.height)
-coef(BWTE4.results$S.vor)
-
 confint(BWTE4.results$S.height, level = 0.85)
-confint(BWTE4.results$S.vor, level = 0.85)
 
 
-# Vegetation candidate model set
-BWTE.run <- function()
-{
-  # 10. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Year + NestAge + grazep + Veg.Height)
-  
-  # 11. DSR varies with VOR
-  S.vor = list(formula =  ~1 + Year + NestAge + grazep + VOR)
-  
-  BWTE.model.list = create.model.list("Nest")
-  BWTE.results = mark.wrapper(BWTE.model.list,
-                              data = BWTE.pr,
-                              adjust = FALSE,
-                              delete = TRUE)
-}
+BWTE.real <- as.data.frame(BWTE4.results$S.height$results$real) |> 
+  rownames_to_column(var = "Group") |> 
+  mutate(Year = case_when(
+    grepl("2021", Group) ~ "2021",
+    grepl("2022", Group) ~ "2022",
+    grepl("2023", Group) ~ "2023")) |> 
+  select(Year, estimate, se, lcl, ucl)
 
-BWTE.results <- BWTE.run()
-BWTE.results
-
-BWTE.avg <- model.avg(BWTE.results$S.height,
-                      BWTE.results$S.vor)
-
-summary(BWTE.avg)
-coef(BWTE.avg, full = T)
-confint(BWTE.avg, level = 0.85, full = T)
-
-BWTE.dsr <- model.average(BWTE.results) |> 
-  as.data.frame() |> 
-  rename("Year" = "par.index")
-
-BWTE.dsr$Year <- case_match(BWTE.dsr$Year,
-                            1 ~ "2021",
-                            67 ~ "2022",
-                            133 ~ "2023")
-
-BWTE.dsr <- fill(BWTE.dsr, Year, .direction = "down")
-
-(BWTE.dsr <- BWTE.dsr |> 
+(BWTE.dsr <- BWTE.real |> 
     group_by(Year) |> 
-    summarise(estimate = mean(estimate)))
+    summarise(estimate = mean(estimate),
+              se = mean(se),
+              lcl = mean(lcl),
+              ucl = mean(ucl)))
 
 
 # Plotting beta coefficients ----------------------------------------------
 
 
-BWTE.beta <- as.data.frame(t(BWTE.avg$coefficients)) |> 
-  cbind(confint(BWTE.avg, level = 0.85, full = T)) |> 
-  select(full, `7.5 %`, `92.5 %`) |> 
+BWTE.beta <- coef(BWTE4.results$S.height) |>
+  cbind(confint(BWTE4.results$S.height, level = 0.85)) |> 
+  select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
-  rename(c("Coefficient" = "full",
+  rename(c("Coefficient" = "estimate",
            "lcl" = "7.5 %",
            "ucl" = "92.5 %"))
 
-BWTE.beta$Variable <- case_match(BWTE.beta$Variable,
-                                 "S((Intercept))" ~ "Intercept",
-                                 "S(Year2022)" ~ "Year2022",
-                                 "S(Year2023)" ~ "Year2023",
-                                 "S(NestAge)" ~ "NestAge",
-                                 "S(grazep)" ~ "Grazing_Presence",
-                                 "S(Veg.Height)" ~ "Veg_Height",
-                                 "S(VOR)" ~ "VOR")
+BWTE.beta$Variable <- gsub("S:", "", BWTE.beta$Variable)
 
 str(BWTE.beta)
 
-(BWTE.plot <- ggplot(BWTE.beta[4:6,], 
+(BWTE.plot <- ggplot(BWTE.beta[4:5,], 
                      aes(x = Variable,
                          y = Coefficient)) +
     geom_hline(yintercept = 0,
@@ -322,14 +286,9 @@ VegHvalues <- seq(from = min(BWTE.surv$Veg.Height),
                   to = max(BWTE.surv$Veg.Height),
                   length = 100)
 
-VORvalues <- seq(from = min(BWTE.surv$VOR),
-                 to = max(BWTE.surv$VOR),
-                 length = 100)
 
-
-AGE.pred <- covariate.predictions(BWTE.results,
-                                  data = data.frame(Veg.Height = mean(VegHvalues),
-                                                    VOR = mean(VORvalues)),
+AGE.pred <- covariate.predictions(BWTE4.results$S.height,
+                                  data = data.frame(Veg.Height = mean(VegHvalues)),
                                   indices = c(2:25,
                                               68:91,
                                               134:157))
@@ -386,9 +345,8 @@ AGE.pred$estimates$Day <- c(1:24)
          y = "Daily Survival Rate"))
 
 
-VegH.pred <- covariate.predictions(BWTE.results,
-                                   data = data.frame(Veg.Height = VegHvalues,
-                                                     VOR = mean(VORvalues)),
+VegH.pred <- covariate.predictions(BWTE4.results$S.height,
+                                   data = data.frame(Veg.Height = VegHvalues),
                                    indices = c(2, 15, 25,
                                                68, 82, 91,
                                                134, 147, 157))
@@ -427,7 +385,7 @@ VegH.pred$estimates$Day[D24Y2023] <- "Day24"
 
 (BWTEVegH.plot <- ggplot(transform(VegH.pred$estimates,
                                    Year = factor(Year, levels = c("2021", "2022", "2023"))), 
-                         aes(x = Veg.Height, 
+                         aes(x = covdata, 
                              y = estimate,
                              groups = Year,
                              fill = Year)) +
@@ -465,85 +423,6 @@ VegH.pred$estimates$Day[D24Y2023] <- "Day24"
          y = "Daily Survival Rate"))
 
 
-VOR.pred <- covariate.predictions(BWTE.results,
-                                  data = data.frame(Veg.Height = mean(VegHvalues),
-                                                    VOR = VORvalues),
-                                  indices = c(2, 15, 25,
-                                              68, 82, 91,
-                                              134, 147, 157))
-
-D1Y2021 <- which(VOR.pred$estimates$par.index == 2)
-D14Y2021 <- which(VOR.pred$estimates$par.index == 15)
-D24Y2021 <- which(VOR.pred$estimates$par.index == 25)
-D1Y2022 <- which(VOR.pred$estimates$par.index == 68)
-D14Y2022 <- which(VOR.pred$estimates$par.index == 82)
-D24Y2022 <- which(VOR.pred$estimates$par.index == 91)
-D1Y2023 <- which(VOR.pred$estimates$par.index == 134)
-D14Y2023 <- which(VOR.pred$estimates$par.index == 147)
-D24Y2023 <- which(VOR.pred$estimates$par.index == 157)
-
-VOR.pred$estimates$Year <- NA
-VOR.pred$estimates$Year[D1Y2021] <- "2021"
-VOR.pred$estimates$Year[D14Y2021] <- "2021"
-VOR.pred$estimates$Year[D24Y2021] <- "2021"
-VOR.pred$estimates$Year[D1Y2022] <- "2022"
-VOR.pred$estimates$Year[D14Y2022] <- "2022"
-VOR.pred$estimates$Year[D24Y2022] <- "2022"
-VOR.pred$estimates$Year[D1Y2023] <- "2023"
-VOR.pred$estimates$Year[D14Y2023] <- "2023"
-VOR.pred$estimates$Year[D24Y2023] <- "2023"
-
-VOR.pred$estimates$Day <- NA
-VOR.pred$estimates$Day[D1Y2021] <- "Day1"
-VOR.pred$estimates$Day[D14Y2021] <- "Day14"
-VOR.pred$estimates$Day[D24Y2021] <- "Day24"
-VOR.pred$estimates$Day[D1Y2022] <- "Day1"
-VOR.pred$estimates$Day[D14Y2022] <- "Day14"
-VOR.pred$estimates$Day[D24Y2022] <- "Day24"
-VOR.pred$estimates$Day[D1Y2023] <- "Day1"
-VOR.pred$estimates$Day[D14Y2023] <- "Day14"
-VOR.pred$estimates$Day[D24Y2023] <- "Day24"
-
-(BWTEVOR.plot <- ggplot(transform(VOR.pred$estimates,
-                                  Year = factor(Year, levels = c("2021", "2022", "2023"))), 
-                        aes(x = VOR, 
-                            y = estimate,
-                            groups = Year,
-                            fill = Year)) +
-    geom_line(linewidth = 1.5,
-              aes(color = Year)) +
-    scale_linetype_manual(values = c(1, 3, 2)) +
-    scale_colour_manual(values = c('#A2A4A2',
-                                   '#717F5B',
-                                   '#D4A634')) +
-    scale_fill_manual(values = c('#A2A4A2',
-                                 '#717F5B',
-                                 '#D4A634')) +
-    theme(plot.title = element_text(family = "my_font",                             # select the font for the title
-                                    size = 16,
-                                    hjust = .5),
-          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-          panel.background = element_rect(fill = NA,                                # make the interior background transparent
-                                          colour = NA),                           # remove any other colors
-          plot.background = element_rect(fill = NA,                                 # make the outer background transparent
-                                         colour = NA),                              # remove any other colors
-          axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text.y = element_text(size = 12, colour = "black"),                    # color the axis text
-          axis.text.x = element_text(size = 12, colour = "black"),
-          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text = element_text(size = 12,                                              # change the size of the axis titles
-                              colour = "black"),                                    # change the color of the axis titles
-          legend.background = element_rect(fill = NA),
-          legend.position = c(.85, .1),
-          legend.box = "horizontal") +
-    facet_grid(~Day) +
-    labs(title = "Blue-winged Teal",
-         color = "Year",
-         x = "Visual Obstruction Reading (dm)",
-         y = "Daily Survival Rate"))
-
-
 ggsave(BWTE.plot,
        filename = "outputs/figs/betaBWTE.png",
        dpi = "print",
@@ -565,13 +444,6 @@ ggsave(BWTEVegH.plot,
        height = 6,
        width = 6)
 
-ggsave(BWTEVOR.plot,
-       filename = "outputs/figs/vorBWTE.png",
-       dpi = "print",
-       bg = "white",
-       height = 6,
-       width = 6)
-
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,
@@ -581,3 +453,4 @@ rm(list = ls(all = TRUE))
 # Then, execute 'cleanup(ask = FALSE)' to delete orphaned output
 #  files from MARK. Execute '?cleanup' to learn more
 cleanup(ask = FALSE)
+

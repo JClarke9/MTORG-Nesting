@@ -72,6 +72,35 @@ raw$pTreat <- ifelse(raw$cTreat == "Rest", "Moderate",
 
 raw$Fate <- as.factor(raw$Fate)                        # coerce survival (0-success, 1-fail) to a factor
 
+unique(raw$R1)
+unique(raw$R2)
+unique(raw$R3)
+unique(raw$R4)
+
+test <- filter(raw, R1 == "13+" | R1 == "18+" |
+                 R2 == "18+" | R2 == "15+" | R2 == "13+" |
+                 R3 == "18+" | R3 == "13+" | R4 == "18+" |
+                 R4 == "13+")
+
+raw$R1 <- recode(raw$R1,
+                 "18+" = "20",
+                 "13+" = "NA")
+
+raw$R2 <- recode(raw$R2,
+                 "18+" = "20",
+                 "13+" = "NA",
+                 "15+" = "NA")
+
+raw$R3 <- recode(raw$R3,
+                 "18+" = "20",
+                 "13+" = "NA")
+
+raw$R4 <- recode(raw$R4,
+                 "18+" = "20",
+                 "13+" = "NA")
+
+test <- filter(raw, R1 == "NA" | R2 == "NA" | R3 == "NA" | R4 == "NA")
+
 raw$R1 <- as.numeric(raw$R1)
 raw$R2 <- as.numeric(raw$R2)
 raw$R3 <- as.numeric(raw$R3)
