@@ -4,12 +4,15 @@
 library(tidyverse)
 library(RMark)
 library(MuMIn)
+library(ggpattern)
 
 
 # Read in Data ------------------------------------------------------------
 
 
 nest <- read.csv("working/RMarknesting.csv")
+
+windowsFonts(my_font = windowsFont("Gandi Sans"))                          # downloading a font to be used for my ordination
 
 
 # Data Wrangling ----------------------------------------------------------
@@ -290,30 +293,52 @@ beta$Variable <- factor(beta$Variable,
 beta_f <- filter(beta, Variable != "Intercept" & Variable != "Year 2022" & Variable != "Year 2023" &
                    Variable != "Time" & Variable != "Time^2" & Variable != "Nestling" & Variable != "Nest Age")
 
+beta_f$Species <- factor(beta_f$Species,
+                         levels = c("GADW", "BWTE", "NOPI", "RWBL", 
+                                    "MODO", "BRBL", "CCSP", "WEME"))
+
+beta_f$Variable <- factor(beta_f$Variable,
+                          levels = c("Days Grazed", "KBG", "Litter", 
+                                     "Forb", "Veg Height", "VOR"))
+
 (beta.plot <- ggplot(beta_f, 
                      aes(x = Variable,
                          y = Coefficient,
                          fill = Species)) +
     geom_hline(yintercept = 0,
-               colour = gray(1/2), 
+               colour = gray(1/2),
+               linewidth = 1,
                lty = 2) +
-    geom_bar(position = "dodge",
-             stat = "identity",
-             colour = "black",
-             width = 0.7) +
-    scale_fill_manual(values = c("#364C59", 
-                                 "#9BAFD0", 
-                                 "#613323", 
-                                 "#C8A696", 
-                                 "#020204", 
-                                 "#E32002", 
-                                 "#b2df8a", 
-                                 "#fb9a99")) +
+    geom_bar_pattern(aes(fill = Species,
+                         pattern = Species),
+                     stat = "identity",
+                     colour = "black",
+                     pattern_colour = "black",
+                     width = 0.7,
+                     position = "dodge") +
+    scale_fill_manual(values = c('#A2A4A2', 
+                                 '#A2A4A2', 
+                                 '#A2A4A2', 
+                                 '#D4A634', 
+                                 '#D4A634', 
+                                 '#D4A634', 
+                                 '#D4A634', 
+                                 '#D4A634')) +
+    scale_pattern_manual(values = c("GADW" = "none", 
+                                    "NOPI" = "crosshatch", 
+                                    "BWTE" = "stripe",
+                                    "CCSP" = "none", 
+                                    "RWBL" = "none", 
+                                    "BRBL" = "crosshatch",
+                                    "WEME" = "none",
+                                    "MODO" = "stripe")) +
     geom_errorbar(aes(ymin = lcl,
                       ymax = ucl),
                   position = position_dodge(0.7),
-                  width = 0.25,
+                  width = 0.5,
+                  linewidth = 0.7,
                   colour = "black") +
+    guides(fill = guide_legend(byrow = TRUE)) +
     theme(plot.title = element_text(family = "my_font",
                                     hjust = 0.5,
                                     size = 40,
@@ -330,8 +355,14 @@ beta_f <- filter(beta, Variable != "Intercept" & Variable != "Year 2022" & Varia
                                    colour = "black"),
           axis.ticks = element_line(colour = "black"),
           text = element_text(size = 30,
-                              colour = "black"),
-          legend.background = element_blank()) +
+                              colour = "black",
+                              family = "my_font"),
+          legend.background = element_blank(),
+          legend.title = element_text(family = "my_font",
+                                      size = 40),
+          legend.text = element_text(family = "my_font",
+                                     size = 30),
+          legend.key.width = unit(2, "cm")) +
     labs(title = "Top Model Effect Sizes",
          x = NULL,
          y = expression("Beta " (beta))))

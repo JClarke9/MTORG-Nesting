@@ -3,8 +3,9 @@
 library(wesanderson)
 library(cowplot)
 library(tidyverse)
+library(extrafont)
 
-windowsFonts(my_font = windowsFont("Arial"))
+windowsFonts(my_font = windowsFont("Gandhi Sans"))                          # downloading a font to be used for my ordination
 
 # Data import -------------------------------------------------------------
 
@@ -48,6 +49,8 @@ tot.simp$Treat <- factor(tot.simp$Treat,
                                         colour = NA),
          axis.line = element_line(colour = "black"),                   # color the x and y axis
          axis.text.x = element_blank(),                 # color the axis text
+         axis.title.y = element_text(family = "my_font",
+                                     margin = margin(0, 20, 0, 0)),
          axis.text.y = element_text(colour = "black",
                                     size = 30),
          axis.ticks = element_line(colour = "black"),
@@ -87,6 +90,8 @@ tot.simp$Treat <- factor(tot.simp$Treat,
           axis.text.x = element_text(family = "my_font",
                                      size = 30, 
                                      colour = "black"),                 # color the axis text
+          axis.title.y = element_text(family = "my_font",
+                                      margin = margin(0, 20, 0, 0)),
           axis.text.y = element_text(colour = "black",
                                      size = 30),
           axis.ticks = element_line(colour = "black"),
@@ -94,6 +99,12 @@ tot.simp$Treat <- factor(tot.simp$Treat,
                               size = 30,                                    # change the size of the axis titles
                               colour = "black"),                          # change the color of the axis titles
           legend.position = "bottom",
+          legend.title = element_text(family = "my_font",
+                                      size = 40),
+          legend.text = element_text(family = "my_font",
+                                     size = 30),
+          legend.box.margin = margin(t = 2, r = 0, b = 0, l = 0,
+                                     unit = "mm"),
           legend.background = element_blank()) +
     labs(title = "Avian Nesting Diversity", 
          x = NULL, 
@@ -106,7 +117,9 @@ tot.simp$Treat <- factor(tot.simp$Treat,
 (birds.viol <- plot_grid(rich.viol, 
                          simp.viol, 
                          nrow = 2, 
-                         ncol = 1))
+                         ncol = 1,
+                         align = "v",
+                         axis = "l"))
 
 
 ggsave(birds.viol, 
