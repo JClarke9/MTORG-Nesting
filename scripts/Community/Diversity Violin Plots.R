@@ -51,7 +51,7 @@ tot.simp$Treat <- factor(tot.simp$Treat,
          axis.line = element_line(colour = "black"),                   # color the x and y axis
          axis.text.x = element_blank(),                 # color the axis text
          axis.title.y = element_text(family = "my_font",
-                                     margin = margin(0, 20, 0, 0)),
+                                     margin = margin(0, 30, 0, 0)),
          axis.text.y = element_text(colour = "black",
                                     size = 30),
          axis.ticks = element_line(colour = "black"),
@@ -94,14 +94,14 @@ tot.simp$Treat <- factor(tot.simp$Treat,
                                      size = 30, 
                                      colour = "black"),                 # color the axis text
           axis.title.y = element_text(family = "my_font",
-                                      margin = margin(0, 20, 0, 0)),
+                                      margin = margin(0, 10, 0, 0)),
           axis.text.y = element_text(colour = "black",
                                      size = 30),
           axis.ticks = element_line(colour = "black"),
           text = element_text(family = "my_font",
                               size = 30,                                    # change the size of the axis titles
                               colour = "black"),                          # change the color of the axis titles
-          legend.position = "right",
+          legend.position = "bottom",
           legend.background = element_blank(),
           legend.title = element_text(family = "my_font",
                                       size = 40),
@@ -115,22 +115,29 @@ tot.simp$Treat <- factor(tot.simp$Treat,
 
 # Combining violin plots --------------------------------------------------
 
-legend <- get_legend(simp.viol)
+# legend <- get_legend(simp.viol)
+#
+# (birds.viol <- plot_grid(rich.viol,
+#                          legend,
+#                          simp.viol + theme(legend.position = "none"),
+#                          nrow = 2, 
+#                          ncol = 2,
+#                          align = "v",
+#                          axis = "l",
+#                          rel_widths = c(1, .2, 1, .1)))
 
 (birds.viol <- plot_grid(rich.viol,
-                         legend,
-                         simp.viol + theme(legend.position = "none"),
-                         nrow = 2, 
-                         ncol = 2,
+                         simp.viol,
+                         nrow = 2,
+                         ncol = 1,
                          align = "v",
-                         axis = "l",
-                         rel_widths = c(1, .2, 1, .1)))
+                         axis = "l"))
 
 
 ggsave(birds.viol, 
        filename = "outputs/figs/AvianDiversityViolin.png",  
        dpi = 300,
        bg = NULL,
-       height = 16.5,
+       height = 17.11,
        width = 14.5,
        units = "in")
