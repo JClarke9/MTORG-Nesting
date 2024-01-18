@@ -40,6 +40,7 @@ tot.simp$Treat <- factor(tot.simp$Treat,
                                '#D4A634')) +
    theme(plot.title = element_text(family = "my_font",
                                    hjust = .5,
+                                   vjust = 1,
                                    size = 40), 
          panel.grid.major = element_blank(),                           # remove the vertical grid lines
          panel.grid.minor = element_blank(),                           # remove the horizontal grid lines
@@ -77,8 +78,10 @@ tot.simp$Treat <- factor(tot.simp$Treat,
     scale_fill_manual(values=c('#A2A4A2',
                                '#717F5B',
                                '#D4A634')) +
+    guides(fill = guide_legend(byrow = TRUE)) +
     theme(plot.title = element_text(family = "my_font",
                                     hjust = .5,
+                                    vjust = 1,
                                     size = 40), 
           panel.grid.major = element_blank(),                           # remove the vertical grid lines
           panel.grid.minor = element_blank(),                           # remove the horizontal grid lines
@@ -98,14 +101,13 @@ tot.simp$Treat <- factor(tot.simp$Treat,
           text = element_text(family = "my_font",
                               size = 30,                                    # change the size of the axis titles
                               colour = "black"),                          # change the color of the axis titles
-          legend.position = "bottom",
+          legend.position = "right",
+          legend.background = element_blank(),
           legend.title = element_text(family = "my_font",
                                       size = 40),
           legend.text = element_text(family = "my_font",
                                      size = 30),
-          legend.box.margin = margin(t = 2, r = 0, b = 0, l = 0,
-                                     unit = "mm"),
-          legend.background = element_blank()) +
+          legend.key.width = unit(2, "cm")) +
     labs(title = "Avian Nesting Diversity", 
          x = NULL, 
          y = "Simpson's Diversity"))
@@ -113,19 +115,22 @@ tot.simp$Treat <- factor(tot.simp$Treat,
 
 # Combining violin plots --------------------------------------------------
 
+legend <- get_legend(simp.viol)
 
-(birds.viol <- plot_grid(rich.viol, 
-                         simp.viol, 
+(birds.viol <- plot_grid(rich.viol,
+                         legend,
+                         simp.viol + theme(legend.position = "none"),
                          nrow = 2, 
-                         ncol = 1,
+                         ncol = 2,
                          align = "v",
-                         axis = "l"))
+                         axis = "l",
+                         rel_widths = c(1, .2, 1, .1)))
 
 
 ggsave(birds.viol, 
        filename = "outputs/figs/AvianDiversityViolin.png",  
        dpi = 300,
        bg = NULL,
-       height = 20,
-       width = 15,
+       height = 16.5,
+       width = 14.5,
        units = "in")
