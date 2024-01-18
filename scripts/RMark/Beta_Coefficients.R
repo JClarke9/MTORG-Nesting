@@ -379,8 +379,8 @@ ggsave(beta.plot,
        filename = "outputs/figs/beta.png",
        dpi = "print",
        bg = NULL,
-       height = 13,
-       width = 22.5)
+       height = 16.5,
+       width = 20.4)
 
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
