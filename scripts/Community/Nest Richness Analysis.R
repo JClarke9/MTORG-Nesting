@@ -1,14 +1,11 @@
 # Loading libraries -------------------------------------------------------
 
 
-library(vegan)
 library(tidyverse)
-library(RColorBrewer)
-library(emmeans)
-library(DHARMa)
-library(glmmTMB)
-library(cowplot)
 library(wesanderson)
+library(glmmTMB)
+library(DHARMa)
+library(emmeans)
 
 
 # Data import -------------------------------------------------------------
@@ -550,19 +547,80 @@ rich.tot$Year <- factor(rich.tot$Year,
                                    "2023"))
 
 
+# Testing total richness by year ------------------------------------------
+
+
+aov21.tot <- glmmTMB(Richness ~ Treat + (1|Paddock), 
+                   data = rich21.padd,
+                   family = genpois(link = "identity"))
+
+diagnose(aov21.tot)
+
+simulationOutput <- simulateResiduals(aov21.tot, plot = T)
+testZeroInflation(simulationOutput)
+testDispersion(simulationOutput)
+
+summary(aov21.tot)
+emmeans(aov21.tot,
+        pairwise~Treat,
+        type = "tukey")
+
+
+aov22.tot <- glmmTMB(Richness ~ Treat + (1|Paddock), 
+                     data = rich22.padd,
+                     family = genpois(link = "identity"))
+
+diagnose(aov22.tot)
+
+simulationOutput <- simulateResiduals(aov22.tot, plot = T)
+testZeroInflation(simulationOutput)
+testDispersion(simulationOutput)
+
+summary(aov22.tot)
+emmeans(aov22.tot,
+        pairwise~Treat,
+        type = "tukey")
+
+
+aov23.tot <- glmmTMB(Richness ~ Treat + (1|Paddock), 
+                     data = rich23.padd,
+                     family = genpois(link = "identity"))
+
+diagnose(aov23.tot)
+
+simulationOutput <- simulateResiduals(aov23.tot, plot = T)
+testZeroInflation(simulationOutput)
+testDispersion(simulationOutput)
+
+summary(aov23.tot)
+emmeans(aov23.tot,
+        pairwise~Treat,
+        type = "tukey")
+
+
 # Testing total richness --------------------------------------------------
 
 
-aov.tot <- glmmTMB(Richness ~ Treat, 
+aov.tot <- glmmTMB(Richness ~ Treat + Year + (1|Paddock), 
                    data = rich.tot,
-                   family = poisson(link = "log"))
+                   family = genpois(link = "log"))
 
 diagnose(aov.tot)
 
-summary(aov.tot)
-
-simulationOutput <- simulateResiduals(aov.tot)
-plot(simulationOutput)
+simulationOutput <- simulateResiduals(aov.tot, plot = T)
 testZeroInflation(simulationOutput)
+testDispersion(simulationOutput)
 
-write.csv(rich.tot, "working/TotalRichness.csv")
+summary(aov.tot)
+emmeans(aov.tot,
+        pairwise~Treat,
+        type = "tukey")
+
+emmeans(aov.tot,
+        pairwise~Year,
+        type = "tukey")
+
+write_csv(rich21.padd, "working/TotalRichness21.csv")
+write_csv(rich22.padd, "working/TotalRichness22.csv")
+write_csv(rich23.padd, "working/TotalRichness23.csv")
+write_csv(rich.tot, "working/TotalRichness.csv")

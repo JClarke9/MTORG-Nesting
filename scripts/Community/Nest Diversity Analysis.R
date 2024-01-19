@@ -1,8 +1,10 @@
 # Loading libraries -------------------------------------------------------
 
-library(vegan)
 library(tidyverse)
 library(wesanderson)
+library(glmmTMB)
+library(DHARMa)
+library(emmeans)
 
 # Data import -------------------------------------------------------------
 
@@ -217,18 +219,87 @@ qqnorm(simp.total$simpson)
 qqline(simp.total$simpson)
 hist(simp.total$simpson)
 
-aov.simp <- glmmTMB(simpson ~ Treat + (1|Year) + (1|Paddock), 
-                    data = simp.total,
-                    family = Gamma(link = "log"))
+
+
+# Diversity analysis by year ----------------------------------------------
+
+
+aov.simp21 <- glmmTMB(simpson ~ Treat + (1|Paddock), 
+                      data = simp21,
+                      family = gaussian(link = "log"))
+
+# remove random effect
+diagnose(aov.simp21)
+
+simulationOutput <- simulateResiduals(aov.simp21, plot = T)
+testZeroInflation(simulationOutput)
+testDispersion(simulationOutput)
+
+summary(aov.simp21)
+
+emmeans(aov.simp21,
+        pairwise~Treat,
+        adjust = "bonferroni")
+
+
+aov.simp22 <- glmmTMB(simpson ~ Treat + (1|Paddock), 
+                      data = simp22,
+                      family = Gamma(link = "log"))
+
+# remove random effect
+diagnose(aov.simp22)
+
+simulationOutput <- simulateResiduals(aov.simp22, plot = T)
+testZeroInflation(simulationOutput)
+testDispersion(simulationOutput)
+
+summary(aov.simp22)
+
+emmeans(aov.simp22,
+        pairwise~Treat,
+        adjust = "tukey")
+
+
+aov.simp23 <- glmmTMB(simpson ~ Treat + (1|Paddock), 
+                      data = simp23,
+                      family = gaussian(link = "identity"))
+
+# remove random effect
+diagnose(aov.simp23)
+
+simulationOutput <- simulateResiduals(aov.simp23, plot = T)
+testZeroInflation(simulationOutput)
+testDispersion(simulationOutput)
+
+summary(aov.simp23)
+
+emmeans(aov.simp23,
+        pairwise~Treat,
+        adjust = "tukey")
+
+
+# Total diversity analysis ------------------------------------------------
+
+
+aov.simp <- glmmTMB(simpson ~ Treat + Year + (1|Paddock), 
+                    data = simp.total)
 
 # remove random effect
 diagnose(aov.simp)
 
+simulationOutput <- simulateResiduals(aov.simp, plot = T)
+testZeroInflation(simulationOutput)
+testDispersion(simulationOutput)
+
 summary(aov.simp)
 
-simulationOutput <- simulateResiduals(aov.simp)
-plot(simulationOutput)
-testZeroInflation(simulationOutput)
+emmeans(aov.simp,
+        pairwise~Treat,
+        type = "Tukey")
+
+emmeans(aov.simp,
+        pairwise~Year,
+        type = "Tukey")
 
 simp.div <- full_join(simpson21.group, 
                       simpson22.group,
@@ -242,4 +313,7 @@ simp.div <- full_join(simpson21.group,
          "2022 Diversity" = "simpson22.group",
          "2023 Diversity" = "simpson23.group")
 
-write.csv(simp.total, "working/SimpsonTotal.csv")
+write_csv(simp21, "working/SimpsonTotal21.csv")
+write_csv(simp22, "working/SimpsonTotal22.csv")
+write_csv(simp23, "working/SimpsonTotal23.csv")
+write_csv(simp.total, "working/SimpsonTotal.csv")
