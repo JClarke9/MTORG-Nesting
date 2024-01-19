@@ -261,7 +261,7 @@ simp_theme <- theme(plot.title = element_text(family = "my_font",
 
 
 ggsave(birdsY.viol, 
-       filename = "outputs/figs/AvianDiversityViolin_Year.png",  
+       filename = "outputs/figs/Simpson_Diversity_Violin_Year.png",  
        dpi = 300,
        bg = NULL,
        height = 15,
@@ -269,7 +269,7 @@ ggsave(birdsY.viol,
        units = "in")
 
 ggsave(birds.viol, 
-       filename = "outputs/figs/AvianDiversityViolin.png",  
+       filename = "outputs/figs/Simpson_Diversity_Violin.png",  
        dpi = 300,
        bg = NULL,
        height = 15,
