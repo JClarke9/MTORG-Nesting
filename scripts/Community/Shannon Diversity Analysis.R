@@ -236,6 +236,7 @@ testZeroInflation(simulationOutput)
 testDispersion(simulationOutput)
 
 summary(aov.shan21)
+confint(aov.shan21, level = 0.95)
 
 emmeans(aov.shan21,
         pairwise~Treat,
