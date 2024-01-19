@@ -232,12 +232,12 @@ beta$Variable <- case_match(beta$Variable,
                             "S:NestAge" ~ "Nest Age",
                             "S:Forb" ~ "Forb Cover",
                             "S:VOR" ~ "VOR (dm)",
-                            "S:Veg.Height" ~ "Veg Height")
+                            "S:Veg.Height" ~ "Veg Height (mm)")
 
 beta$Variable <- factor(beta$Variable,
                         levels = c("Intercept", "Year 2022", "Year 2023", "Time",
                                    "Time^2", "Nest Age", "Nestling", "Grazing Presence",
-                                   "Days Grazed", "KBG Cover", "Forb Cover", "Litter Cover", "Veg Height",
+                                   "Days Grazed", "KBG Cover", "Forb Cover", "Litter Cover", "Veg Height (mm)",
                                    "VOR (dm)"))
 
 
@@ -299,7 +299,7 @@ beta_f$Species <- factor(beta_f$Species,
 
 beta_f$Variable <- factor(beta_f$Variable,
                           levels = c("Days Grazed", "KBG Cover", "Litter Cover", 
-                                     "Forb Cover", "Veg Height", "VOR (dm)"))
+                                     "Forb Cover", "Veg Height (mm)", "VOR (dm)"))
 
 (beta.plot <- ggplot(beta_f, 
                      aes(x = Variable,
@@ -383,8 +383,8 @@ ggsave(beta.plot,
        filename = "outputs/figs/beta.png",
        dpi = "print",
        bg = NULL,
-       height = 13.5,
-       width = 21.88)
+       height = 13.2,
+       width = 21.89)
 
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
