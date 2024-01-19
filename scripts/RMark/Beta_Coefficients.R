@@ -224,21 +224,21 @@ beta$Variable <- case_match(beta$Variable,
                             "S:Nestling1" ~ "Nestling",
                             "S:Year2022" ~ "Year 2022",
                             "S:Year2023" ~ "Year 2023",
-                            "S:Litter" ~ "Litter",
+                            "S:Litter" ~ "Litter Cover",
                             "S:Time" ~ "Time",
                             "S:I(Time^2)" ~ "Time^2",
-                            "S:KBG" ~ "KBG",
+                            "S:KBG" ~ "KBG Cover",
                             "S:grazed" ~ "Days Grazed",
                             "S:NestAge" ~ "Nest Age",
-                            "S:Forb" ~ "Forb",
-                            "S:VOR" ~ "VOR",
+                            "S:Forb" ~ "Forb Cover",
+                            "S:VOR" ~ "VOR (dm)",
                             "S:Veg.Height" ~ "Veg Height")
 
 beta$Variable <- factor(beta$Variable,
                         levels = c("Intercept", "Year 2022", "Year 2023", "Time",
                                    "Time^2", "Nest Age", "Nestling", "Grazing Presence",
-                                   "Days Grazed", "KBG", "Forb", "Litter", "Veg Height",
-                                   "VOR"))
+                                   "Days Grazed", "KBG Cover", "Forb Cover", "Litter Cover", "Veg Height",
+                                   "VOR (dm)"))
 
 
 # Plot the data -----------------------------------------------------------
@@ -298,8 +298,8 @@ beta_f$Species <- factor(beta_f$Species,
                                     "MODO", "BRBL", "CCSP", "WEME"))
 
 beta_f$Variable <- factor(beta_f$Variable,
-                          levels = c("Days Grazed", "KBG", "Litter", 
-                                     "Forb", "Veg Height", "VOR"))
+                          levels = c("Days Grazed", "KBG Cover", "Litter Cover", 
+                                     "Forb Cover", "Veg Height", "VOR (dm)"))
 
 (beta.plot <- ggplot(beta_f, 
                      aes(x = Variable,

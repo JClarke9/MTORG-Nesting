@@ -83,7 +83,7 @@ shan_theme <- theme(plot.title = element_text(family = "my_font",
                                                 size = 40),
                     legend.text = element_text(family = "my_font",
                                                size = 30),
-                    legend.key.width = unit(2, "cm"))
+                    legend.key.width = unit(1, "cm"))
 
 
 # Creating violin plots ---------------------------------------------------
@@ -171,7 +171,7 @@ shan_theme <- theme(plot.title = element_text(family = "my_font",
     shan_theme +
     labs(title = "2021 Avian Nesting Diversity", 
          x = NULL, 
-         y = "Shannon's Diversity"))
+         y = "Shannon Diversity"))
 
 (shan.viol22 <- ggplot(shan22, 
                        aes(fill = Treat,
@@ -188,7 +188,7 @@ shan_theme <- theme(plot.title = element_text(family = "my_font",
     shan_theme +
     labs(title = "2022 Avian Nesting Diversity", 
          x = NULL, 
-         y = "Shannon's Diversity"))
+         y = "Shannon Diversity"))
 
 (shan.viol23 <- ggplot(shan23, 
                        aes(fill = Treat,
@@ -205,7 +205,7 @@ shan_theme <- theme(plot.title = element_text(family = "my_font",
     shan_theme +
     labs(title = "2023 Avian Nesting Diversity", 
          x = NULL, 
-         y = "Shannon's Diversity"))
+         y = "Shannon Diversity"))
 
 
 (shan.viol <- ggplot(tot.shan, 
@@ -223,7 +223,8 @@ shan_theme <- theme(plot.title = element_text(family = "my_font",
     shan_theme +
     labs(title = "Avian Nesting Diversity", 
          x = NULL, 
-         y = "Shannon's Diversity"))
+         y = "Shannon Diversity",
+         fill = "Intensity"))
 
 
 # Combining violin plots --------------------------------------------------
