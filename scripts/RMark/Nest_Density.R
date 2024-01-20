@@ -142,7 +142,7 @@ NOPI.trt <- mark(NOPI.surv,
 # This loop calculates the densities and confidence intervals for all
 # of the models listed above
 
-birds.trt <- NULL  # Initialize the combined dataframe
+birds.trtY <- NULL  # Initialize the combined dataframe
 
 # Main loop for multiple species
 all_objects <- ls()
@@ -238,13 +238,13 @@ for (species in species_list) {
           estimate == 0 ~ 0),)
     
     # Combine with the existing birds.trt dataframe
-    birds.trt <- rbind(birds.trt, group |> mutate(Species = species))
+    birds.trtY <- rbind(birds.trtY, group |> mutate(Species = species))
   } else {
     warning(paste0("Objects ", surv_obj, " and/or ", trt_obj, " not found in the environment. Skipping species ", species))
   }
 }
 
-(birdY.density <- birds.trt |> 
+(birdY.density <- birds.trtY |> 
     group_by(Species) |> 
     summarize(birds_ha = mean(estimate),
               se =  mean(se),
@@ -255,7 +255,7 @@ for (species in species_list) {
 # Plot densities ----------------------------------------------------------
 
 
-(density.plotY <- ggplot(birds.trt, 
+(density.plotY <- ggplot(birds.trtY, 
                          aes(x = Species, 
                              y = estimate)) +
    stat_summary(geom = "point",
@@ -293,7 +293,7 @@ for (species in species_list) {
 ggsave(density.plotY,
        filename = "outputs/figs/AvianDensity_Year.png",
        dpi = "print",
-       bg = NULL,
+       bg = "white",
        height = 13,
        width = 22.5)
 
@@ -372,7 +372,7 @@ NOPI.trtG <- mark(NOPI.surv,
 # This loop calculates the densities and confidence intervals for all
 # of the models listed above
 
-birds.trt <- NULL  # Initialize the combined dataframe
+birds.trtT <- NULL  # Initialize the combined dataframe
 
 # Main loop for multiple species
 all_objects <- ls()
@@ -592,13 +592,16 @@ for (species in species_list) {
           estimate == 0 ~ 0))
     
     # Combine with the existing birds.trt dataframe
-    birds.trt <- rbind(birds.trt, group |> mutate(Species = species))
+    birds.trtT <- rbind(birds.trtT, group |> mutate(Species = species))
   } else {
     warning(paste0("Objects ", surv_obj, " and/or ", trt_obj, " not found in the environment. Skipping species ", species))
   }
 }
 
-birdT.density <- birds.trt |> 
+birds.trtT <- birds.trtT |> 
+  ungroup()
+
+birdT.density <- birds.trtT |> 
   group_by(cTreat,
            Species) |> 
   summarize(birds_ha = mean(estimate),
@@ -610,7 +613,7 @@ birdT.density <- birds.trt |>
 # Plot densities ----------------------------------------------------------
 
 
-(density.plotT <- ggplot(birds.trt, 
+(density.plotT <- ggplot(birds.trtT, 
                          aes(x = cTreat, 
                              y = estimate)) +
    stat_summary(geom = "point",
@@ -643,21 +646,231 @@ birdT.density <- birds.trt |>
         x = NULL, 
         y = "Nests Per Ha"))
 
+ggsave(density.plotT,
+       filename = "outputs/figs/AvianDensity_Treat.png",
+       dpi = "print",
+       bg = "white",
+       height = 13,
+       width = 22.5)
+
 
 # Modeling differences in densities --------------------------------------------------------------------------
 
 
 library(glmmTMB)
+library(GLMMadaptive)
 library(DHARMa)
-
-aov.ccsp <- glmmTMB(estimate ~ cTreat + (1|Year/Replicate), 
-                    data = filter(birds.trt, Species == "CCSP"),
-                    family = gaussian(link = "identity"))
-diagnose(aov.ccsp)
-
-simulationOutput <- simulateResiduals(aov.ccsp, plot = T)
+library(emmeans)
 
 
+hist(birds.trtT$estimate[birds.trtT$Species == "BRBL"])
+hist(birds.trtT$estimate[birds.trtT$Species == "BRBL" & birds.trtT$cTreat == "Rest"])
+hist(birds.trtT$estimate[birds.trtT$Species == "BRBL" & birds.trtT$cTreat == "Moderate"])
+hist(birds.trtT$estimate[birds.trtT$Species == "BRBL" & birds.trtT$cTreat == "Full"])
+hist(birds.trtT$estimate[birds.trtT$Species == "BRBL" & birds.trtT$cTreat == "Heavy"])
+
+aov.BRBL <- glmmTMB(estimate ~ cTreat + (1|Year/Replicate),
+                    data = filter(birds.trtT, Species == "BRBL"),
+                    start = list(psi = 1.9),
+                    family = tweedie(link = "log"))
+
+simulationOutput <- simulateResiduals(aov.BRBL,
+                                      n = 999,
+                                      plot = T)
+
+diagnose(aov.BRBL)
+testResiduals(simulationOutput)
+testZeroInflation(simulationOutput)
+testQuantiles(simulationOutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
+
+summary(aov.BRBL)
+emmeans(aov.BRBL, 
+        pairwise ~ cTreat,
+        adjust = "tukey")
+
+confint(aov.BRBL, 
+        level = 0.95,
+        method = "profile")
+
+
+hist(birds.trtT$estimate[birds.trtT$Species == "WEME"])
+hist(birds.trtT$estimate[birds.trtT$Species == "WEME" & birds.trtT$cTreat == "Rest"])
+hist(birds.trtT$estimate[birds.trtT$Species == "WEME" & birds.trtT$cTreat == "Moderate"])
+hist(birds.trtT$estimate[birds.trtT$Species == "WEME" & birds.trtT$cTreat == "Full"])
+hist(birds.trtT$estimate[birds.trtT$Species == "WEME" & birds.trtT$cTreat == "Heavy"])
+
+aov.WEME <- glmmTMB(estimate ~ cTreat + (1|Year/Replicate),
+                    data = filter(birds.trtT, Species == "WEME"),
+                    start = list(psi = 1.1),
+                    family = tweedie(link = "log"))
+
+simulationOutput <- simulateResiduals(aov.WEME,
+                                      n = 999,
+                                      plot = T)
+
+diagnose(aov.WEME)
+testResiduals(simulationOutput)
+testZeroInflation(simulationOutput)
+testQuantiles(simulationOutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
+
+summary(aov.WEME)
+emmeans(aov.WEME,
+        pairwise~cTreat,
+        adjust ="tukey")
+
+confint(aov.WEME, 
+        level = 0.95,
+        method = "profile")
+
+
+hist(birds.trtT$estimate[birds.trtT$Species == "CCSP"])
+hist(birds.trtT$estimate[birds.trtT$Species == "CCSP" & birds.trtT$cTreat == "Rest"])
+hist(birds.trtT$estimate[birds.trtT$Species == "CCSP" & birds.trtT$cTreat == "Moderate"])
+hist(birds.trtT$estimate[birds.trtT$Species == "CCSP" & birds.trtT$cTreat == "Full"])
+hist(birds.trtT$estimate[birds.trtT$Species == "CCSP" & birds.trtT$cTreat == "Heavy"])
+
+aov.CCSP <- glmmTMB(estimate ~ cTreat + (1|Year/Replicate),
+                    data = filter(birds.trtT, Species == "CCSP"),
+                    start = list(psi = 1.1),
+                    family = tweedie(link = "log"))
+
+simulationOutput <- simulateResiduals(aov.CCSP,
+                                      n = 999,
+                                      plot = T)
+
+diagnose(aov.CCSP)
+testResiduals(simulationOutput)
+testZeroInflation(simulationOutput)
+testQuantiles(simulationOutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
+
+summary(aov.CCSP)
+emmeans(aov.CCSP, 
+        pairwise ~ cTreat,
+        adjust = "tukey")
+
+confint(aov.CCSP, 
+        level = 0.95,
+        method = "profile")
+
+
+hist(birds.trtT$estimate[birds.trtT$Species == "MODO"])
+hist(birds.trtT$estimate[birds.trtT$Species == "MODO" & birds.trtT$cTreat == "Rest"])
+hist(birds.trtT$estimate[birds.trtT$Species == "MODO" & birds.trtT$cTreat == "Moderate"])
+hist(birds.trtT$estimate[birds.trtT$Species == "MODO" & birds.trtT$cTreat == "Full"])
+hist(birds.trtT$estimate[birds.trtT$Species == "MODO" & birds.trtT$cTreat == "Heavy"])
+
+aov.MODO <- glmmTMB(estimate ~ cTreat + (1|Year/Replicate),
+                    data = filter(birds.trtT, Species == "MODO"),
+                    start = list(psi = 1.1),
+                    family = tweedie(link = "log"))
+
+simulationOutput <- simulateResiduals(aov.MODO,
+                                      n = 999,
+                                      plot = T)
+
+diagnose(aov.MODO)
+testResiduals(simulationOutput)
+testZeroInflation(simulationOutput)
+testQuantiles(simulationOutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
+
+summary(aov.MODO)
+emmeans(aov.MODO, 
+        pairwise ~ cTreat,
+        adjust = "tukey")
+
+confint(aov.MODO, 
+        level = 0.95,
+        method = "profile")
+
+
+hist(birds.trtT$estimate[birds.trtT$Species == "RWBL"])
+hist(birds.trtT$estimate[birds.trtT$Species == "RWBL" & birds.trtT$cTreat == "Rest"])
+hist(birds.trtT$estimate[birds.trtT$Species == "RWBL" & birds.trtT$cTreat == "Moderate"])
+hist(birds.trtT$estimate[birds.trtT$Species == "RWBL" & birds.trtT$cTreat == "Full"])
+hist(birds.trtT$estimate[birds.trtT$Species == "RWBL" & birds.trtT$cTreat == "Heavy"])
+
+aov.RWBL <- glmmTMB(estimate ~ cTreat + (1|Year/Replicate),
+                    data = filter(birds.trtT, Species == "RWBL"),
+                    start = list(psi = 1.1),
+                    family = tweedie(link = "log"))
+
+simulationOutput <- simulateResiduals(aov.RWBL,
+                                      n = 999,
+                                      plot = T)
+
+diagnose(aov.RWBL)
+testResiduals(simulationOutput)
+testZeroInflation(simulationOutput)
+testQuantiles(simulationOutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
+
+summary(aov.RWBL)
+emmeans(aov.RWBL, 
+        pairwise ~ cTreat,
+        adjust = "tukey")
+
+confint(aov.RWBL, 
+        level = 0.95,
+        method = "profile")
+
+
+hist(birds.trtT$estimate[birds.trtT$Species == "NOPI"])
+hist(birds.trtT$estimate[birds.trtT$Species == "NOPI" & birds.trtT$cTreat == "Rest"])
+hist(birds.trtT$estimate[birds.trtT$Species == "NOPI" & birds.trtT$cTreat == "Moderate"])
+hist(birds.trtT$estimate[birds.trtT$Species == "NOPI" & birds.trtT$cTreat == "Full"])
+hist(birds.trtT$estimate[birds.trtT$Species == "NOPI" & birds.trtT$cTreat == "Heavy"])
+
+aov.NOPI <- glmmTMB(estimate ~ cTreat + (1|Year/Replicate),
+                    data = filter(birds.trtT, Species == "NOPI"),
+                    start = list(psi = 1.1),
+                    family = tweedie(link = "log"))
+ 
+simulationOutput <- simulateResiduals(aov.NOPI,
+                                      n = 999,
+                                      plot = T)
+
+diagnose(aov.NOPI)
+testResiduals(simulationOutput)
+testZeroInflation(simulationOutput)
+testQuantiles(simulationOutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
+
+summary(aov.NOPI)
+emmeans(aov.NOPI, 
+        pairwise ~ cTreat,
+        adjust = "tukey")
+
+confint(aov.NOPI, 
+        level = 0.95,
+        method = "profile")
+
+
+hist(birds.trtT$estimate[birds.trtT$Species == "GADW"])
+hist(birds.trtT$estimate[birds.trtT$Species == "GADW" & birds.trtT$cTreat == "Rest"])
+hist(birds.trtT$estimate[birds.trtT$Species == "GADW" & birds.trtT$cTreat == "Moderate"])
+hist(birds.trtT$estimate[birds.trtT$Species == "GADW" & birds.trtT$cTreat == "Full"])
+hist(birds.trtT$estimate[birds.trtT$Species == "GADW" & birds.trtT$cTreat == "Heavy"])
+
+aov.GADW <- glmmTMB(estimate ~ cTreat + (1|Year/Replicate),
+                    data = filter(birds.trtT, Species == "GADW"),
+                    start = list(psi = 1.1),
+                    family = tweedie(link = "log"))
+
+simulationOutput <- simulateResiduals(aov.GADW,
+                                      n = 999,
+                                      plot = T)
+
+diagnose(aov.GADW)
+testResiduals(simulationOutput)
+testZeroInflation(simulationOutput)
+testQuantiles(simulationOutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
+
+summary(aov.GADW)
+emmeans(aov.GADW, 
+        pairwise ~ cTreat)
+
+confint(aov.GADW, 
+        level = 0.95,
+        method = "profile",
+        component = "cond")
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,

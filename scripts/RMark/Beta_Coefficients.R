@@ -231,14 +231,14 @@ beta$Variable <- case_match(beta$Variable,
                             "S:grazed" ~ "Days Grazed",
                             "S:NestAge" ~ "Nest Age",
                             "S:Forb" ~ "Forb Cover",
-                            "S:VOR" ~ "VOR (dm)",
-                            "S:Veg.Height" ~ "Veg Height (mm)")
+                            "S:VOR" ~ "VOR",
+                            "S:Veg.Height" ~ "Veg Height")
 
 beta$Variable <- factor(beta$Variable,
                         levels = c("Intercept", "Year 2022", "Year 2023", "Time",
                                    "Time^2", "Nest Age", "Nestling", "Grazing Presence",
-                                   "Days Grazed", "KBG Cover", "Forb Cover", "Litter Cover", "Veg Height (mm)",
-                                   "VOR (dm)"))
+                                   "Days Grazed", "KBG Cover", "Forb Cover", "Litter Cover", "Veg Height",
+                                   "VOR"))
 
 
 # Plot the data -----------------------------------------------------------
@@ -299,27 +299,25 @@ beta_f$Species <- factor(beta_f$Species,
 
 beta_f$Variable <- factor(beta_f$Variable,
                           levels = c("Days Grazed", "KBG Cover", "Litter Cover", 
-                                     "Forb Cover", "Veg Height (mm)", "VOR (dm)"))
+                                     "Forb Cover", "Veg Height", "VOR"))
 
 (beta.plot <- ggplot(beta_f, 
                      aes(x = Variable,
                          y = Coefficient,
                          fill = Species)) +
     geom_hline(yintercept = 0,
-               colour = gray(1/2),
-               linewidth = 1,
+               colour = gray(1/2), 
                lty = 2) +
-    geom_bar_pattern(aes(fill = Species,
-                         pattern = Species),
-                     stat = "identity",
-                     colour = "black",
-                     pattern_fill = "black",
-                     pattern_colour = "black",
-                     pattern_density  = 0.1,
-                     pattern_linetype = 0.5,
-                     pattern_res = 600,
-                     width = 0.7,
-                     position = "dodge") +
+    geom_bar(position = "dodge",
+             stat = "identity",
+             colour = "black",
+             width = 0.7) +
+    geom_errorbar(aes(ymin = lcl,
+                      ymax = ucl),
+                  position = position_dodge(0.7),
+                  width = 0.5,
+                  linewidth = 0.7,
+                  colour = "black") +
     scale_fill_manual(values = c('#A2A4A2', 
                                  '#A2A4A2', 
                                  '#A2A4A2', 
@@ -328,20 +326,6 @@ beta_f$Variable <- factor(beta_f$Variable,
                                  '#D4A634', 
                                  '#D4A634', 
                                  '#D4A634')) +
-    scale_pattern_manual(values = c("GADW" = "none", 
-                                    "NOPI" = "crosshatch", 
-                                    "BWTE" = "stripe",
-                                    "CCSP" = "none", 
-                                    "RWBL" = "none", 
-                                    "BRBL" = "crosshatch",
-                                    "WEME" = "none",
-                                    "MODO" = "stripe")) +
-    geom_errorbar(aes(ymin = lcl,
-                      ymax = ucl),
-                  position = position_dodge(0.7),
-                  width = 0.5,
-                  linewidth = 0.7,
-                  colour = "black") +
     guides(fill = guide_legend(byrow = TRUE)) +
     theme(plot.title = element_text(family = "my_font",
                                     hjust = 0.5,
@@ -371,6 +355,18 @@ beta_f$Variable <- factor(beta_f$Variable,
          x = NULL,
          y = expression("Beta " (beta))))
 
+library(cowplot)
+
+object <- get_legend(beta.plot)
+
+object <- object + theme(plot.background = element_rect(fill = NULL))
+
+ggsave(object,
+       filename = "outputs/figs/beta_legend.png",
+       dpi = "print",
+       bg = NULL,
+       height = 10,
+       width = 5)
 
 ggsave(betaF.plot,
        filename = "outputs/figs/betaFull.png",
@@ -382,7 +378,7 @@ ggsave(betaF.plot,
 ggsave(beta.plot,
        filename = "outputs/figs/beta.png",
        dpi = "print",
-       bg = NULL,
+       bg = "white",
        height = 13.2,
        width = 21.89)
 
