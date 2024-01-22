@@ -658,7 +658,6 @@ ggsave(density.plotT,
 
 
 library(glmmTMB)
-library(GLMMadaptive)
 library(DHARMa)
 library(emmeans)
 
