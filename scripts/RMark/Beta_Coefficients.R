@@ -294,17 +294,28 @@ beta_f <- filter(beta, Variable != "Intercept" & Variable != "Year 2022" & Varia
                    Variable != "Time" & Variable != "Time^2" & Variable != "Nestling" & Variable != "Nest Age")
 
 beta_f$Species <- factor(beta_f$Species,
-                         levels = c("GADW", "BWTE", "NOPI", "RWBL", 
-                                    "MODO", "BRBL", "CCSP", "WEME"))
+                         levels = c("GADW", "BWTE", "NOPI", 
+                                    "RWBL", "MODO", "BRBL"))
+
+beta_f$Type <- ifelse(beta_f$Species == "GADW", "FAC",
+                      ifelse(beta_f$Species == "BWTE", "FAC",
+                             ifelse(beta_f$Species == "NOPI", "FAC",
+                                    ifelse(beta_f$Species == "RWBL", "FAC",
+                                           ifelse(beta_f$Species == "MODO", "FAC",
+                                                  ifelse(beta_f$Species == "BRBL", "OBL",
+                                                         NA))))))
+
+beta_f$Type <- factor(beta_f$Type,
+                      levels = c("OBL", "FAC"))
 
 beta_f$Variable <- factor(beta_f$Variable,
-                          levels = c("Days Grazed", "KBG Cover", "Litter Cover", 
+                          levels = c("Litter Cover", "Days Grazed", "KBG Cover", 
                                      "Forb Cover", "Veg Height", "VOR"))
 
 (beta.plot <- ggplot(beta_f, 
                      aes(x = Variable,
                          y = Coefficient,
-                         fill = Species)) +
+                         fill = Type)) +
     geom_hline(yintercept = 0,
                colour = gray(1/2), 
                lty = 2) +
@@ -318,14 +329,10 @@ beta_f$Variable <- factor(beta_f$Variable,
                   width = 0.5,
                   linewidth = 0.7,
                   colour = "black") +
-    scale_fill_manual(values = c('#A2A4A2', 
-                                 '#A2A4A2', 
-                                 '#A2A4A2', 
-                                 '#D4A634', 
-                                 '#D4A634', 
-                                 '#D4A634', 
-                                 '#D4A634', 
-                                 '#D4A634')) +
+    scale_fill_manual(values = c('#D4A634',
+                                 '#A2A4A2'),
+                      labels = c("OBL" = "Obligate",
+                                 "FAC" = "Facultative")) +
     guides(fill = guide_legend(byrow = TRUE)) +
     theme(plot.title = element_text(family = "my_font",
                                     hjust = 0.5,
@@ -377,8 +384,8 @@ ggsave(betaF.plot,
 
 ggsave(beta.plot,
        filename = "outputs/figs/beta.png",
-       dpi = "print",
-       bg = "white",
+       dpi = 600,
+       bg = "transparent",
        height = 13.2,
        width = 21.89)
 
