@@ -1,31 +1,34 @@
-Spec,Heavy,Full,Moderate,Rest
-AMCO,1,3,0,0
-AMWI,1,1,2,0
-BOBO,0,3,5,2
-BRBL,2,6,12,9
-BWTE,13,23,18,16
-CCLO,2,1,4,0
-CCSP,76,112,119,52
-COGR,0,0,1,0
-DICK,0,3,4,4
-EAKI,0,2,3,3
-GADW,7,14,17,11
-GRSP,5,2,2,2
-GWTE,1,0,2,0
-KILL,1,0,0,1
-MALL,3,5,11,1
-MAWR,0,1,0,0
-MODO,10,6,10,11
-NOPI,5,10,20,12
-NSHO,1,10,10,1
-PBGR,0,2,0,0
-RWBL,3,29,26,17
-SAVS,1,1,0,1
-SORA,0,1,0,0
-STGR,1,3,1,0
-UPSA,0,0,1,2
-WEME,9,11,13,15
-WILL,0,0,1,0
-WIPH,1,3,0,1
-WISN,0,1,0,0
-YHBL,1,0,1,0
+Species,Group,Rest,Moderate,Full,Heavy,Totals
+American Bittern,FAC,0,4,0,0,4
+American Coot,WET,1,2,4,11,18
+American Wigeon,FAC,0,2,2,1,5
+Bobolink,OBL,3,6,3,0,12
+Brewer's Blackbird,FAC,11,17,7,3,38
+Blue-winged Teal,FAC,26,30,33,23,112
+Chestnut-collared Longspur,OBL,4,4,1,3,12
+Clay-colored Sparrow,FAC,85,152,150,96,483
+Common Grackle,FAC,0,1,0,0,1
+Dickcissel,OBL,4,4,3,0,11
+Eastern Kingbird,FAC,6,4,4,0,14
+Gadwall,FAC,18,30,21,9,78
+Grasshopper Sparrow,OBL,2,2,2,6,12
+Green-winged Teal,FAC,1,3,0,2,6
+Killdeer,FAC,2,0,0,1,3
+Lesser Scaup,FAC,0,0,1,0,1
+Mallard,FAC,1,19,7,4,31
+Marsh Wren,WET,0,0,1,1,2
+Mourning Dove,FAC,11,17,10,12,50
+Northern Pintail,FAC,14,27,11,7,59
+Northern Shoveler,FAC,3,12,10,1,26
+Pied-billed Grebe,WET,1,0,2,2,5
+Red-winged Blackbird,FAC,30,32,35,22,119
+Savannah Sparrow,OBL,1,0,1,1,3
+Sora,WET,1,1,2,2,6
+Sharp-tailed Grouse,OBL,0,3,4,1,8
+Upland Sandpiper,OBL,2,2,0,0,4
+Western Meadowlark,OBL,26,17,21,12,76
+Willet,FAC,3,1,0,0,4
+Wilson's Phalarope,WET,1,0,3,1,5
+Wilson's Snipe,WET,1,0,1,1,3
+Yellow-headed Blackbird,WET,5,1,0,12,18
+Totals,NA,263,393,339,234,1229

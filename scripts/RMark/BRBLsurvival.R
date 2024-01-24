@@ -235,6 +235,14 @@ confint(BRBL4.results$S.lit, level = 0.85)
         grepl("20231", Group) ~ "Nestling")) |> 
     select(Year, Stage, estimate, se, lcl, ucl))
 
+(BRBL.year <- BRBL.real |> 
+    group_by(Year) |> 
+    summarize(mean = mean(estimate)))
+
+(BRBL.stage <- BRBL.real |> 
+    group_by(Stage) |> 
+    summarize(mean = mean(estimate)))
+
 
 # Plotting Beta Coefficients ----------------------------------------------
 

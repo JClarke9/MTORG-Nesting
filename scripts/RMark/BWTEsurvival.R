@@ -209,15 +209,13 @@ coef(BWTE4.results$S.height)
 confint(BWTE4.results$S.height, level = 0.85)
 
 
-BWTE.real <- as.data.frame(BWTE4.results$S.height$results$real) |> 
-  rownames_to_column(var = "Group") |> 
-  mutate(Year = case_when(
-    grepl("2021", Group) ~ "2021",
-    grepl("2022", Group) ~ "2022",
-    grepl("2023", Group) ~ "2023")) |> 
-  select(Year, estimate, se, lcl, ucl)
-
-(BWTE.dsr <- BWTE.real |> 
+(BWTE.real <- as.data.frame(BWTE4.results$S.height$results$real) |> 
+    rownames_to_column(var = "Group") |> 
+    mutate(Year = case_when(
+      grepl("2021", Group) ~ "2021",
+      grepl("2022", Group) ~ "2022",
+      grepl("2023", Group) ~ "2023")) |> 
+    select(Year, estimate, se, lcl, ucl) |> 
     group_by(Year) |> 
     summarise(estimate = mean(estimate),
               se = mean(se),

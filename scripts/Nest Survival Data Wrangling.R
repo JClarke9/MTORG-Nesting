@@ -23,8 +23,6 @@ totals <- totals |>
 check_failed <- filter(raw, Fate == 1 & Fate2 == "Survive")
 check_survive <- filter(raw, Fate == 0 & Fate2 != "Survive")
 
-CCSP <- filter(raw, Spec == "CCSP")
-
 raw <- filter(raw, Treatment == "MTORG")
 raw <- filter(raw, Spec != "DUCK" & Spec != "UNKN")
 

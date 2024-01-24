@@ -214,12 +214,12 @@ GADW.real <- as.data.frame(GADW4.results$S.forb$results$real) |>
     grepl("2023", Group) ~ "2023")) |> 
   select(Year, estimate, se, lcl, ucl)
 
-GADW.dsr <- GADW.real |> 
-  group_by(Year) |> 
-  summarise(estimate = mean(estimate),
-            se = mean(se),
-            lcl = mean(lcl),
-            ucl = mean(ucl))
+(GADW.dsr <- GADW.real |> 
+    group_by(Year) |> 
+    summarise(estimate = mean(estimate),
+              se = mean(se),
+              lcl = mean(lcl),
+              ucl = mean(ucl)))
 
 
 # Plotting beta coefficients ----------------------------------------------
