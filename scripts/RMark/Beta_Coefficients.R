@@ -294,8 +294,19 @@ beta_f <- filter(beta, Variable != "Intercept" & Variable != "Year 2022" & Varia
                    Variable != "Time" & Variable != "Time^2" & Variable != "Nestling" & Variable != "Nest Age")
 
 beta_f$Species <- factor(beta_f$Species,
-                         levels = c("GADW", "BWTE", "NOPI", "RWBL", 
-                                    "MODO", "BRBL", "CCSP", "WEME"))
+                         levels = c("GADW", "BWTE", "NOPI", 
+                                    "RWBL", "MODO", "BRBL"))
+
+beta_f$Type <- ifelse(beta_f$Species == "GADW", "FAC",
+                      ifelse(beta_f$Species == "BWTE", "FAC",
+                             ifelse(beta_f$Species == "NOPI", "FAC",
+                                    ifelse(beta_f$Species == "RWBL", "FAC",
+                                           ifelse(beta_f$Species == "MODO", "FAC",
+                                                  ifelse(beta_f$Species == "BRBL", "OBL",
+                                                         NA))))))
+
+beta_f$Type <- factor(beta_f$Type,
+                      levels = c("OBL", "FAC"))
 
 beta_f$Variable <- factor(beta_f$Variable,
                           levels = c("Days Grazed", "KBG Cover", "Litter Cover", 
@@ -377,8 +388,8 @@ ggsave(betaF.plot,
 
 ggsave(beta.plot,
        filename = "outputs/figs/beta.png",
-       dpi = "print",
-       bg = "white",
+       dpi = 600,
+       bg = "transparent",
        height = 13.2,
        width = 21.89)
 

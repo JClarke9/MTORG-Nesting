@@ -5,6 +5,7 @@ library(ggord)
 library(tidyverse)
 library(vegan)
 library(cowplot)
+library(patchwork)
 library(indicspecies)
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
@@ -56,7 +57,7 @@ totals23$cTreat <- factor(totals23$cTreat,
 
 
 my_theme <-  theme(plot.title = element_text(family = "my_font",                             # select the font for the title
-                                             size = 40,
+                                             size = 20,
                                              hjust = .5),
                    panel.grid = element_blank(),                                     # remove the horizontal grid lines
                    panel.background = element_blank(),
@@ -64,14 +65,17 @@ my_theme <-  theme(plot.title = element_text(family = "my_font",                
                    panel.border = element_rect(colour = NA),                               # remove colors
                    axis.line = element_line(colour = "black"),                             # color the x and y axis
                    axis.text.x = element_text(family = "my_font",
-                                              size = 30),                                          # color the axis text
+                                              size = 12),                                          # color the axis text
                    axis.text.y = element_text(family = "my_font",
-                                              size = 30),
+                                              size = 12),
                    axis.ticks = element_line(colour = "black"),                            # set axis tick color
                    text=element_text(family = "my_font",
-                                     size = 30,                                              # change the size of the axis titles
+                                     size = 12,                                              # change the size of the axis titles
                                      colour = "black"),                                    # change the color of the
-                   legend.position="none") 
+                   legend.position="bottom",
+                   legend.margin = margin(t = -1, r = 0,
+                                          b = 0, l = 0, 
+                                          unit = "cm")) 
 
 
 # Creating 2021 Ordination ------------------------------------------------
@@ -118,19 +122,21 @@ stressplot(birds21.ord)                                                         
                              alpha_el = .4,                                                            # change the transparency of the ellipses
                              txt = NULL,                                                                 # change the size of the text
                              repel = TRUE,                                                               # prevent overlap of labels
-                             xlim = c(-2.5, 2.5),                                                           # set the limits of the x axis
-                             ylim = c(-2.5, 2.5),                                                         # set the limits of the y axis
+                             xlim = c(-2, 2),                                                           # set the limits of the x axis
+                             ylim = c(-2, 2),                                                         # set the limits of the y axis
                              grp_title = "Grazing Intensity") +
-    geom_text(aes(x = -1.2,
-                  y = 1.90,
+    geom_text(aes(x = -1.1,
+                  y = 1.80,
                   label = c("Stress = 0.12")),
               family = "my_font",
-              size = 9) +
-    geom_text(aes(x = -1.2,
-                  y = 1.65,
+              size = 3,
+              check_overlap = TRUE) +
+    geom_text(aes(x = -1.1,
+                  y = 1.55,
                   label = c("p = 0.03")),
               family = "my_font",
-              size = 9) +
+              size = 3,
+              check_overlap = TRUE) +
     my_theme +
     labs(title = "2021"))
 
@@ -160,8 +166,6 @@ birds21.dSe <- betadisper(birds21.PMr,                                          
                    permutations = 9999,
                    method = "bray",                                               # use bray-curtis distance
                    by = "terms"))                                                  # effects ('marginal') or overall significance ('NULL')
-
-library(emmeans)
 
 
 # Create 2022 ordination object -------------------------------------------
@@ -208,19 +212,21 @@ stressplot(birds22.ord)                                                         
                              alpha_el = .4,                                                            # change the transparency of the ellipses
                              txt = NULL,                                                                 # change the size of the text
                              repel = TRUE,                                                               # prevent overlap of labels
-                             xlim = c(-2, 2.5),                                                           # set the limits of the x axis
+                             xlim = c(-2, 2),                                                           # set the limits of the x axis
                              ylim = c(-2, 2),                                                         # set the limits of the y axis
                              grp_title = "Grazing Intensity") +
-    geom_text(aes(x = -1.2,
-                  y = 1.90,
+    geom_text(aes(x = -1.1,
+                  y = 1.80,
                   label = c("Stress = 0.10")),
               family = "my_font",
-              size = 9) +
-    geom_text(aes(x = -1.2,
-                  y = 1.65,
+              size = 3,
+              check_overlap = TRUE) +
+    geom_text(aes(x = -1.1,
+                  y = 1.55,
                   label = c("p = 0.11")),
               family = "my_font",
-              size = 9) +
+              size = 3,
+              check_overlap = TRUE) +
     my_theme +
     labs(title = "2022"))
 
@@ -296,19 +302,21 @@ stressplot(birds23.ord)                                                         
                              alpha_el = .4,                                                            # change the transparency of the ellipses
                              txt = NULL,                                                                 # change the size of the text
                              repel = TRUE,                                                               # prevent overlap of labels
-                             xlim = c(-2, 2.5),                                                           # set the limits of the x axis
+                             xlim = c(-2, 2),                                                           # set the limits of the x axis
                              ylim = c(-2, 2),                                                         # set the limits of the y axis
                              grp_title = "Grazing Intensity") +
-    geom_text(aes(x = -1.2,
-                  y = 1.90,
+    geom_text(aes(x = -1.1,
+                  y = 1.80,
                   label = c("Stress = 0.15")),
               family = "my_font",
-              size = 9) +
-    geom_text(aes(x = -1.2,
-                  y = 1.65,
+              size = 3,
+              check_overlap = TRUE) +
+    geom_text(aes(x = -1.1,
+                  y = 1.55,
                   label = c("p = 0.304")),
               family = "my_font",
-              size = 9) +
+              size = 3,
+              check_overlap = TRUE) +
     my_theme +
     labs(title = "2023"))
 
@@ -342,19 +350,60 @@ birds23.dSe <- betadisper(birds23.PMr,                                          
 
 # Combining ordinations ---------------------------------------------------
 
+legend <- get_legend(avian22.ordination)
 
-(avianord.year <- plot_grid(avian21.ordination + theme(legend.position = "none"), 
-                            avian22.ordination + theme(legend.position = "none"),
-                            avian23.ordination + theme(legend.position = "none"),
+(avianord.year <- plot_grid(avian21.ordination + theme(legend.position = "none",
+                                                       plot.margin = margin(t = 0, r = 0,
+                                                                            b = 0, l = 0,
+                                                                            unit = "cm")), 
+                            avian22.ordination + theme(legend.position = "none", 
+                                                       plot.margin = margin(t = 0, r = 0,
+                                                                            b = 0, l = 0,
+                                                                            unit = "cm")),
+                            avian23.ordination + theme(legend.position = "none",
+                                                       plot.margin = margin(t = 0, r = 0,
+                                                                            b = 0, l = 0,
+                                                                            unit = "cm")),
                             nrow = 1,
-                            ncol = 3))
+                            ncol = 3,
+                            align = "h"))
+
+(avianord.year <- plot_grid(avianord.year,
+                   legend,
+                   nrow = 2,
+                   ncol = 1,
+                   rel_heights = c(1, 0.1)))
+
+(avianord.year <- avianord.year + 
+    plot_annotation(title = "Avian Nesting Community Composition",
+                    theme = theme(plot.title = element_text(family = "my_font",
+                                                            hjust = .5,
+                                                            vjust = -1,
+                                                            size = 20),
+                                  panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+                                  panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+                                  panel.background = element_rect(fill = "transparent",                     # make the interior background transparent
+                                                                  colour = NA), 
+                                  plot.background = element_rect(fill = "transparent",                      # make the outer background transparent
+                                                                 colour = NA), 
+                                  axis.line = element_line(colour = "black"),                             # color the x and y axis
+                                  axis.text.x = element_text(family = "my_font",
+                                                             size = 12, 
+                                                             colour = "black"),                             # color the axis text
+                                  axis.text.y = element_text(colour = "black",
+                                                             size = 12),
+                                  axis.ticks = element_line(colour = "black"),
+                                  text = element_text(family = "my_font",
+                                                      size = 12,                                              # change the size of the axis titles
+                                                      colour = "black"),                                    # change the color of the axis titles
+                                  legend.position = "none")))
 
 ggsave(avianord.year, 
        filename = "outputs/figs/AvianOrd.png",  
-       dpi = "print", 
-       bg = NULL,
-       height = 9,
-       width = 22.5)
+       dpi = 600, 
+       bg = "transparent",
+       height = 4.0,
+       width = 6.5)
 
 # Indicator species analysis ----------------------------------------------
 
