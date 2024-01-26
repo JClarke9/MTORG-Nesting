@@ -240,6 +240,14 @@ CCSP4.results$S.stage$results$real |>
         grepl("20231", Group) ~ "Nestling")) |> 
     select(Year, Stage, estimate, se, lcl, ucl))
 
+(CCSP.year <- CCSP.real |> 
+    group_by(Year) |> 
+    summarize(mean = mean(estimate)))
+
+(CCSP.stage <- CCSP.real |> 
+    group_by(Stage) |> 
+    summarize(mean = mean(estimate)))
+
 
 # Plotting beta coefficients ----------------------------------------------
 
