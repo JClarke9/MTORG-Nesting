@@ -205,6 +205,11 @@ GADW4.results
 coef(GADW4.results$S.forb)
 confint(GADW4.results$S.forb, level = 0.85)
 
+GADW4.results$S.forb$results$real |>
+  summarize(estimate = mean(estimate),
+            se = mean(se),
+            lcl = mean(lcl),
+            ucl = mean(ucl))
 
 GADW.real <- as.data.frame(GADW4.results$S.forb$results$real) |> 
   rownames_to_column(var = "Group") |> 

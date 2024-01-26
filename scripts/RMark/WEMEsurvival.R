@@ -217,6 +217,11 @@ WEME4.results
 coef(WEME4.results$S.stage)
 confint(WEME4.results$S.stage, level = 0.85)
 
+WEME4.results$S.stage$results$real |> 
+  summarize(estimate = mean(estimate),
+            se = mean(se),
+            lcl = mean(lcl),
+            ucl = mean(ucl))
 
 (WEME.real <- as.data.frame(WEME4.results$S.stage$results$real) |> 
     rownames_to_column(var = "Group") |> 

@@ -219,6 +219,11 @@ RWBL4.results
 coef(RWBL4.results$S.grazed)
 confint(RWBL4.results$S.grazed, level = 0.85)
 
+RWBL4.results$S.grazed$results$real |> 
+  summarize(estimate = mean(estimate),
+            se = mean(se),
+            lcl = mean(lcl),
+            ucl = mean(ucl))
 
 (RWBL.real <- as.data.frame(RWBL4.results$S.grazed$results$real) |> 
     rownames_to_column(var = "Group") |> 

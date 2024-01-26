@@ -219,6 +219,11 @@ BRBL4.results
 coef(BRBL4.results$S.lit)
 confint(BRBL4.results$S.lit, level = 0.85)
 
+BRBL4.results$S.lit$results$real |> 
+  summarize(estimate = mean(estimate),
+            se = mean(se),
+            lcl = mean(lcl),
+            ucl = mean(ucl))
 
 (BRBL.real <- as.data.frame(BRBL4.results$S.lit$results$real) |> 
     rownames_to_column(var = "Group") |> 

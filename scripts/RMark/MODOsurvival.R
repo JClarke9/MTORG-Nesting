@@ -213,6 +213,11 @@ MODO4.results
 coef(MODO4.results$S.kbg)
 confint(MODO4.results$S.kbg, level = 0.85)
 
+MODO4.results$S.kbg$results$real |> 
+  summarize(estimate = mean(estimate),
+            se = mean(se),
+            lcl = mean(lcl),
+            ucl = mean(ucl))
 
 (MODO.real <- as.data.frame(MODO4.results$S.kbg$results$real) |> 
     rownames_to_column(var = "Group") |> 

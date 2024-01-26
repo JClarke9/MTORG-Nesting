@@ -208,6 +208,11 @@ BWTE4.results
 coef(BWTE4.results$S.height)
 confint(BWTE4.results$S.height, level = 0.85)
 
+BWTE4.results$S.height$results$real |> 
+  summarize(estimate = mean(estimate),
+            se = mean(se),
+            lcl = mean(lcl),
+            ucl = mean(ucl))
 
 BWTE.real <- as.data.frame(BWTE4.results$S.height$results$real) |> 
   rownames_to_column(var = "Group") |> 

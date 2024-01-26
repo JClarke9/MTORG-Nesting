@@ -219,6 +219,11 @@ CCSP4.results
 coef(CCSP4.results$S.stage)
 confint(CCSP4.results$S.stage, level = 0.85)
 
+CCSP4.results$S.stage$results$real |> 
+  summarize(estimate = mean(estimate),
+            se = mean(se),
+            lcl = mean(lcl),
+            ucl = mean(ucl))
 
 (CCSP.real <- as.data.frame(CCSP4.results$S.stage$results$real) |> 
     rownames_to_column(var = "Group") |> 
