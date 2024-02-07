@@ -68,6 +68,74 @@ if (length(objects_to_remove) > 0) {
 }
 
 
+# Constant Survival Models ------------------------------------------------
+
+
+WEME.trt <- mark(WEME.surv, 
+                 nocc = max(WEME.surv$LastChecked), 
+                 model = "Nest",
+                 groups = "Year",
+                 adjust = FALSE,
+                 delete = TRUE,
+                 model.parameters = list(S = list(formula =  ~1 + Year)))
+
+BRBL.trt <- mark(BRBL.surv, 
+                 nocc = max(BRBL.surv$LastChecked), 
+                 model = "Nest",
+                 groups = "Year",
+                 adjust = FALSE,
+                 delete = TRUE,
+                 model.parameters = list(S = list(formula =  ~1 + Year)))
+
+CCSP.trt <- mark(CCSP.surv, 
+                 nocc = max(CCSP.surv$LastChecked), 
+                 model = "Nest",
+                 groups = "Year",
+                 adjust = FALSE,
+                 delete = TRUE,
+                 model.parameters = list(S = list(formula =  ~1 + Year)))
+
+MODO.trt <- mark(MODO.surv, 
+                 nocc = max(MODO.surv$LastChecked), 
+                 model = "Nest",
+                 groups = "Year",
+                 adjust = FALSE,
+                 delete = TRUE,
+                 model.parameters = list(S = list(formula =  ~1 + Year)))
+
+RWBL.trt <- mark(RWBL.surv, 
+                 nocc = max(RWBL.surv$LastChecked), 
+                 model = "Nest",
+                 groups = "Year",
+                 adjust = FALSE,
+                 delete = TRUE,
+                 model.parameters = list(S = list(formula =  ~1 + Year)))
+
+GADW.trt <- mark(GADW.surv, 
+                 nocc = max(GADW.surv$LastChecked), 
+                 model = "Nest",
+                 groups = "Year",
+                 adjust = FALSE,
+                 delete = TRUE,
+                 model.parameters = list(S = list(formula =  ~1 + Year)))
+
+BWTE.trt <- mark(BWTE.surv, 
+                 nocc = max(BWTE.surv$LastChecked), 
+                 model = "Nest",
+                 groups = "Year",
+                 adjust = FALSE,
+                 delete = TRUE,
+                 model.parameters = list(S = list(formula =  ~1 + Year)))
+
+NOPI.trt <- mark(NOPI.surv, 
+                 nocc = max(NOPI.surv$LastChecked), 
+                 model = "Nest",
+                 groups = "Year",
+                 adjust = FALSE,
+                 delete = TRUE,
+                 model.parameters = list(S = list(formula =  ~1 + Year)))
+
+
 # Run constant survival models --------------------------------------------
 
 
