@@ -68,74 +68,6 @@ if (length(objects_to_remove) > 0) {
 }
 
 
-# Constant Survival Models ------------------------------------------------
-
-
-WEME.trt <- mark(WEME.surv, 
-                 nocc = max(WEME.surv$LastChecked), 
-                 model = "Nest",
-                 groups = "Year",
-                 adjust = FALSE,
-                 delete = TRUE,
-                 model.parameters = list(S = list(formula =  ~1 + Year)))
-
-BRBL.trt <- mark(BRBL.surv, 
-                 nocc = max(BRBL.surv$LastChecked), 
-                 model = "Nest",
-                 groups = "Year",
-                 adjust = FALSE,
-                 delete = TRUE,
-                 model.parameters = list(S = list(formula =  ~1 + Year)))
-
-CCSP.trt <- mark(CCSP.surv, 
-                 nocc = max(CCSP.surv$LastChecked), 
-                 model = "Nest",
-                 groups = "Year",
-                 adjust = FALSE,
-                 delete = TRUE,
-                 model.parameters = list(S = list(formula =  ~1 + Year)))
-
-MODO.trt <- mark(MODO.surv, 
-                 nocc = max(MODO.surv$LastChecked), 
-                 model = "Nest",
-                 groups = "Year",
-                 adjust = FALSE,
-                 delete = TRUE,
-                 model.parameters = list(S = list(formula =  ~1 + Year)))
-
-RWBL.trt <- mark(RWBL.surv, 
-                 nocc = max(RWBL.surv$LastChecked), 
-                 model = "Nest",
-                 groups = "Year",
-                 adjust = FALSE,
-                 delete = TRUE,
-                 model.parameters = list(S = list(formula =  ~1 + Year)))
-
-GADW.trt <- mark(GADW.surv, 
-                 nocc = max(GADW.surv$LastChecked), 
-                 model = "Nest",
-                 groups = "Year",
-                 adjust = FALSE,
-                 delete = TRUE,
-                 model.parameters = list(S = list(formula =  ~1 + Year)))
-
-BWTE.trt <- mark(BWTE.surv, 
-                 nocc = max(BWTE.surv$LastChecked), 
-                 model = "Nest",
-                 groups = "Year",
-                 adjust = FALSE,
-                 delete = TRUE,
-                 model.parameters = list(S = list(formula =  ~1 + Year)))
-
-NOPI.trt <- mark(NOPI.surv, 
-                 nocc = max(NOPI.surv$LastChecked), 
-                 model = "Nest",
-                 groups = "Year",
-                 adjust = FALSE,
-                 delete = TRUE,
-                 model.parameters = list(S = list(formula =  ~1 + Year)))
-
-
 # Run constant survival models --------------------------------------------
 
 
@@ -746,8 +678,8 @@ hist(birds.trtT$estimate[birds.trtT$Species == "BRBL" & birds.trtT$cTreat == "He
 
 aov.BRBL <- glmmTMB(estimate ~ cTreat + (1|Year/Replicate),
                     data = filter(birds.trtT, Species == "BRBL"),
-                    start = list(psi = 1.9),
-                    family = tweedie(link = "log"))
+                    ziformula = ~cTreat,
+                    family = ziGamma(link = "log"))
 
 simulationOutput <- simulateResiduals(aov.BRBL,
                                       n = 999,
@@ -776,8 +708,8 @@ hist(birds.trtT$estimate[birds.trtT$Species == "WEME" & birds.trtT$cTreat == "He
 
 aov.WEME <- glmmTMB(estimate ~ cTreat + (1|Year/Replicate),
                     data = filter(birds.trtT, Species == "WEME"),
-                    start = list(psi = 1.1),
-                    family = tweedie(link = "log"))
+                    ziformula = ~cTreat,
+                    family = ziGamma(link = "log"))
 
 simulationOutput <- simulateResiduals(aov.WEME,
                                       n = 999,
@@ -806,8 +738,8 @@ hist(birds.trtT$estimate[birds.trtT$Species == "CCSP" & birds.trtT$cTreat == "He
 
 aov.CCSP <- glmmTMB(estimate ~ cTreat + (1|Year/Replicate),
                     data = filter(birds.trtT, Species == "CCSP"),
-                    start = list(psi = 1.1),
-                    family = tweedie(link = "log"))
+                    ziformula = ~cTreat,
+                    family = ziGamma(link = "log"))
 
 simulationOutput <- simulateResiduals(aov.CCSP,
                                       n = 999,
@@ -836,8 +768,8 @@ hist(birds.trtT$estimate[birds.trtT$Species == "MODO" & birds.trtT$cTreat == "He
 
 aov.MODO <- glmmTMB(estimate ~ cTreat + (1|Year/Replicate),
                     data = filter(birds.trtT, Species == "MODO"),
-                    start = list(psi = 1.1),
-                    family = tweedie(link = "log"))
+                    ziformula = ~cTreat,
+                    family = ziGamma(link = "log"))
 
 simulationOutput <- simulateResiduals(aov.MODO,
                                       n = 999,
@@ -866,8 +798,8 @@ hist(birds.trtT$estimate[birds.trtT$Species == "RWBL" & birds.trtT$cTreat == "He
 
 aov.RWBL <- glmmTMB(estimate ~ cTreat + (1|Year/Replicate),
                     data = filter(birds.trtT, Species == "RWBL"),
-                    start = list(psi = 1.1),
-                    family = tweedie(link = "log"))
+                    ziformula = ~cTreat,
+                    family = ziGamma(link = "log"))
 
 simulationOutput <- simulateResiduals(aov.RWBL,
                                       n = 999,
@@ -896,8 +828,8 @@ hist(birds.trtT$estimate[birds.trtT$Species == "NOPI" & birds.trtT$cTreat == "He
 
 aov.NOPI <- glmmTMB(estimate ~ cTreat + (1|Year/Replicate),
                     data = filter(birds.trtT, Species == "NOPI"),
-                    start = list(psi = 1.1),
-                    family = tweedie(link = "log"))
+                    ziformula = ~cTreat,
+                    family = ziGamma(link = "log"))
  
 simulationOutput <- simulateResiduals(aov.NOPI,
                                       n = 999,
@@ -926,8 +858,8 @@ hist(birds.trtT$estimate[birds.trtT$Species == "GADW" & birds.trtT$cTreat == "He
 
 aov.GADW <- glmmTMB(estimate ~ cTreat + (1|Year/Replicate),
                     data = filter(birds.trtT, Species == "GADW"),
-                    start = list(psi = 1.1),
-                    family = tweedie(link = "log"))
+                    ziformula = ~cTreat,
+                    family = ziGamma(link = "log"))
 
 simulationOutput <- simulateResiduals(aov.GADW,
                                       n = 999,
@@ -947,6 +879,35 @@ confint(aov.GADW,
         method = "profile",
         component = "cond")
 
+
+hist(birds.trtT$estimate[birds.trtT$Species == "BWTE"])
+hist(birds.trtT$estimate[birds.trtT$Species == "BWTE" & birds.trtT$cTreat == "Rest"])
+hist(birds.trtT$estimate[birds.trtT$Species == "BWTE" & birds.trtT$cTreat == "Moderate"])
+hist(birds.trtT$estimate[birds.trtT$Species == "BWTE" & birds.trtT$cTreat == "Full"])
+hist(birds.trtT$estimate[birds.trtT$Species == "BWTE" & birds.trtT$cTreat == "Heavy"])
+
+aov.BWTE <- glmmTMB(estimate ~ cTreat + (1|Year/Replicate),
+                    data = filter(birds.trtT, Species == "BWTE"),
+                    ziformula = ~cTreat,
+                    family = ziGamma(link = "log"))
+
+simulationOutput <- simulateResiduals(aov.BWTE,
+                                      n = 999,
+                                      plot = T)
+
+diagnose(aov.BWTE)
+testResiduals(simulationOutput)
+testZeroInflation(simulationOutput)
+testQuantiles(simulationOutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
+
+summary(aov.BWTE)
+emmeans(aov.BWTE, 
+        pairwise ~ cTreat)
+
+confint(aov.BWTE, 
+        level = 0.95,
+        method = "profile",
+        component = "cond")
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,
 #  execute 'rm(list = ls(all = TRUE))' - see 2 lines below.
