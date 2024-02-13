@@ -614,14 +614,20 @@ birdT.density <- birds.trtT |>
 
 
 (density.plotT <- ggplot(birds.trtT, 
-                         aes(x = cTreat, 
-                             y = estimate)) +
+                         aes(x = factor(Species,
+                                        levels = c("GADW", "NOPI", "BWTE", "MODO",
+                                                   "CCSP", "WEME", "RWBL", "BRBL")), 
+                             y = estimate,
+                             color = cTreat)) +
    stat_summary(geom = "point",
                 fun = "mean",
-                size = 5) +
+                size = 6,
+                position = position_dodge(.5)) +
    stat_summary(geom = "errorbar",
                 fun.data = mean_cl_boot,
-                width = 0.2) +
+                linewidth = 1,
+                position = position_dodge(.5)) +
+   scale_color_manual(values=c('#A2A4A2', 'lightgoldenrod2', '#D4A634', '#717F5B')) +
    theme(plot.title = element_text(family = "my_font",
                                    hjust = 0.5,
                                    size = 40,
@@ -639,21 +645,15 @@ birdT.density <- birds.trtT |>
          axis.text.x = element_text(family = "my_font",
                                     size = 30, 
                                     colour = "black",
-                                    angle = 45,
-                                    vjust = 1.0,
-                                    hjust = 1.0),
+                                    margin = margin(0, 10, 0, 10, unit = "pt")),
          axis.ticks = element_line(colour = "black"),
          text = element_text(size = 30,
-                             colour = "black")) +                                  # change the color of the axis titles
-   facet_wrap(~factor(Species,
-                      levels = c("GADW", "NOPI", "BWTE", "MODO",
-                                 "CCSP", "WEME", "RWBL", "BRBL")),
-              nrow = 2,
-              ncol = 4,
-              scales = "free_y") +
+                             colour = "black"),
+         panel.spacing = unit(20, "lines")) +
    labs(title = "Avian Densities",
         x = NULL, 
-        y = "Nests Per Ha"))
+        y = "Nests Per Ha",
+        color = "Grazing Intensity"))
 
 ggsave(density.plotT,
        filename = "outputs/figs/AvianDensity_Treat.png",
