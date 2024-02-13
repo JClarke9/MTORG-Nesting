@@ -37,7 +37,7 @@ birds23 <- read.csv("working/birds23.csv")
 birds21$cTreat <- factor(birds21$cTreat,
                          levels = c("Rest", "Moderate", "Full", "Heavy"))
 
-birds23$cTreat <- factor(birds23$cTreat,
+birds22$cTreat <- factor(birds22$cTreat,
                          levels = c("Rest", "Moderate", "Full", "Heavy"))
 
 birds23$cTreat <- factor(birds23$cTreat,
@@ -46,7 +46,7 @@ birds23$cTreat <- factor(birds23$cTreat,
 totals21$cTreat <- factor(totals21$cTreat,
                           levels = c("Rest", "Moderate", "Full", "Heavy"))
 
-totals23$cTreat <- factor(totals23$cTreat,
+totals22$cTreat <- factor(totals22$cTreat,
                           levels = c("Rest", "Moderate", "Full", "Heavy"))
 
 totals23$cTreat <- factor(totals23$cTreat,
