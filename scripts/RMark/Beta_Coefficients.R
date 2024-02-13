@@ -366,11 +366,11 @@ beta_f$Variable <- factor(beta_f$Variable,
          x = NULL,
          y = expression("Beta " (beta))))
 
-library(cowplot)
+# library(cowplot)
 
-object <- get_legend(beta.plot)
-
-object <- object + theme(plot.background = element_rect(fill = NULL))
+# object <- get_legend(beta.plot)
+# 
+# object <- object + theme(plot.background = element_rect(fill = NULL))
 
 ggsave(object,
        filename = "outputs/figs/beta_legend.png",

@@ -649,7 +649,8 @@ birdT.density <- birds.trtT |>
                       levels = c("GADW", "NOPI", "BWTE", "MODO",
                                  "CCSP", "WEME", "RWBL", "BRBL")),
               nrow = 2,
-              ncol = 4) +
+              ncol = 4,
+              scales = "free_y") +
    labs(title = "Avian Densities",
         x = NULL, 
         y = "Nests Per Ha"))
