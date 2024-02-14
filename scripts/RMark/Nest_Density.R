@@ -662,6 +662,7 @@ ggsave(density.plotT,
        height = 13,
        width = 22.5)
 
+write_csv(birds.trtT, "working/Birds_Treatment_Density.csv")
 
 # Running Kruskal-Wallace Tests ------------------------------------------------------------------------------
 
