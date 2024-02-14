@@ -663,6 +663,24 @@ ggsave(density.plotT,
        width = 22.5)
 
 
+# Running Kruskal-Wallace Tests ------------------------------------------------------------------------------
+
+
+kruskal.test(estimate~cTreat, data = birds.trtT[birds.trtT$Species == "BRBL",])
+kruskal.test(estimate~cTreat, data = birds.trtT[birds.trtT$Species == "WEME",])
+kruskal.test(estimate~cTreat, data = birds.trtT[birds.trtT$Species == "CCSP",])
+kruskal.test(estimate~cTreat, data = birds.trtT[birds.trtT$Species == "MODO",])
+kruskal.test(estimate~cTreat, data = birds.trtT[birds.trtT$Species == "RWBL",])
+kruskal.test(estimate~cTreat, data = birds.trtT[birds.trtT$Species == "NOPI",])
+kruskal.test(estimate~cTreat, data = birds.trtT[birds.trtT$Species == "GADW",])
+kruskal.test(estimate~cTreat, data = birds.trtT[birds.trtT$Species == "BWTE",])
+
+pairwise.wilcox.test(birds.trtT[birds.trtT$Species == "GADW", ]$estimate, 
+                     birds.trtT[birds.trtT$Species == "GADW", ]$cTreat,
+                     paired = F,
+                     p.adjust.method = "bonf")
+
+
 # Modeling differences in densities --------------------------------------------------------------------------
 
 
