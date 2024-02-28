@@ -158,5 +158,8 @@ cgrec_total <- cgrec |>
   group_by(Common_Name, Latin_Name, Alpha, Group) |> 
   summarise(Abundance = sum(Count))
 
+cgrec_total <- cgrec_total %>%
+  arrange(factor(Group, levels = c("OBL", "FAC", "WET")), desc(Abundance))
+
 write_csv(cgrec_total,
           "CGREC_Bird_Communities/outputs/CGREC_totals.csv")
