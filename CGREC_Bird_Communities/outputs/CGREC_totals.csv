@@ -1,37 +1,37 @@
-Species,Alpha,Group,Abundance
-American Bittern,AMBI,FAC,6
-American Coot,AMCO,WET,18
-American Widgeon,AMWI,FAC,28
-Blue-winged Teal,BWTE,FAC,495
-Bobolink,BOBO,OBL,20
-Brewer's Blackbird,BRBL,FAC,160
-Canada Goose,CAGO,FAC,3
-Chestnut-collared Longspur,CCLO,OBL,84
-Clay-colored Sparrow,CCSP,FAC,776
-Common Grackle,COGR,FAC,1
-Common Nighthawk,CONI,FAC,20
-Dickcissel,DICK,OBL,11
-Eastern Kingbird,EAKI,FAC,16
-Gadwall,GADW,FAC,200
-Grasshopper Sparrow,GRSP,OBL,83
-Green-winged Teal,GWTE,FAC,7
-Horned Lark,HOLA,OBL,5
-Killdeer,KILL,FAC,16
-Lesser Scaup,LESC,FAC,7
-Mallard,MALL,FAC,104
-Marbled Godwit,MAGO,OBL,6
-Marsh Wren,MAWR,WET,2
-Mourning Dove,MODO,FAC,138
-Northern Pintail,NOPI,FAC,199
-Northern Shoveler,NSHO,FAC,106
-Pied-billed Grebe,PBGR,WET,5
-Red-winged Blackbird,RWBL,FAC,159
-Savannah Sparrow,SAVS,OBL,48
-Sharp-tailed Grouse,STGR,OBL,20
-Sora,SORA,WET,6
-Upland Sandpiper,UPSA,OBL,23
-Western Meadowlark,WEME,OBL,351
-Willet,WILL,FAC,18
-Wilson's Phalarope,WIPH,WET,13
-Wilson's Snipe,WISN,WET,31
-Yellow-headed Blackbird,YHBL,WET,19
+Common_Name,Latin_Name,Alpha,Group,Abundance
+American Bittern,Botaurus lentiginosus,AMBI,FAC,6
+American Coot,Fulica americana,AMCO,WET,18
+American Wigeon,Mareca americana,AMWI,FAC,28
+Blue-winged Teal,Spatula discors,BWTE,FAC,495
+Bobolink,Dolichonyx oryzivorus,BOBO,OBL,20
+Brewer's Blackbird,Euphagus cyanocephalus,BRBL,FAC,160
+Canada Goose,Branta canadensis,CAGO,FAC,3
+Chestnut-collared Longspur,Calcarius ornatus,CCLO,OBL,84
+Clay-colored Sparrow,Spizella pallida,CCSP,FAC,776
+Common Grackle,Quiscalus quiscula,COGR,FAC,1
+Common Nighthawk,Chordeiles minor,CONI,FAC,20
+Dickcissel,Spiza americana,DICK,OBL,11
+Eastern Kingbird,Tyrannus tyrannus,EAKI,FAC,16
+Gadwall,Mareca strepera,GADW,FAC,200
+Grasshopper Sparrow,Ammodramus savannarum,GRSP,OBL,83
+Green-winged Teal,Anas crecca,GWTE,FAC,7
+Horned Lark,Eremophila alpestris,HOLA,OBL,5
+Killdeer,Charadrius vociferus,KILL,FAC,16
+Lesser Scaup,Aythya affinis,LESC,FAC,7
+Mallard,Anas platyrhynchos,MALL,FAC,104
+Marbled Godwit,Limosa fedoa,MAGO,OBL,6
+Marsh Wren,Cistothorus palustris,MAWR,WET,2
+Mourning Dove,Zenaida macroura,MODO,FAC,138
+Northern Pintail,Anas acuta,NOPI,FAC,199
+Northern Shoveler,Spatula clypeata,NSHO,FAC,106
+Pied-billed Grebe,Podilymbus podiceps,PBGR,WET,5
+Red-winged Blackbird,Agelaius phoeniceus,RWBL,FAC,159
+Savannah Sparrow,Passerculus sandwichensis,SAVS,OBL,48
+Sharp-tailed Grouse,Tympanuchus phasianellus,STGR,OBL,20
+Sora,Porzana carolina,SORA,WET,6
+Upland Sandpiper,Bartramia longicauda,UPSA,OBL,23
+Western Meadowlark,Sturnella neglecta,WEME,OBL,351
+Willet,Tringa semipalamata,WILL,FAC,18
+Wilson's Phalarope,Phalaropus tricolor,WIPH,WET,13
+Wilson's Snipe,Gallinago delicata,WISN,WET,31
+Yellow-headed Blackbird,Xanthocephalus xanthocephalus,YHBL,WET,19
