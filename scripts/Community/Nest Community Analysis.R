@@ -129,13 +129,13 @@ stressplot(birds21.ord)                                                         
                   y = 1.80,
                   label = c("Stress = 0.12")),
               family = "my_font",
-              size = 3,
+              size = 5,
               check_overlap = TRUE) +
     geom_text(aes(x = -1.1,
                   y = 1.55,
                   label = c("p = 0.03")),
               family = "my_font",
-              size = 3,
+              size = 5,
               check_overlap = TRUE) +
     my_theme +
     labs(title = "2021"))
@@ -219,13 +219,13 @@ stressplot(birds22.ord)                                                         
                   y = 1.80,
                   label = c("Stress = 0.10")),
               family = "my_font",
-              size = 3,
+              size = 5,
               check_overlap = TRUE) +
     geom_text(aes(x = -1.1,
                   y = 1.55,
                   label = c("p = 0.11")),
               family = "my_font",
-              size = 3,
+              size = 5,
               check_overlap = TRUE) +
     my_theme +
     labs(title = "2022"))
@@ -309,13 +309,13 @@ stressplot(birds23.ord)                                                         
                   y = 1.80,
                   label = c("Stress = 0.15")),
               family = "my_font",
-              size = 3,
+              size = 5,
               check_overlap = TRUE) +
     geom_text(aes(x = -1.1,
                   y = 1.55,
                   label = c("p = 0.304")),
               family = "my_font",
-              size = 3,
+              size = 5,
               check_overlap = TRUE) +
     my_theme +
     labs(title = "2023"))
@@ -369,7 +369,7 @@ legend <- get_legend(avian22.ordination)
                             align = "h"))
 
 (avianord.year <- plot_grid(avianord.year,
-                   legend,
+                   # legend,
                    nrow = 2,
                    ncol = 1,
                    rel_heights = c(1, 0.1)))
@@ -378,8 +378,8 @@ legend <- get_legend(avian22.ordination)
     plot_annotation(title = "Avian Nesting Community Composition",
                     theme = theme(plot.title = element_text(family = "my_font",
                                                             hjust = .5,
-                                                            vjust = -1,
-                                                            size = 20),
+                                                            vjust = 1,
+                                                            size = 48),
                                   panel.grid.major = element_blank(),                                     # remove the vertical grid lines
                                   panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
                                   panel.background = element_rect(fill = "transparent",                     # make the interior background transparent
@@ -388,22 +388,22 @@ legend <- get_legend(avian22.ordination)
                                                                  colour = NA), 
                                   axis.line = element_line(colour = "black"),                             # color the x and y axis
                                   axis.text.x = element_text(family = "my_font",
-                                                             size = 12, 
+                                                             size = 30, 
                                                              colour = "black"),                             # color the axis text
                                   axis.text.y = element_text(colour = "black",
-                                                             size = 12),
+                                                             size = 30),
                                   axis.ticks = element_line(colour = "black"),
                                   text = element_text(family = "my_font",
-                                                      size = 12,                                              # change the size of the axis titles
+                                                      size = 30,                                              # change the size of the axis titles
                                                       colour = "black"),                                    # change the color of the axis titles
                                   legend.position = "none")))
 
 ggsave(avianord.year, 
        filename = "outputs/figs/AvianOrd.png",  
        dpi = 600, 
-       bg = "transparent",
-       height = 4.0,
-       width = 6.5)
+       bg = "white",
+       height = 5.56,
+       width = 13.30)
 
 # Indicator species analysis ----------------------------------------------
 
