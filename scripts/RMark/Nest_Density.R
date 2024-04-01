@@ -615,10 +615,12 @@ birdT.density <- birds.trtT |>
 
 (density.plotT <- ggplot(birds.trtT, 
                          aes(x = factor(Species,
-                                        levels = c("GADW", "NOPI", "BWTE", "MODO",
-                                                   "CCSP", "WEME", "RWBL", "BRBL")), 
+                                        levels = c("RWBL", "MODO", "BRBL", "GADW",
+                                                   "BWTE", "NOPI", "WEME", "CCSP")), 
                              y = estimate,
-                             color = cTreat)) +
+                             color = factor(cTreat,
+                                            levels = c("Rest", "Moderate",
+                                                       "Full", "Heavy")))) +
    stat_summary(geom = "point",
                 fun = "mean",
                 size = 6,
@@ -630,7 +632,7 @@ birdT.density <- birds.trtT |>
    scale_color_manual(values=c('#A2A4A2', 'lightgoldenrod2', '#D4A634', '#717F5B')) +
    theme(plot.title = element_text(family = "my_font",
                                    hjust = 0.5,
-                                   size = 40,
+                                   size = 30,
                                    vjust = 1,
                                    colour = "black"),
          panel.grid.major = element_blank(),
@@ -640,17 +642,18 @@ birdT.density <- birds.trtT |>
          plot.background = element_rect(fill = NA,
                                         colour = NA),
          axis.line = element_line(colour = "black"),
-         axis.text.y = element_text(size = 30, 
+         axis.text.y = element_text(size = 24, 
                                     colour = "black"),
          axis.text.x = element_text(family = "my_font",
-                                    size = 30, 
+                                    size = 24, 
                                     colour = "black",
                                     margin = margin(0, 10, 0, 10, unit = "pt")),
          axis.ticks = element_line(colour = "black"),
-         text = element_text(size = 30,
+         text = element_text(size = 24,
                              colour = "black"),
-         panel.spacing = unit(20, "lines")) +
-   labs(title = "Avian Densities",
+         panel.spacing = unit(20, "lines"),
+         legend.position = "none") +
+   labs(title = "Nesting Densities",
         x = NULL, 
         y = "Nests Per Ha",
         color = "Grazing Intensity"))
@@ -659,8 +662,8 @@ ggsave(density.plotT,
        filename = "outputs/figs/AvianDensity_Treat.png",
        dpi = "print",
        bg = "white",
-       height = 13,
-       width = 22.5)
+       height = 5.56,
+       width = 13.31)
 
 write_csv(birds.trtT, "working/Birds_Treatment_Density.csv")
 
