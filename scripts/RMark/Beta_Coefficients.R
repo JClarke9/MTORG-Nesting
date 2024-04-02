@@ -340,7 +340,7 @@ beta_f$Variable <- factor(beta_f$Variable,
     guides(fill = guide_legend(byrow = TRUE)) +
     theme(plot.title = element_text(family = "my_font",
                                     hjust = 0.5,
-                                    size = 40,
+                                    size = 30,
                                     vjust = 1,
                                     colour = "black"),
           panel.grid.major = element_blank(),
@@ -350,17 +350,17 @@ beta_f$Variable <- factor(beta_f$Variable,
           plot.background = element_rect(fill = NA,
                                          colour = NA),
           axis.line = element_line(colour = "black"),
-          axis.text = element_text(size = 30, 
+          axis.text = element_text(size = 24, 
                                    colour = "black"),
           axis.ticks = element_line(colour = "black"),
-          text = element_text(size = 30,
+          text = element_text(size = 24,
                               colour = "black",
                               family = "my_font"),
           legend.background = element_blank(),
           legend.title = element_text(family = "my_font",
-                                      size = 40),
+                                      size = 30),
           legend.text = element_text(family = "my_font",
-                                     size = 30),
+                                     size = 24),
           legend.key.width = unit(2, "cm")) +
     labs(title = "Top Model Effect Sizes",
          x = NULL,
@@ -371,27 +371,27 @@ beta_f$Variable <- factor(beta_f$Variable,
 # object <- get_legend(beta.plot)
 # 
 # object <- object + theme(plot.background = element_rect(fill = NULL))
-
-ggsave(object,
-       filename = "outputs/figs/beta_legend.png",
-       dpi = "print",
-       bg = NULL,
-       height = 10,
-       width = 5)
+# 
+# ggsave(object,
+#        filename = "outputs/figs/beta_legend.png",
+#        dpi = "print",
+#        bg = NULL,
+#        height = 10,
+#        width = 5)
 
 ggsave(betaF.plot,
        filename = "outputs/figs/betaFull.png",
        dpi = "print",
        bg = "white",
-       height = 6,
-       width = 25)
+       height = 5.56,
+       width = 13.31)
 
 ggsave(beta.plot,
        filename = "outputs/figs/beta.png",
        dpi = 600,
-       bg = "transparent",
-       height = 13.2,
-       width = 21.89)
+       bg = "white",
+       height = 5.56,
+       width = 13.31)
 
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
