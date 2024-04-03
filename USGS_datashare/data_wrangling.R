@@ -12,7 +12,7 @@ library(tidyverse)
 raw <- read_csv("raw/Nesting.csv")
 
 birds <- select(raw, c(Spec, id, Year, Visit.Interval, Expos, Date, FirstFound, 
-                       AgeFound, Fate, Fate2, Clutch, Treatment))
+                       AgeFound, Fate, Fate2, InitClutch, Clutch, Treatment))
 
 
 # Data Wrangling ----------------------------------------------------------
@@ -34,7 +34,10 @@ birds <- birds |>
                           "candling/back dating",
                           "candling"),
          fate = Fate2[which.max(Visit.Interval)],
-         clutch_size = max(Clutch),
+         clutch_size = ifelse(max(Clutch) >= InitClutch, max(Clutch),
+                              ifelse(max(Clutch < InitClutch, InitClutch,
+                                         NA))),
+           max(Clutch),
          .by = id)
 
 birds <- birds |> 
@@ -54,3 +57,14 @@ birds <- birds |>
             .by = c(species_abbreviation, site_abbreviation, year,
                     date_format, nid_estimated, nid_how, date_found,
                     age_found, fate, clutch_size))
+
+usgs <- birds |> 
+  select(species_abbreviation, site_abbreviation, year, date_format, nid_estimated, nid_how, clutch_size, n_nest)
+
+usgs$comments <- ifelse(usgs$nid_how == "candling",
+                        "Candled 2 eggs from the nest for nests found while incubating. For nests found at the nestling stage, we determined age based on feather/nestling development.",
+                        ifelse(usgs$nid_how == "candling/back dating",
+                               "Since eggs were often hard to see through, we would estimate the age by candling 2 eggs and back date based on hatch date to ensure accurate estimation.",
+                               NA))
+
+write_csv(usgs, "USGS_datashare/working/usgs.csv")
