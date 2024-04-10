@@ -653,7 +653,7 @@ birdT.density <- birds.trtT |>
                              colour = "black"),
          panel.spacing = unit(20, "lines"),
          legend.position = "none") +
-   labs(title = "Nesting Densities",
+   labs(title = "Nesting Densities by Species",
         x = NULL, 
         y = "Nests Per Ha",
         color = "Grazing Intensity"))
