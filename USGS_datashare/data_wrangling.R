@@ -35,9 +35,8 @@ birds <- birds |>
                           "candling"),
          fate = Fate2[which.max(Visit.Interval)],
          clutch_size = ifelse(max(Clutch) >= InitClutch, max(Clutch),
-                              ifelse(max(Clutch < InitClutch, InitClutch,
-                                         NA))),
-           max(Clutch),
+                              ifelse(max(Clutch) < InitClutch, InitClutch,
+                                         NA)),
          .by = id)
 
 birds <- birds |> 
@@ -52,19 +51,24 @@ birds <- birds |>
          age_found, fate, clutch_size) |> 
   distinct()
 
-birds <- birds |> 
+usgs <- birds |> 
+  filter(clutch_size > 0) |> 
   summarise(n_nest = n(),
             .by = c(species_abbreviation, site_abbreviation, year,
                     date_format, nid_estimated, nid_how, date_found,
                     age_found, fate, clutch_size))
 
-usgs <- birds |> 
-  select(species_abbreviation, site_abbreviation, year, date_format, nid_estimated, nid_how, clutch_size, n_nest)
+# usgs$comments <- ifelse(usgs$age_found < 0 & usgs$nid_how == "candling", "Negative ages represent nests in either the nest building or laying stage with an age 0 being the first day of incubation. For nests found in the incubating stage, we candled 2 eggs from the nest to determine age. For nests found in the nestling stage, we determined age based on nestling/feather development. Nest initiation date was considered the day a nest contained a full clutch of eggs and incubation began.",
+#                         ifelse(usgs$age_found >= 0 & usgs$nid_how == "candling", "For nests found in the incubating stage, we candled 2 eggs from the nest to determine age. For nests found in the nestling stage, we determined age based on nestling/feather development. Nest initiation date was considered the day a nest contained a full clutch of eggs and incubation began.",
+#                                ifelse(usgs$age_found < 0 & usgs$nid_how == "candling/back dating", "Negative ages represent nests in either the nest building or laying stage with an age 0 being the first day of incubation. Since eggs were often hard to see through, we would estimate the age by candling 2 eggs and back date based on hatch date to ensure accurate estimation. Nest initiation date was considered the day a nest contained a full clutch of eggs and incubation began.",
+#                                       ifelse(usgs$age_found >= 0 & usgs$nid_how == "candling/back dating", "Since eggs were often hard to see through, we would estimate the age by candling 2 eggs and back date based on hatch date to ensure accurate estimation. Nest initiation date was considered the day a nest contained a full clutch of eggs and incubation began.",
+#                                              NA))))
 
-usgs$comments <- ifelse(usgs$nid_how == "candling",
-                        "Candled 2 eggs from the nest for nests found while incubating. For nests found at the nestling stage, we determined age based on feather/nestling development.",
-                        ifelse(usgs$nid_how == "candling/back dating",
-                               "Since eggs were often hard to see through, we would estimate the age by candling 2 eggs and back date based on hatch date to ensure accurate estimation.",
+usgs$comments <- ifelse(usgs$nid_how == "candling", "For nests found in the incubating stage, we candled 2 eggs from the nest to determine age. For nests found in the nestling stage, we determined age based on nestling/feather development. Nest initiation date was considered the day a nest contained a full clutch of eggs and incubation began.",
+                        ifelse(usgs$nid_how == "candling/back dating", "Since eggs were often hard to see through, we would estimate the age by candling 2 eggs and back date based on hatch date to ensure accurate estimation. Nest initiation date was considered the day a nest contained a full clutch of eggs and incubation began.",
                                NA))
+
+usgs <- usgs |> 
+  select(species_abbreviation, site_abbreviation, year, date_format, nid_estimated, nid_how, clutch_size, n_nest, comments)
 
 write_csv(usgs, "USGS_datashare/working/usgs.csv")

@@ -362,7 +362,7 @@ beta_f$Variable <- factor(beta_f$Variable,
           legend.text = element_text(family = "my_font",
                                      size = 24),
           legend.key.width = unit(2, "cm")) +
-    labs(title = "Top Model Effect Sizes",
+    labs(title = "Factors Influencing Nest Survival",
          x = NULL,
          y = expression("Beta " (beta))))
 
