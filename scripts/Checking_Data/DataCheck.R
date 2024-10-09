@@ -3,7 +3,7 @@ library(tidyverse)
 new <- read_csv("raw/Nesting.csv")
 old <- read_csv("raw/Nesting_OLD.csv")
 
-new_f <- filter(new, Year != 2023)
+new_f <- filter(new, Year != 2023 & Year != 2024)
 
 new_f <- new_f |> 
   group_by(id) |> 

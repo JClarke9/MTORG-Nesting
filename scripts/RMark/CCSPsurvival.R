@@ -7,22 +7,22 @@ library(tidyverse)
 library(RMark)
 library(MuMIn)
 library(cowplot)
-source("scripts/Functions/RMark_Stage_Code.R")
+source('scripts/Functions/RMark_Stage_Code.R')
 
-windowsFonts(my_font = windowsFont("Gandhi Sans"))
+windowsFonts(my_font = windowsFont('Gandhi Sans'))
 
 
 # Data import -------------------------------------------------------------
 
 
-nest <- read.csv("working/RMarknesting.csv")
+nest <- read.csv('working/RMarknesting.csv')
 
 
 # Subsetting data ---------------------------------------------------------
 
 
 CCSP.surv <- filter(nest, 
-                    Spec == "CCSP" & Stage != "Laying")
+                    Spec == 'CCSP' & Stage != 'Laying')
 
 test <- filter(CCSP.surv,
                is.na(KBG) |
@@ -45,10 +45,10 @@ CCSP.surv <- subset(CCSP.surv,
                     subset = !MISSING)
 
 CCSP.surv$Year <- factor(CCSP.surv$Year,
-                         levels = c("2021", "2022", "2023"))
+                         levels = c('2021', '2022', '2023', '2024'))
 
 CCSP.surv$Nestling <- factor(CCSP.surv$Nestling,
-                             level = c("0", "1"))
+                             level = c('0', '1'))
 
 str(CCSP.surv)
 
@@ -57,14 +57,14 @@ str(CCSP.surv)
 
 
 x <- create.stage.var(CCSP.surv, 
-                      "AgeDay1", 
-                      "Incub", 
+                      'AgeDay1', 
+                      'Incub', 
                       rep(1,max(CCSP.surv$LastChecked)), 
                       12)
 
 CCSP.surv <- bind_cols(CCSP.surv, x)
 
-rm(list = ls()[!ls() %in% c("CCSP.surv")])
+rm(list = ls()[!ls() %in% c('CCSP.surv')])
 
 
 # Daily survival rate models ----------------------------------------------
@@ -72,9 +72,9 @@ rm(list = ls()[!ls() %in% c("CCSP.surv")])
 
 CCSP.pr <- process.data(CCSP.surv,
                         nocc = max(CCSP.surv$LastChecked),
-                        groups = c("Year",
-                                   "Nestling"),
-                        model = "Nest")
+                        groups = c('Year',
+                                   'Nestling'),
+                        model = 'Nest')
 
 # Temporal candidate model set
 CCSP1.run <- function()
@@ -91,7 +91,7 @@ CCSP1.run <- function()
   # 4. DSR varies with year
   S.year = list(formula = ~1 + Year)
   
-  CCSP.model.list = create.model.list("Nest")
+  CCSP.model.list = create.model.list('Nest')
   CCSP1.results = mark.wrapper(CCSP.model.list,
                                data = CCSP.pr,
                                adjust = FALSE,
@@ -124,7 +124,7 @@ CCSP2.run <- function()
   # 5. DSR varies with nest age
   S.stage = list(formula = ~1 + Year + Nestling)
   
-  CCSP.model.list = create.model.list("Nest")
+  CCSP.model.list = create.model.list('Nest')
   CCSP2.results = mark.wrapper(CCSP.model.list,
                                data = CCSP.pr,
                                adjust = FALSE,
@@ -154,7 +154,7 @@ CCSP3.run <- function()
   # 4. DSR varies with the previous years grazing intensity
   S.pDoD = list(formula = ~1 + Year + Nestling + pDoD)
   
-  CCSP.model.list = create.model.list("Nest")
+  CCSP.model.list = create.model.list('Nest')
   CCSP3.results = mark.wrapper(CCSP.model.list,
                                data = CCSP.pr,
                                adjust = FALSE,
@@ -205,7 +205,7 @@ CCSP4.run <- function()
   # 11. DSR varies with VOR
   S.vor = list(formula =  ~1 + Year + Nestling + VOR)
   
-  CCSP.model.list = create.model.list("Nest")
+  CCSP.model.list = create.model.list('Nest')
   CCSP4.results = mark.wrapper(CCSP.model.list,
                                data = CCSP.pr,
                                adjust = FALSE,
@@ -226,18 +226,18 @@ CCSP4.results$S.stage$results$real |>
             ucl = mean(ucl))
 
 (CCSP.real <- as.data.frame(CCSP4.results$S.stage$results$real) |> 
-    rownames_to_column(var = "Group") |> 
+    rownames_to_column(var = 'Group') |> 
     mutate(Year = case_when(
-      grepl("2021", Group) ~ "2021",
-      grepl("2022", Group) ~ "2022",
-      grepl("2023", Group) ~ "2023"),
+      grepl('2021', Group) ~ '2021',
+      grepl('2022', Group) ~ '2022',
+      grepl('2023', Group) ~ '2023'),
       Stage = case_when(
-        grepl("20210", Group) ~ "Incubating",
-        grepl("20220", Group) ~ "Incubating",
-        grepl("20230", Group) ~ "Incubating",
-        grepl("20211", Group) ~ "Nestling",
-        grepl("20221", Group) ~ "Nestling",
-        grepl("20231", Group) ~ "Nestling")) |> 
+        grepl('20210', Group) ~ 'Incubating',
+        grepl('20220', Group) ~ 'Incubating',
+        grepl('20230', Group) ~ 'Incubating',
+        grepl('20211', Group) ~ 'Nestling',
+        grepl('20221', Group) ~ 'Nestling',
+        grepl('20231', Group) ~ 'Nestling')) |> 
     select(Year, Stage, estimate, se, lcl, ucl))
 
 (CCSP.year <- CCSP.real |> 
@@ -255,12 +255,12 @@ CCSP4.results$S.stage$results$real |>
 CCSP.beta <- coef(CCSP4.results$S.stage) |>
   cbind(confint(CCSP4.results$S.stage, level = 0.85)) |> 
   select(estimate, `7.5 %`, `92.5 %`) |> 
-  rownames_to_column(var = "Variable") |> 
-  rename(c("Coefficient" = "estimate",
-           "lcl" = "7.5 %",
-           "ucl" = "92.5 %"))
+  rownames_to_column(var = 'Variable') |> 
+  rename(c('Coefficient' = 'estimate',
+           'lcl' = '7.5 %',
+           'ucl' = '92.5 %'))
 
-CCSP.beta$Variable <- gsub("S:", "", CCSP.beta$Variable)
+CCSP.beta$Variable <- gsub('S:', '', CCSP.beta$Variable)
 
 str(CCSP.beta)
 
@@ -278,26 +278,26 @@ str(CCSP.beta)
                       ymax = ucl),
                   width = .5,
                   linewidth = 1) +
-    theme(plot.title = element_text(family = "my_font",
+    theme(plot.title = element_text(family = 'my_font',
                                     hjust = .5,
                                     size = 20,
                                     vjust = 1,
-                                    colour = "black"),
+                                    colour = 'black'),
           panel.grid.major = element_blank(),                                     # remove the vertical grid lines
           panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
           panel.background = element_rect(fill = NA,                     # make the interior background transparent
                                           colour = NA),                           # remove any other colors
           plot.background = element_rect(fill = NA,                      # make the outer background transparent
                                          colour = NA),                              # remove any other colors
-          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.line = element_line(colour = 'black'),                             # color the x and y axis
           axis.text = element_text(size = 12, 
-                                   colour = "black"),                    # color the axis text
-          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+                                   colour = 'black'),                    # color the axis text
+          axis.ticks = element_line(colour = 'black'),                            # change the colors of the axis tick marks
           text = element_text(size = 12,                                              # change the size of the axis titles
-                              colour = "black")) +                                    # change the color of the axis titles
-    labs(title = "Clay-colored Sparrow",
+                              colour = 'black')) +                                    # change the color of the axis titles
+    labs(title = 'Clay-colored Sparrow',
          x = NULL,
-         y = expression("Beta " (beta))))
+         y = expression('Beta ' (beta))))
 
 
 # Creating predictive plots -----------------------------------------------
@@ -322,23 +322,23 @@ nst2022 <- which(stage.pred$estimates$par.index == 313)
 nst2023 <- which(stage.pred$estimates$par.index == 391)
 
 stage.pred$estimates$Year <- NA
-stage.pred$estimates$Year[inc2021] <- "2021"
-stage.pred$estimates$Year[inc2022] <- "2022"
-stage.pred$estimates$Year[inc2023] <- "2023"
-stage.pred$estimates$Year[nst2021] <- "2021"
-stage.pred$estimates$Year[nst2022] <- "2022"
-stage.pred$estimates$Year[nst2023] <- "2023"
+stage.pred$estimates$Year[inc2021] <- '2021'
+stage.pred$estimates$Year[inc2022] <- '2022'
+stage.pred$estimates$Year[inc2023] <- '2023'
+stage.pred$estimates$Year[nst2021] <- '2021'
+stage.pred$estimates$Year[nst2022] <- '2022'
+stage.pred$estimates$Year[nst2023] <- '2023'
 
 stage.pred$estimates$Stage <- NA
-stage.pred$estimates$Stage[inc2021] <- "Incubating"
-stage.pred$estimates$Stage[inc2022] <- "Incubating"
-stage.pred$estimates$Stage[inc2023] <- "Incubating"
-stage.pred$estimates$Stage[nst2021] <- "Nestling"
-stage.pred$estimates$Stage[nst2022] <- "Nestling"
-stage.pred$estimates$Stage[nst2023] <- "Nestling"
+stage.pred$estimates$Stage[inc2021] <- 'Incubating'
+stage.pred$estimates$Stage[inc2022] <- 'Incubating'
+stage.pred$estimates$Stage[inc2023] <- 'Incubating'
+stage.pred$estimates$Stage[nst2021] <- 'Nestling'
+stage.pred$estimates$Stage[nst2022] <- 'Nestling'
+stage.pred$estimates$Stage[nst2023] <- 'Nestling'
 
 (CCSPstage.plot <- ggplot(transform(stage.pred$estimates,
-                                    Year = factor(Year, levels = c("2021", "2022", "2023"))), 
+                                    Year = factor(Year, levels = c('2021', '2022', '2023'))), 
                           aes(x = Stage, 
                               y = estimate,
                               groups = Year,
@@ -352,7 +352,7 @@ stage.pred$estimates$Stage[nst2023] <- "Nestling"
     scale_fill_manual(values = c('#A2A4A2',
                                  '#717F5B',
                                  '#D4A634')) +
-    theme(plot.title = element_text(family = "my_font",                             # select the font for the title
+    theme(plot.title = element_text(family = 'my_font',                             # select the font for the title
                                     size = 16,
                                     hjust = .5),
           panel.grid.major = element_blank(),                                     # remove the vertical grid lines
@@ -361,32 +361,32 @@ stage.pred$estimates$Stage[nst2023] <- "Nestling"
                                           colour = NA),                           # remove any other colors
           plot.background = element_rect(fill = NA,                                 # make the outer background transparent
                                          colour = NA),                              # remove any other colors
-          axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text.y = element_text(size = 12, colour = "black"),                    # color the axis text
-          axis.text.x = element_text(size = 12, colour = "black"),
-          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          axis.line = element_line(colour = 'black'),                             # color the x and y axis
+          axis.text.y = element_text(size = 12, colour = 'black'),                    # color the axis text
+          axis.text.x = element_text(size = 12, colour = 'black'),
+          axis.ticks = element_line(colour = 'black'),                            # change the colors of the axis tick marks
           text = element_text(size = 12,                                              # change the size of the axis titles
-                              colour = "black"),                                    # change the color of the axis titles
+                              colour = 'black'),                                    # change the color of the axis titles
           legend.background = element_rect(fill = NA),
           legend.position = c(.85, .1),
-          legend.box = "horizontal") +
-    labs(title = "Clay-colored Sparrow",
-         color = "Year",
-         x = "Stage",
-         y = "Daily Survival Rate"))
+          legend.box = 'horizontal') +
+    labs(title = 'Clay-colored Sparrow',
+         color = 'Year',
+         x = 'Stage',
+         y = 'Daily Survival Rate'))
 
 
 ggsave(CCSP.plot,
-       filename = "outputs/figs/betaCCSP.png",
-       dpi = "print",
-       bg = "white",
+       filename = 'outputs/figs/betaCCSP.png',
+       dpi = 'print',
+       bg = 'white',
        height = 6,
        width = 6)
 
 ggsave(CCSPstage.plot,
-       filename = "outputs/figs/stageCCSP.png",
-       dpi = "print",
-       bg = "white",
+       filename = 'outputs/figs/stageCCSP.png',
+       dpi = 'print',
+       bg = 'white',
        height = 6,
        width = 6)
 
