@@ -89,6 +89,7 @@ nest$cTreat <- ifelse(nest$Paddock == 1 & nest$Year == 2021 | nest$Paddock == 5 
                                                                                                                        ifelse(nest$Paddock == 4 & nest$Year == 2024 | nest$Paddock == 8 & nest$Year == 2024 | nest$Paddock == 11 & nest$Year == 2024 | nest$Paddock == 15 & nest$Year == 2024, 'Heavy',
                                                                                                   NA))))))))))))))))
 
+# currently I have the midpoints in for the DoD of 2023 and 2024
 nest$cDoD <- ifelse(nest$Year == 2021 & nest$cTreat == 'Heavy', 76.3,
                    ifelse(nest$Year == 2021 & nest$cTreat == 'Full', 52.3,
                           ifelse(nest$Year == 2021 & nest$cTreat == 'Moderate', 51.7,
@@ -97,13 +98,13 @@ nest$cDoD <- ifelse(nest$Year == 2021 & nest$cTreat == 'Heavy', 76.3,
                                                ifelse(nest$Year == 2022 & nest$cTreat == 'Full', 45.3,
                                                       ifelse(nest$Year == 2022 & nest$cTreat == 'Moderate', 35.2,
                                                              ifelse(nest$Year == 2022 & nest$cTreat == 'Rest', 0,
-                                                                    ifelse(nest$Year == 2023 & nest$cTreat == 'Heavy', NA,
-                                                                           ifelse(nest$Year == 2023 & nest$cTreat == 'Full', NA,
-                                                                                  ifelse(nest$Year == 2023 & nest$cTreat == 'Moderate', NA,
+                                                                    ifelse(nest$Year == 2023 & nest$cTreat == 'Heavy', 70,
+                                                                           ifelse(nest$Year == 2023 & nest$cTreat == 'Full', 50,
+                                                                                  ifelse(nest$Year == 2023 & nest$cTreat == 'Moderate', 30,
                                                                                          ifelse(nest$Year == 2023 & nest$cTreat == 'Rest', 0, 
-                                                                                                ifelse(nest$Year == 2024 & nest$cTreat == 'Heavy', NA,
-                                                                                                       ifelse(nest$Year == 2024 & nest$cTreat == 'Full', NA,
-                                                                                                              ifelse(nest$Year == 2024 & nest$cTreat == 'Moderate', NA,
+                                                                                                ifelse(nest$Year == 2024 & nest$cTreat == 'Heavy', 70,
+                                                                                                       ifelse(nest$Year == 2024 & nest$cTreat == 'Full', 50,
+                                                                                                              ifelse(nest$Year == 2024 & nest$cTreat == 'Moderate', 30,
                                                                                                                      ifelse(nest$Year == 2024 & nest$cTreat == 'Rest', 0, 
                                                                                                                             NA))))))))))))))))
 
@@ -113,6 +114,7 @@ nest$pTreat <- ifelse(nest$cTreat == 'Rest', 'Moderate',
                                    ifelse(nest$cTreat == 'Heavy', 'Rest',
                                           NA))))
 
+# currently I have the midpoints in for 2024
 nest$pDoD <- ifelse(nest$Year == 2021 & nest$pTreat == 'Heavy', 60.6,
                    ifelse(nest$Year == 2021 & nest$pTreat == 'Full', 60.2,
                           ifelse(nest$Year == 2021 & nest$pTreat == 'Moderate', 33.7,
@@ -125,9 +127,9 @@ nest$pDoD <- ifelse(nest$Year == 2021 & nest$pTreat == 'Heavy', 60.6,
                                                                            ifelse(nest$Year == 2023 & nest$pTreat == 'Full', 45.3,
                                                                                   ifelse(nest$Year == 2023 & nest$pTreat == 'Moderate', 35.2,
                                                                                          ifelse(nest$Year == 2023 & nest$pTreat == 'Rest', 0, 
-                                                                                                ifelse(nest$Year == 2024 & nest$pTreat == 'Heavy', NA,
-                                                                                                       ifelse(nest$Year == 2024 & nest$pTreat == 'Full', NA,
-                                                                                                              ifelse(nest$Year == 2024 & nest$pTreat == 'Moderate', NA,
+                                                                                                ifelse(nest$Year == 2024 & nest$pTreat == 'Heavy', 70,
+                                                                                                       ifelse(nest$Year == 2024 & nest$pTreat == 'Full', 50,
+                                                                                                              ifelse(nest$Year == 2024 & nest$pTreat == 'Moderate', 30,
                                                                                                                      ifelse(nest$Year == 2024 & nest$pTreat == 'Rest', 0, 
                                                                                                                             NA))))))))))))))))
 
