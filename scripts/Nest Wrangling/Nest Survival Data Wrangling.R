@@ -72,66 +72,66 @@ tail(nest$DateChecked)                                         # show the last f
 # Adding Treatment Data ---------------------------------------------------
 
 nest$cTreat <- ifelse(nest$Paddock == 1 & nest$Year == 2021 | nest$Paddock == 5 & nest$Year == 2021 | nest$Paddock == 12 & nest$Year == 2021 | nest$Paddock == 16 & nest$Year == 2021, 'Heavy',
-                     ifelse(nest$Paddock == 2 & nest$Year == 2021 | nest$Paddock == 6 & nest$Year == 2021 | nest$Paddock == 9 & nest$Year == 2021 | nest$Paddock == 13 & nest$Year == 2021, 'Full',
-                            ifelse(nest$Paddock == 3 & nest$Year == 2021 | nest$Paddock == 7 & nest$Year == 2021 | nest$Paddock == 10 & nest$Year == 2021 | nest$Paddock == 14 & nest$Year == 2021, 'Moderate',
-                                   ifelse(nest$Paddock == 4 & nest$Year == 2021 | nest$Paddock == 8 & nest$Year == 2021 | nest$Paddock == 11 & nest$Year == 2021 | nest$Paddock == 15 & nest$Year == 2021, 'Rest',
-                                          ifelse(nest$Paddock == 1 & nest$Year == 2022 | nest$Paddock == 5 & nest$Year == 2022 | nest$Paddock == 12 & nest$Year == 2022 | nest$Paddock == 16 & nest$Year == 2022, 'Rest',
-                                                 ifelse(nest$Paddock == 2 & nest$Year == 2022 | nest$Paddock == 6 & nest$Year == 2022 | nest$Paddock == 9 & nest$Year == 2022 | nest$Paddock == 13 & nest$Year == 2022, 'Heavy',
-                                                        ifelse(nest$Paddock == 3 & nest$Year == 2022 | nest$Paddock == 7 & nest$Year == 2022 | nest$Paddock == 10 & nest$Year == 2022 | nest$Paddock == 14 & nest$Year == 2022, 'Full',
-                                                               ifelse(nest$Paddock == 4 & nest$Year == 2022 | nest$Paddock == 8 & nest$Year == 2022 | nest$Paddock == 11 & nest$Year == 2022 | nest$Paddock == 15 & nest$Year == 2022, 'Moderate',
-                                                                      ifelse(nest$Paddock == 1 & nest$Year == 2023 | nest$Paddock == 5 & nest$Year == 2023 | nest$Paddock == 12 & nest$Year == 2023 | nest$Paddock == 16 & nest$Year == 2023, 'Moderate',
-                                                                             ifelse(nest$Paddock == 2 & nest$Year == 2023 | nest$Paddock == 6 & nest$Year == 2023 | nest$Paddock == 9 & nest$Year == 2023 | nest$Paddock == 13 & nest$Year == 2023, 'Rest',
-                                                                                    ifelse(nest$Paddock == 3 & nest$Year == 2023 | nest$Paddock == 7 & nest$Year == 2023 | nest$Paddock == 10 & nest$Year == 2023 | nest$Paddock == 14 & nest$Year == 2023, 'Heavy',
-                                                                                           ifelse(nest$Paddock == 4 & nest$Year == 2023 | nest$Paddock == 8 & nest$Year == 2023 | nest$Paddock == 11 & nest$Year == 2023 | nest$Paddock == 15 & nest$Year == 2023, 'Full',
-                                                                                                  ifelse(nest$Paddock == 1 & nest$Year == 2024 | nest$Paddock == 5 & nest$Year == 2024 | nest$Paddock == 12 & nest$Year == 2024 | nest$Paddock == 16 & nest$Year == 2024, 'Full',
-                                                                                                         ifelse(nest$Paddock == 2 & nest$Year == 2024 | nest$Paddock == 6 & nest$Year == 2024 | nest$Paddock == 9 & nest$Year == 2024 | nest$Paddock == 13 & nest$Year == 2024, 'Moderate',
-                                                                                                                ifelse(nest$Paddock == 3 & nest$Year == 2024 | nest$Paddock == 7 & nest$Year == 2024 | nest$Paddock == 10 & nest$Year == 2024 | nest$Paddock == 14 & nest$Year == 2024, 'Rest',
-                                                                                                                       ifelse(nest$Paddock == 4 & nest$Year == 2024 | nest$Paddock == 8 & nest$Year == 2024 | nest$Paddock == 11 & nest$Year == 2024 | nest$Paddock == 15 & nest$Year == 2024, 'Heavy',
-                                                                                                  NA))))))))))))))))
+                      ifelse(nest$Paddock == 2 & nest$Year == 2021 | nest$Paddock == 6 & nest$Year == 2021 | nest$Paddock == 9 & nest$Year == 2021 | nest$Paddock == 13 & nest$Year == 2021, 'Full',
+                             ifelse(nest$Paddock == 3 & nest$Year == 2021 | nest$Paddock == 7 & nest$Year == 2021 | nest$Paddock == 10 & nest$Year == 2021 | nest$Paddock == 14 & nest$Year == 2021, 'Moderate',
+                                    ifelse(nest$Paddock == 4 & nest$Year == 2021 | nest$Paddock == 8 & nest$Year == 2021 | nest$Paddock == 11 & nest$Year == 2021 | nest$Paddock == 15 & nest$Year == 2021, 'Rest',
+                                           ifelse(nest$Paddock == 1 & nest$Year == 2022 | nest$Paddock == 5 & nest$Year == 2022 | nest$Paddock == 12 & nest$Year == 2022 | nest$Paddock == 16 & nest$Year == 2022, 'Rest',
+                                                  ifelse(nest$Paddock == 2 & nest$Year == 2022 | nest$Paddock == 6 & nest$Year == 2022 | nest$Paddock == 9 & nest$Year == 2022 | nest$Paddock == 13 & nest$Year == 2022, 'Heavy',
+                                                         ifelse(nest$Paddock == 3 & nest$Year == 2022 | nest$Paddock == 7 & nest$Year == 2022 | nest$Paddock == 10 & nest$Year == 2022 | nest$Paddock == 14 & nest$Year == 2022, 'Full',
+                                                                ifelse(nest$Paddock == 4 & nest$Year == 2022 | nest$Paddock == 8 & nest$Year == 2022 | nest$Paddock == 11 & nest$Year == 2022 | nest$Paddock == 15 & nest$Year == 2022, 'Moderate',
+                                                                       ifelse(nest$Paddock == 1 & nest$Year == 2023 | nest$Paddock == 5 & nest$Year == 2023 | nest$Paddock == 12 & nest$Year == 2023 | nest$Paddock == 16 & nest$Year == 2023, 'Moderate',
+                                                                              ifelse(nest$Paddock == 2 & nest$Year == 2023 | nest$Paddock == 6 & nest$Year == 2023 | nest$Paddock == 9 & nest$Year == 2023 | nest$Paddock == 13 & nest$Year == 2023, 'Rest',
+                                                                                     ifelse(nest$Paddock == 3 & nest$Year == 2023 | nest$Paddock == 7 & nest$Year == 2023 | nest$Paddock == 10 & nest$Year == 2023 | nest$Paddock == 14 & nest$Year == 2023, 'Heavy',
+                                                                                            ifelse(nest$Paddock == 4 & nest$Year == 2023 | nest$Paddock == 8 & nest$Year == 2023 | nest$Paddock == 11 & nest$Year == 2023 | nest$Paddock == 15 & nest$Year == 2023, 'Full',
+                                                                                                   ifelse(nest$Paddock == 1 & nest$Year == 2024 | nest$Paddock == 5 & nest$Year == 2024 | nest$Paddock == 12 & nest$Year == 2024 | nest$Paddock == 16 & nest$Year == 2024, 'Full',
+                                                                                                          ifelse(nest$Paddock == 2 & nest$Year == 2024 | nest$Paddock == 6 & nest$Year == 2024 | nest$Paddock == 9 & nest$Year == 2024 | nest$Paddock == 13 & nest$Year == 2024, 'Moderate',
+                                                                                                                 ifelse(nest$Paddock == 3 & nest$Year == 2024 | nest$Paddock == 7 & nest$Year == 2024 | nest$Paddock == 10 & nest$Year == 2024 | nest$Paddock == 14 & nest$Year == 2024, 'Rest',
+                                                                                                                        ifelse(nest$Paddock == 4 & nest$Year == 2024 | nest$Paddock == 8 & nest$Year == 2024 | nest$Paddock == 11 & nest$Year == 2024 | nest$Paddock == 15 & nest$Year == 2024, 'Heavy',
+                                                                                                                               NA))))))))))))))))
 
 # currently I have the midpoints in for the DoD of 2023 and 2024
 nest$cDoD <- ifelse(nest$Year == 2021 & nest$cTreat == 'Heavy', 76.3,
-                   ifelse(nest$Year == 2021 & nest$cTreat == 'Full', 52.3,
-                          ifelse(nest$Year == 2021 & nest$cTreat == 'Moderate', 51.7,
-                                 ifelse(nest$Year == 2021 & nest$cTreat == 'Rest', 0,
-                                        ifelse(nest$Year == 2022 & nest$cTreat == 'Heavy', 65.3,
-                                               ifelse(nest$Year == 2022 & nest$cTreat == 'Full', 45.3,
-                                                      ifelse(nest$Year == 2022 & nest$cTreat == 'Moderate', 35.2,
-                                                             ifelse(nest$Year == 2022 & nest$cTreat == 'Rest', 0,
-                                                                    ifelse(nest$Year == 2023 & nest$cTreat == 'Heavy', 70,
-                                                                           ifelse(nest$Year == 2023 & nest$cTreat == 'Full', 50,
-                                                                                  ifelse(nest$Year == 2023 & nest$cTreat == 'Moderate', 30,
-                                                                                         ifelse(nest$Year == 2023 & nest$cTreat == 'Rest', 0, 
-                                                                                                ifelse(nest$Year == 2024 & nest$cTreat == 'Heavy', 70,
-                                                                                                       ifelse(nest$Year == 2024 & nest$cTreat == 'Full', 50,
-                                                                                                              ifelse(nest$Year == 2024 & nest$cTreat == 'Moderate', 30,
-                                                                                                                     ifelse(nest$Year == 2024 & nest$cTreat == 'Rest', 0, 
-                                                                                                                            NA))))))))))))))))
+                    ifelse(nest$Year == 2021 & nest$cTreat == 'Full', 52.3,
+                           ifelse(nest$Year == 2021 & nest$cTreat == 'Moderate', 51.7,
+                                  ifelse(nest$Year == 2021 & nest$cTreat == 'Rest', 0,
+                                         ifelse(nest$Year == 2022 & nest$cTreat == 'Heavy', 65.3,
+                                                ifelse(nest$Year == 2022 & nest$cTreat == 'Full', 45.3,
+                                                       ifelse(nest$Year == 2022 & nest$cTreat == 'Moderate', 35.2,
+                                                              ifelse(nest$Year == 2022 & nest$cTreat == 'Rest', 0,
+                                                                     ifelse(nest$Year == 2023 & nest$cTreat == 'Heavy', 70,
+                                                                            ifelse(nest$Year == 2023 & nest$cTreat == 'Full', 50,
+                                                                                   ifelse(nest$Year == 2023 & nest$cTreat == 'Moderate', 30,
+                                                                                          ifelse(nest$Year == 2023 & nest$cTreat == 'Rest', 0, 
+                                                                                                 ifelse(nest$Year == 2024 & nest$cTreat == 'Heavy', 70,
+                                                                                                        ifelse(nest$Year == 2024 & nest$cTreat == 'Full', 50,
+                                                                                                               ifelse(nest$Year == 2024 & nest$cTreat == 'Moderate', 30,
+                                                                                                                      ifelse(nest$Year == 2024 & nest$cTreat == 'Rest', 0, 
+                                                                                                                             NA))))))))))))))))
 
 nest$pTreat <- ifelse(nest$cTreat == 'Rest', 'Moderate',
-                     ifelse(nest$cTreat == 'Moderate', 'Full',
-                            ifelse(nest$cTreat == 'Full', 'Heavy',
-                                   ifelse(nest$cTreat == 'Heavy', 'Rest',
-                                          NA))))
+                      ifelse(nest$cTreat == 'Moderate', 'Full',
+                             ifelse(nest$cTreat == 'Full', 'Heavy',
+                                    ifelse(nest$cTreat == 'Heavy', 'Rest',
+                                           NA))))
 
 # currently I have the midpoints in for 2024
 nest$pDoD <- ifelse(nest$Year == 2021 & nest$pTreat == 'Heavy', 60.6,
-                   ifelse(nest$Year == 2021 & nest$pTreat == 'Full', 60.2,
-                          ifelse(nest$Year == 2021 & nest$pTreat == 'Moderate', 33.7,
-                                 ifelse(nest$Year == 2021 & nest$pTreat == 'Rest', 0,
-                                        ifelse(nest$Year == 2022 & nest$pTreat == 'Heavy', 76.3,
-                                               ifelse(nest$Year == 2022 & nest$pTreat == 'Full', 52.3,
-                                                      ifelse(nest$Year == 2022 & nest$pTreat == 'Moderate', 51.7,
-                                                             ifelse(nest$Year == 2022 & nest$pTreat == 'Rest', 0,
-                                                                    ifelse(nest$Year == 2023 & nest$pTreat == 'Heavy', 65.3,
-                                                                           ifelse(nest$Year == 2023 & nest$pTreat == 'Full', 45.3,
-                                                                                  ifelse(nest$Year == 2023 & nest$pTreat == 'Moderate', 35.2,
-                                                                                         ifelse(nest$Year == 2023 & nest$pTreat == 'Rest', 0, 
-                                                                                                ifelse(nest$Year == 2024 & nest$pTreat == 'Heavy', 70,
-                                                                                                       ifelse(nest$Year == 2024 & nest$pTreat == 'Full', 50,
-                                                                                                              ifelse(nest$Year == 2024 & nest$pTreat == 'Moderate', 30,
-                                                                                                                     ifelse(nest$Year == 2024 & nest$pTreat == 'Rest', 0, 
-                                                                                                                            NA))))))))))))))))
+                    ifelse(nest$Year == 2021 & nest$pTreat == 'Full', 60.2,
+                           ifelse(nest$Year == 2021 & nest$pTreat == 'Moderate', 33.7,
+                                  ifelse(nest$Year == 2021 & nest$pTreat == 'Rest', 0,
+                                         ifelse(nest$Year == 2022 & nest$pTreat == 'Heavy', 76.3,
+                                                ifelse(nest$Year == 2022 & nest$pTreat == 'Full', 52.3,
+                                                       ifelse(nest$Year == 2022 & nest$pTreat == 'Moderate', 51.7,
+                                                              ifelse(nest$Year == 2022 & nest$pTreat == 'Rest', 0,
+                                                                     ifelse(nest$Year == 2023 & nest$pTreat == 'Heavy', 65.3,
+                                                                            ifelse(nest$Year == 2023 & nest$pTreat == 'Full', 45.3,
+                                                                                   ifelse(nest$Year == 2023 & nest$pTreat == 'Moderate', 35.2,
+                                                                                          ifelse(nest$Year == 2023 & nest$pTreat == 'Rest', 0, 
+                                                                                                 ifelse(nest$Year == 2024 & nest$pTreat == 'Heavy', 70,
+                                                                                                        ifelse(nest$Year == 2024 & nest$pTreat == 'Full', 50,
+                                                                                                               ifelse(nest$Year == 2024 & nest$pTreat == 'Moderate', 30,
+                                                                                                                      ifelse(nest$Year == 2024 & nest$pTreat == 'Rest', 0, 
+                                                                                                                             NA))))))))))))))))
 
 nest <- full_join(nest, sched, by = c('Year', 'cTreat'='Intensity'))
 
@@ -162,22 +162,22 @@ test <- filter(nest, R1 == '13+' | R1 == '18+' |
                  R4 == '13+')
 
 nest$R1 <- recode(nest$R1,
-                 '18+' = '20',
-                 '13+' = 'NA',
-                 .default = nest$R1)
+                  '18+' = '20',
+                  '13+' = 'NA',
+                  .default = nest$R1)
 
 nest$R2 <- recode(nest$R2,
-                 '18+' = '20',
-                 '13+' = 'NA',
-                 '15+' = 'NA')
+                  '18+' = '20',
+                  '13+' = 'NA',
+                  '15+' = 'NA')
 
 nest$R3 <- recode(nest$R3,
-                 '18+' = '20',
-                 '13+' = 'NA')
+                  '18+' = '20',
+                  '13+' = 'NA')
 
 nest$R4 <- recode(nest$R4,
-                 '18+' = '20',
-                 '13+' = 'NA')
+                  '18+' = '20',
+                  '13+' = 'NA')
 
 test <- filter(nest, R1 == 'NA' | R2 == 'NA' | R3 == 'NA' | R4 == 'NA')
 
@@ -262,11 +262,11 @@ rm(list = ls()[!ls() %in%  'nest'])
 spec.nest <- data.frame()
 
 for (i in unique(nest$Spec)) {
-  spec.surv <- filter(nest, Spec==i)
+  spec.surv <- filter(nest, Spec == i)
   
   spec.surv$TotalVegCover <- spec.surv |> 
     select(KBG:Woody) |> 
-    rowSums(na.rm=TRUE)
+    rowSums(na.rm = TRUE)
   
   spec.surv <- spec.surv |> 
     mutate(across(KBG:Woody, ~ .x/TotalVegCover * 100))
@@ -301,8 +301,8 @@ for (i in unique(nest$Spec)) {
   spec.surv$FirstFound <- spec.surv$FirstFound - min(spec.surv$FirstFound) + 1
   spec.surv$AgeDay1 <- spec.surv$AgeFound - spec.surv$FirstFound + 1
   
-  spec.surv <- rename(spec.surv, LitterD=Litter.Depth)
-  spec.surv <- rename(spec.surv, SmoothB=Smooth.Brome)
+  spec.surv <- rename(spec.surv, LitterD = Litter.Depth)
+  spec.surv <- rename(spec.surv, SmoothB = Smooth.Brome)
   
   
   spec.surv$cTreat <- dplyr::recode(spec.surv$cTreat,

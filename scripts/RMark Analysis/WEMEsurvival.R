@@ -6,22 +6,22 @@ library(vegan)
 library(tidyverse)
 library(RMark)
 library(MuMIn)
-source("scripts/Functions/RMark_Stage_Code.R")
+source('scripts/Functions/RMark_Stage_Code.R')
 
-windowsFonts(my_font = windowsFont("Gandhi Sans"))
+windowsFonts(my_font = windowsFont('Gandhi Sans'))
 
 
 # Data import -------------------------------------------------------------
 
 
-nest <- read.csv("working/RMarknesting.csv")
+nest <- read.csv('working/RMarknesting.csv')
 
 
 # Subsetting data ---------------------------------------------------------
 
 
 WEME.surv <- filter(nest, 
-                    Spec == "WEME" & Stage != "Laying")                                         # select out only WEME nest
+                    Spec == 'WEME' & Stage != 'Laying')                                         # select out only WEME nest
 
 test <- filter(WEME.surv,
                is.na(KBG) |
@@ -44,10 +44,10 @@ WEME.surv <- subset(WEME.surv,
                     subset = !MISSING)
 
 WEME.surv$Year <- factor(WEME.surv$Year,
-                         levels = c("2021", "2022", "2023"))
+                         levels = c('2021', '2022', '2023', '2024'))
 
 WEME.surv$Nestling <- factor(WEME.surv$Nestling,
-                             level = c("0", "1"))
+                             level = c('0', '1'))
 
 str(WEME.surv)
 
@@ -56,14 +56,14 @@ str(WEME.surv)
 
 
 x <- create.stage.var(WEME.surv, 
-                      "AgeDay1", 
-                      "Incub", 
+                      'AgeDay1', 
+                      'Incub', 
                       rep(1,max(WEME.surv$LastChecked)), 
                       12)
 
 WEME.surv <- bind_cols(WEME.surv, x)
 
-rm(list = ls()[!ls() %in% c("WEME.surv")])
+rm(list = ls()[!ls() %in% c('WEME.surv')])
 
 
 # Daily survival rate models ----------------------------------------------
@@ -71,9 +71,9 @@ rm(list = ls()[!ls() %in% c("WEME.surv")])
 
 WEME.pr <- process.data(WEME.surv,
                         nocc = max(WEME.surv$LastChecked),
-                        groups = c("Year",
-                                   "Nestling"),
-                        model = "Nest")
+                        groups = c('Year',
+                                   'Nestling'),
+                        model = 'Nest')
 
 # Temporal candidate model set
 WEME1.run <- function()
@@ -90,7 +90,7 @@ WEME1.run <- function()
   # 4. DSR varies with year
   S.year = list(formula = ~1 + Year)
   
-  WEME.model.list = create.model.list("Nest")
+  WEME.model.list = create.model.list('Nest')
   WEME1.results = mark.wrapper(WEME.model.list,
                                data = WEME.pr,
                                adjust = FALSE,
@@ -122,7 +122,7 @@ WEME2.run <- function()
   # 5. DSR varies with nest age
   S.stage = list(formula = ~1 + Nestling)
   
-  WEME.model.list = create.model.list("Nest")
+  WEME.model.list = create.model.list('Nest')
   WEME2.results = mark.wrapper(WEME.model.list,
                                data = WEME.pr,
                                adjust = FALSE,
@@ -152,7 +152,7 @@ WEME3.run <- function()
   # 4. DSR varies with the previous years grazing intensity
   S.pDoD = list(formula = ~1 + Nestling + pDoD)
   
-  WEME.model.list = create.model.list("Nest")
+  WEME.model.list = create.model.list('Nest')
   WEME3.results = mark.wrapper(WEME.model.list,
                                data = WEME.pr,
                                adjust = FALSE,
@@ -203,7 +203,7 @@ WEME4.run <- function()
   # 11. DSR varies with VOR
   S.vor = list(formula =  ~1 + Nestling + VOR)
   
-  WEME.model.list = create.model.list("Nest")
+  WEME.model.list = create.model.list('Nest')
   WEME4.results = mark.wrapper(WEME.model.list,
                                data = WEME.pr,
                                adjust = FALSE,
@@ -224,14 +224,16 @@ WEME4.results$S.stage$results$real |>
             ucl = mean(ucl))
 
 (WEME.real <- as.data.frame(WEME4.results$S.stage$results$real) |> 
-    rownames_to_column(var = "Group") |> 
+    rownames_to_column(var = 'Group') |> 
     mutate(Stage = case_when(
-      grepl("20210", Group) ~ "Incubating",
-      grepl("20220", Group) ~ "Incubating",
-      grepl("20230", Group) ~ "Incubating",
-      grepl("20211", Group) ~ "Nestling",
-      grepl("20221", Group) ~ "Nestling",
-      grepl("20231", Group) ~ "Nestling")) |> 
+      grepl('20210', Group) ~ 'Incubating',
+      grepl('20220', Group) ~ 'Incubating',
+      grepl('20230', Group) ~ 'Incubating',
+      grepl('20240', Group) ~ 'Incubating',
+      grepl('20211', Group) ~ 'Nestling',
+      grepl('20221', Group) ~ 'Nestling',
+      grepl('20231', Group) ~ 'Nestling',
+      grepl('20241', Group) ~ 'Nestling')) |> 
     group_by(Stage) |> 
     summarize(estimate = mean(estimate), 
               se = mean(se), 
@@ -245,12 +247,12 @@ WEME4.results$S.stage$results$real |>
 WEME.beta <- coef(WEME4.results$S.stage) |>
   cbind(confint(WEME4.results$S.stage, level = 0.85)) |> 
   select(estimate, `7.5 %`, `92.5 %`) |> 
-  rownames_to_column(var = "Variable") |> 
-  rename(c("Coefficient" = "estimate",
-           "lcl" = "7.5 %",
-           "ucl" = "92.5 %"))
+  rownames_to_column(var = 'Variable') |> 
+  rename(c('Coefficient' = 'estimate',
+           'lcl' = '7.5 %',
+           'ucl' = '92.5 %'))
 
-WEME.beta$Variable <- gsub("S:", "", WEME.beta$Variable)
+WEME.beta$Variable <- gsub('S:', '', WEME.beta$Variable)
 
 str(WEME.beta)
 
@@ -268,26 +270,26 @@ str(WEME.beta)
                       ymax = ucl),
                   width = .5,
                   linewidth = 1) +
-    theme(plot.title = element_text(family = "my_font",
+    theme(plot.title = element_text(family = 'my_font',
                                     hjust = .5,
                                     size = 20,
                                     vjust = 1,
-                                    colour = "black"),
+                                    colour = 'black'),
           panel.grid.major = element_blank(),                                     # remove the vertical grid lines
           panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
           panel.background = element_rect(fill = NA,                     # make the interior background transparent
                                           colour = NA),                           # remove any other colors
           plot.background = element_rect(fill = NA,                      # make the outer background transparent
                                          colour = NA),                              # remove any other colors
-          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.line = element_line(colour = 'black'),                             # color the x and y axis
           axis.text = element_text(size = 12, 
-                                   colour = "black"),                    # color the axis text
-          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+                                   colour = 'black'),                    # color the axis text
+          axis.ticks = element_line(colour = 'black'),                            # change the colors of the axis tick marks
           text = element_text(size = 12,                                              # change the size of the axis titles
-                              colour = "black")) +                                    # change the color of the axis titles
-    labs(title = "Western Meadowlark",
+                              colour = 'black')) +                                    # change the color of the axis titles
+    labs(title = 'Western Meadowlark',
          x = NULL,
-         y = expression("Beta " (beta))))
+         y = expression('Beta ' (beta))))
 
 
 # Creating predictive plots -----------------------------------------------
@@ -304,19 +306,19 @@ plotdata <- WEME4.results$S.stage
 
 
 stage.pred <- covariate.predictions(plotdata,
-                                    indices = c(1, 220))
+                                    indices = c(1, 305))
 
 inc <- which(stage.pred$estimates$par.index == 1)
-nst <- which(stage.pred$estimates$par.index == 220)
+nst <- which(stage.pred$estimates$par.index == 305)
 
 stage.pred$estimates$Stage <- NA
-stage.pred$estimates$Stage[inc] <- "Incubating"
-stage.pred$estimates$Stage[nst] <- "Nestling"
+stage.pred$estimates$Stage[inc] <- 'Incubating'
+stage.pred$estimates$Stage[nst] <- 'Nestling'
 
 stage.pred$estimates$Day <- 1
 
 (WEMEstage.plot <- ggplot(transform(stage.pred$estimates,
-                                    Day = factor(Day, levels = "1")), 
+                                    Day = factor(Day, levels = '1')), 
                           aes(x = Stage, 
                               y = estimate,
                               groups = Day,
@@ -326,7 +328,7 @@ stage.pred$estimates$Day <- 1
     scale_linetype_manual(values = c(1, 3, 2)) +
     scale_colour_manual(values = c('#D4A634')) +
     scale_fill_manual(values = c('#D4A634')) +
-    theme(plot.title = element_text(family = "my_font",                             # select the font for the title
+    theme(plot.title = element_text(family = 'my_font',                             # select the font for the title
                                     size = 16,
                                     hjust = .5),
           panel.grid.major = element_blank(),                                     # remove the vertical grid lines
@@ -335,30 +337,30 @@ stage.pred$estimates$Day <- 1
                                           colour = NA),                           # remove any other colors
           plot.background = element_rect(fill = NA,                                 # make the outer background transparent
                                          colour = NA),                              # remove any other colors
-          axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text.y = element_text(size = 12, colour = "black"),                    # color the axis text
-          axis.text.x = element_text(size = 12, colour = "black"),
-          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          axis.line = element_line(colour = 'black'),                             # color the x and y axis
+          axis.text.y = element_text(size = 12, colour = 'black'),                    # color the axis text
+          axis.text.x = element_text(size = 12, colour = 'black'),
+          axis.ticks = element_line(colour = 'black'),                            # change the colors of the axis tick marks
           text = element_text(size = 12,                                              # change the size of the axis titles
-                              colour = "black"),                                    # change the color of the axis titles
+                              colour = 'black'),                                    # change the color of the axis titles
           legend.background = element_rect(fill = NA),
-          legend.position = "none") +
-    labs(title = "Western Meadowlark",
-         x = "Stage",
-         y = "Daily Survival Rate"))
+          legend.position = 'none') +
+    labs(title = 'Western Meadowlark',
+         x = 'Stage',
+         y = 'Daily Survival Rate'))
 
 
 ggsave(WEME.plot,
-       filename = "outputs/figs/betaWEME.png",
-       dpi = "print",
-       bg = "white",
+       filename = 'outputs/figs/betaWEME.png',
+       dpi = 'print',
+       bg = 'white',
        height = 6,
        width = 6)
 
 ggsave(WEMEstage.plot,
-       filename = "outputs/figs/stageWEME.png",
-       dpi = "print",
-       bg = "white",
+       filename = 'outputs/figs/stageWEME.png',
+       dpi = 'print',
+       bg = 'white',
        height = 6,
        width = 6)
 
