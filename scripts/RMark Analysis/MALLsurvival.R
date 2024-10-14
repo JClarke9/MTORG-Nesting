@@ -20,9 +20,9 @@ nest <- read.csv("working/RMarknesting.csv")
 # Subsetting data ---------------------------------------------------------
 
 
-NOPI.surv <- filter(nest, Spec=="NOPI" & Stage != "Laying")                                         # select out only NOPI nest
+MALL.surv <- filter(nest, Spec=="MALL" & Stage != "Laying")                                         # select out only MALL nest
 
-test <- filter(NOPI.surv,
+test <- filter(MALL.surv,
                is.na(KBG) |
                  is.na(SmoothB) |
                  is.na(Litter) |
@@ -35,46 +35,46 @@ test <- filter(NOPI.surv,
                  is.na(VOR) |
                  is.na(cTreat))
 
-MISSING <- is.na(NOPI.surv$AgeFound)
+MISSING <- is.na(MALL.surv$AgeFound)
 
 sum(MISSING)
 
-NOPI.surv <- subset(NOPI.surv, 
+MALL.surv <- subset(MALL.surv, 
                     subset = !MISSING)
 
-NOPI.surv$Year <- factor(NOPI.surv$Year,
+MALL.surv$Year <- factor(MALL.surv$Year,
                          levels = c("2021", "2022", "2023", "2024"))
 
-str(NOPI.surv)
+str(MALL.surv)
 
-NOPI.surv$Nestling <- factor(NOPI.surv$Nestling,
+MALL.surv$Nestling <- factor(MALL.surv$Nestling,
                              levels = c("0", "1"))
 
 
 # Creating stage variable -------------------------------------------------
 
 
-x <- create.stage.var(NOPI.surv, 
+x <- create.stage.var(MALL.surv, 
                       "AgeDay1", 
                       "Incub", 
-                      rep(1,max(NOPI.surv$LastChecked)), 
+                      rep(1,max(MALL.surv$LastChecked)), 
                       12)
 
-NOPI.surv <- bind_cols(NOPI.surv, x)
+MALL.surv <- bind_cols(MALL.surv, x)
 
-rm(list = ls()[!ls() %in% c("NOPI.surv")])
+rm(list = ls()[!ls() %in% c("MALL.surv")])
 
 
 # Daily survival rate models ----------------------------------------------
 
 
-NOPI.pr <- process.data(NOPI.surv,
-                        nocc = max(NOPI.surv$LastChecked),
+MALL.pr <- process.data(MALL.surv,
+                        nocc = max(MALL.surv$LastChecked),
                         groups = c("Year"),
                         model = "Nest")
 
 # Temporal candidate model set
-NOPI1.run <- function()
+MALL1.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
@@ -88,22 +88,22 @@ NOPI1.run <- function()
   # 4. DSR varies with year
   S.year = list(formula = ~1 + Year)
   
-  NOPI.model.list = create.model.list("Nest")
-  NOPI1.results = mark.wrapper(NOPI.model.list,
-                               data = NOPI.pr,
+  MALL.model.list = create.model.list("Nest")
+  MALL1.results = mark.wrapper(MALL.model.list,
+                               data = MALL.pr,
                                adjust = FALSE,
                                delete =TRUE)
 }
 
 # Results of candidate model set
-NOPI1.results <- NOPI1.run()
-NOPI1.results
+MALL1.results <- MALL1.run()
+MALL1.results
 
-coef(NOPI1.results$S.null)
+coef(MALL1.results$S.null)
 
 
 # Biological candidate model set
-NOPI2.run <- function()
+MALL2.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
@@ -111,21 +111,21 @@ NOPI2.run <- function()
   # 4. DSR varies with nest age
   S.age = list(formula = ~1 + NestAge)
   
-  NOPI.model.list = create.model.list("Nest")
-  NOPI2.results = mark.wrapper(NOPI.model.list,
-                               data = NOPI.pr,
+  MALL.model.list = create.model.list("Nest")
+  MALL2.results = mark.wrapper(MALL.model.list,
+                               data = MALL.pr,
                                adjust = FALSE,
                                delete = TRUE)
 }
 
 # Results of candidate model set
-NOPI2.results <- NOPI2.run()
-NOPI2.results
+MALL2.results <- MALL2.run()
+MALL2.results
 
-coef(NOPI2.results$S.null)
+coef(MALL2.results$S.null)
 
 # Grazing candidate model set
-NOPI3.run <- function()
+MALL3.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
@@ -139,22 +139,22 @@ NOPI3.run <- function()
   # 4. DSR varies with the previous  + NestAges grazing intensity
   S.pDoD = list(formula = ~1 + pDoD)
   
-  NOPI.model.list = create.model.list("Nest")
-  NOPI3.results = mark.wrapper(NOPI.model.list,
-                               data = NOPI.pr,
+  MALL.model.list = create.model.list("Nest")
+  MALL3.results = mark.wrapper(MALL.model.list,
+                               data = MALL.pr,
                                adjust = FALSE,
                                delete = TRUE)
 }
 
 # Results of candidate model set
-NOPI3.results <- NOPI3.run()
-NOPI3.results
+MALL3.results <- MALL3.run()
+MALL3.results
 
-coef(NOPI3.results$S.null)
+coef(MALL3.results$S.null)
 
 
 # Vegetation candidate model set
-NOPI4.run <- function()
+MALL4.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
@@ -189,43 +189,39 @@ NOPI4.run <- function()
   # 11. DSR varies with VOR
   S.vor = list(formula =  ~1 + VOR)
   
-  NOPI.model.list = create.model.list("Nest")
-  NOPI4.results = mark.wrapper(NOPI.model.list,
-                               data = NOPI.pr,
+  MALL.model.list = create.model.list("Nest")
+  MALL4.results = mark.wrapper(MALL.model.list,
+                               data = MALL.pr,
                                adjust = FALSE,
                                delete = TRUE)
 }
 
 # Results of candidate model set
-NOPI4.results <- NOPI4.run()
-NOPI4.results
+MALL4.results <- MALL4.run()
+MALL4.results
 
-coef(NOPI4.results$S.lit)
-confint(NOPI4.results$S.lit, level = 0.85)
+coef(MALL4.results$S.bare)
+confint(MALL4.results$S.bare, level = 0.85)
 
-coef(NOPI4.results$S.vor)
-confint(NOPI4.results$S.vor, level = 0.85)
-
-(NOPI.dsrLIT <- as.data.frame(NOPI4.results$S.lit$results$real))
-(NOPI.dsrVOR <- as.data.frame(NOPI4.results$S.vor$results$real))
+(MALL.dsr <- as.data.frame(MALL4.results$S.bare$results$real))
 
 
 # Plotting beta coefficients ----------------------------------------------
 
 
-NOPI.beta <- coef(NOPI4.results$S.vor) |>
-  cbind(confint(NOPI4.results$S.vor, level = 0.85)) |> 
+MALL.beta <- coef(MALL4.results$S.vor) |>
+  cbind(confint(MALL4.results$S.vor, level = 0.85)) |> 
   select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
            "lcl" = "7.5 %",
            "ucl" = "92.5 %"))
 
-NOPI.beta$Variable <- gsub("S:", "", NOPI.beta$Variable)
+MALL.beta$Variable <- gsub("S:", "", MALL.beta$Variable)
 
-str(NOPI.beta)
+str(MALL.beta)
 
-(NOPI.plot <- ggplot(NOPI.beta[2,], 
+(MALL.plot <- ggplot(MALL.beta[2,], 
                      aes(x = Variable,
                          y = Coefficient)) +
     geom_hline(yintercept = 0,
@@ -264,19 +260,19 @@ str(NOPI.beta)
 # Creating predictive plots -----------------------------------------------
 
 
-NOPI.ddl <- make.design.data(NOPI.pr) |> 
+MALL.ddl <- make.design.data(MALL.pr) |> 
   as.data.frame()
 
-VORvalues <- seq(from = min(NOPI.surv$VOR),
-                 to = max(NOPI.surv$VOR),
+VORvalues <- seq(from = min(MALL.surv$VOR),
+                 to = max(MALL.surv$VOR),
                  length = 100)
 
 
-VOR.pred <- covariate.predictions(NOPI4.results$S.vor,
+VOR.pred <- covariate.predictions(MALL4.results$S.vor,
                                   data = data.frame(VOR = VORvalues),
                                   indices = 1)
 
-(NOPIvor.plot <- ggplot(VOR.pred$estimates, 
+(MALLvor.plot <- ggplot(VOR.pred$estimates, 
                         aes(x = covdata, 
                             y = estimate)) +
     geom_line(linewidth = 1.5,
@@ -306,15 +302,15 @@ VOR.pred <- covariate.predictions(NOPI4.results$S.vor,
          y = "Daily Survival Rate"))
 
 
-ggsave(NOPI.plot,
-       filename = "outputs/figs/betaNOPI.png",
+ggsave(MALL.plot,
+       filename = "outputs/figs/betaMALL.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
-ggsave(NOPIvor.plot,
-       filename = "outputs/figs/vorNOPI.png",
+ggsave(MALLvor.plot,
+       filename = "outputs/figs/vorMALL.png",
        dpi = "print",
        bg = "white",
        height = 6,

@@ -43,7 +43,7 @@ GADW.surv <- subset(GADW.surv,
                     subset = !MISSING)
 
 GADW.surv$Year <- factor(GADW.surv$Year,
-                         levels = c("2021", "2022", "2023"))
+                         levels = c("2021", "2022", "2023", "2024"))
 
 str(GADW.surv)
 
@@ -121,7 +121,6 @@ GADW2.results <- GADW2.run()
 GADW2.results
 
 coef(GADW2.results$S.age)
-
 confint(GADW2.results$S.age, level = 0.85)
 
 
@@ -151,8 +150,16 @@ GADW3.run <- function()
 GADW3.results <- GADW3.run()
 GADW3.results
 
-coef(GADW3.results$S.age)
-confint(GADW3.results$S.age, level = 0.85)
+coef(GADW3.results$S.grazed)
+confint(GADW3.results$S.grazed, level = 0.85)
+
+coef(GADW3.results$S.pDoD)
+confint(GADW3.results$S.pDoD, level = 0.85)
+
+coef(GADW3.results$grazep)
+confint(GADW3.results$S.grazep, level = 0.85)
+
+# I need to figure out how to handle this.
 
 
 # Vegetation candidate model set
@@ -338,12 +345,12 @@ Forb.pred$estimates$Day[D27Y2023] <- "Day27"
     geom_line(linewidth = 1.5,
               aes(color = Year)) +
     scale_linetype_manual(values = c(1, 3, 2)) +
-    scale_colour_manual(values = c('#A2A4A2',
-                                   '#717F5B',
-                                   '#D4A634')) +
-    scale_fill_manual(values = c('#A2A4A2',
-                                 '#717F5B',
-                                 '#D4A634')) +
+    scale_colour_manual(values = c("#A2A4A2",
+                                   "#717F5B",
+                                   "#D4A634")) +
+    scale_fill_manual(values = c("#A2A4A2",
+                                 "#717F5B",
+                                 "#D4A634")) +
     theme(plot.title = element_text(family = "my_font",                             # select the font for the title
                                     size = 16,
                                     hjust = .5),
@@ -397,12 +404,12 @@ AGE.pred$estimates$Day <- c(1:27)
     geom_line(linewidth = 1.5,
               aes(color = Year)) +
     scale_linetype_manual(values = c(1, 3, 2)) +
-    scale_colour_manual(values = c('#A2A4A2',
-                                   '#717F5B',
-                                   '#D4A634')) +
-    scale_fill_manual(values = c('#A2A4A2',
-                                 '#717F5B',
-                                 '#D4A634')) +
+    scale_colour_manual(values = c("#A2A4A2",
+                                   "#717F5B",
+                                   "#D4A634")) +
+    scale_fill_manual(values = c("#A2A4A2",
+                                 "#717F5B",
+                                 "#D4A634")) +
     theme(plot.title = element_text(family = "my_font",                             # select the font for the title
                                     size = 16,
                                     hjust = .5),
@@ -451,9 +458,9 @@ ggsave(GADWage.plot,
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,
-#  execute 'rm(list = ls(all = TRUE))' - see 2 lines below.
+#  execute "rm(list = ls(all = TRUE))" - see 2 lines below.
 # NOTE: this will delete all objects in the R session.
 rm(list = ls(all = TRUE))
-# Then, execute 'cleanup(ask = FALSE)' to delete orphaned output
-#  files from MARK. Execute '?cleanup' to learn more
+# Then, execute "cleanup(ask = FALSE)" to delete orphaned output
+#  files from MARK. Execute "?cleanup" to learn more
 cleanup(ask = FALSE)

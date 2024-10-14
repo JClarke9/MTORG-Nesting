@@ -20,10 +20,10 @@ nest <- read.csv("working/RMarknesting.csv")
 # Subsetting data ---------------------------------------------------------
 
 
-RWBL.surv <- filter(nest, 
-                    Spec == "RWBL" & Stage != "Laying")                                         # select out only RWBL nest
+YHBL.surv <- filter(nest, 
+                    Spec == "YHBL" & Stage != "Laying")                                         # select out only YHBL nest
 
-test <- filter(RWBL.surv,
+test <- filter(YHBL.surv,
                is.na(KBG) |
                  is.na(SmoothB) |
                  is.na(Litter) |
@@ -36,47 +36,48 @@ test <- filter(RWBL.surv,
                  is.na(VOR) |
                  is.na(cTreat))
 
-MISSING <- is.na(RWBL.surv$AgeFound)
+MISSING <- is.na(YHBL.surv$AgeFound)
 
 sum(MISSING)
 
-RWBL.surv <- subset(RWBL.surv, 
+YHBL.surv <- subset(YHBL.surv, 
                     subset = !MISSING)
 
-RWBL.surv$Year <- factor(RWBL.surv$Year,
+YHBL.surv$Year <- factor(YHBL.surv$Year,
                          levels = c("2021", "2022", "2023", "2024"))
 
-RWBL.surv$Nestling <- factor(RWBL.surv$Nestling,
+YHBL.surv$Nestling <- factor(YHBL.surv$Nestling,
                              level = c("0", "1"))
 
-str(RWBL.surv)
+str(YHBL.surv)
 
 
 # Creating stage variable -------------------------------------------------
 
 
-x <- create.stage.var(RWBL.surv, 
+x <- create.stage.var(YHBL.surv, 
                       "AgeDay1", 
                       "Incub", 
-                      rep(1,max(RWBL.surv$LastChecked)), 
+                      rep(1,max(YHBL.surv$LastChecked)), 
                       12)
 
-RWBL.surv <- bind_cols(RWBL.surv, x)
+YHBL.surv <- bind_cols(YHBL.surv, x)
 
-rm(list = ls()[!ls() %in% c("RWBL.surv")])
+rm(list = ls()[!ls() %in% c("YHBL.surv")])
 
 
 # Daily survival rate models ----------------------------------------------
 
 
-RWBL.pr <- process.data(RWBL.surv,
-                        nocc = max(RWBL.surv$LastChecked),
+YHBL.pr <- process.data(YHBL.surv,
+                        nocc = max(YHBL.surv$LastChecked),
                         groups = c("Year",
                                    "Nestling"),
                         model = "Nest")
 
 # Temporal candidate model set
-RWBL1.run <- function()
+# I didn't include year because most years we didn't have many nests
+YHBL1.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
@@ -87,60 +88,60 @@ RWBL1.run <- function()
   # 3. DSR varies with quadratic effect of date
   S.quad = list(formula = ~1 + Time + I(Time^2))
   
-  # 4. DSR varies with year
-  S.year = list(formula = ~1 + Year)
-  
-  RWBL.model.list = create.model.list("Nest")
-  RWBL1.results = mark.wrapper(RWBL.model.list,
-                               data = RWBL.pr,
+  YHBL.model.list = create.model.list("Nest")
+  YHBL1.results = mark.wrapper(YHBL.model.list,
+                               data = YHBL.pr,
                                adjust = FALSE,
                                delete = TRUE)
 }
 
 # Results of candidate model set
-RWBL1.results <- RWBL1.run()
-RWBL1.results
+YHBL1.results <- YHBL1.run()
+YHBL1.results
 
-coef(RWBL1.results$S.quad)
-confint(RWBL1.results$S.quad, level = 0.85)
+coef(YHBL1.results$S.time)
+confint(YHBL1.results$S.time, level = 0.85)
+
+coef(YHBL1.results$S.quad)
+confint(YHBL1.results$S.quad, level = 0.85)
 
 
 
 # Biological candidate model set
-RWBL2.run <- function()
+YHBL2.run <- function()
 {
   # 3. DSR varies with quadratic effect of date
-  S.quad = list(formula = ~1 + Time + I(Time^2))
+  S.time = list(formula = ~1 + Time)
   
   # 2. DSR varies with BHCO number
-  S.bhcon = list(formula = ~1 + Time + I(Time^2) + BHCONum)
+  S.bhcon = list(formula = ~1 + Time + BHCONum)
   
   # 2. DSR varies with BHCO number
-  S.bhcop = list(formula = ~1 + Time + I(Time^2) + BHCOPres)
+  S.bhcop = list(formula = ~1 + Time + BHCOPres)
   
   # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + Time + I(Time^2) + NestAge)
+  S.age = list(formula = ~1 + Time + NestAge)
   
   # 5. DSR varies with nest age
-  S.stage = list(formula = ~1 + Time + I(Time^2) + Nestling)
+  S.stage = list(formula = ~1 + Time + Nestling)
   
-  RWBL.model.list = create.model.list("Nest")
-  RWBL2.results = mark.wrapper(RWBL.model.list,
-                               data = RWBL.pr,
+  YHBL.model.list = create.model.list("Nest")
+  YHBL2.results = mark.wrapper(YHBL.model.list,
+                               data = YHBL.pr,
                                adjust = FALSE,
                                delete = TRUE)
 }
 
 # Results of candidate model set
-RWBL2.results <- RWBL2.run()
-RWBL2.results
+YHBL2.results <- YHBL2.run()
+YHBL2.results
 
-coef(RWBL2.results$S.stage)
-confint(RWBL2.results$S.stage, level = 0.85)
+coef(YHBL2.results$S.stage)
+confint(YHBL2.results$S.stage, level = 0.85)
 
 
 # Grazing candidate model set
-RWBL3.run <- function()
+YHBL3.run <- function()
 {
   # 5. DSR varies with nest age
   S.stage = list(formula = ~1 + Time + I(Time^2) + Nestling)
@@ -154,23 +155,23 @@ RWBL3.run <- function()
   # 4. DSR varies with the previous years grazing intensity
   S.pDoD = list(formula = ~1 + Time + I(Time^2) + Nestling + pDoD)
   
-  RWBL.model.list = create.model.list("Nest")
-  RWBL3.results = mark.wrapper(RWBL.model.list,
-                               data = RWBL.pr,
+  YHBL.model.list = create.model.list("Nest")
+  YHBL3.results = mark.wrapper(YHBL.model.list,
+                               data = YHBL.pr,
                                adjust = FALSE,
                                delete = TRUE)
 }
 
 # Results of candidate model set
-RWBL3.results <- RWBL3.run()
-RWBL3.results
+YHBL3.results <- YHBL3.run()
+YHBL3.results
 
-coef(RWBL2.results$S.stage)
-confint(RWBL2.results$S.stage, level = 0.85)
+coef(YHBL2.results$S.stage)
+confint(YHBL2.results$S.stage, level = 0.85)
 
 
 # Vegetation candidate model set
-RWBL4.run <- function()
+YHBL4.run <- function()
 {
   # 2. DSR varies with the number of days a nest experienced grazing
   S.stage = list(formula = ~1 + Time + I(Time^2) + Nestling)
@@ -205,27 +206,27 @@ RWBL4.run <- function()
   # 11. DSR varies with VOR
   S.vor = list(formula =  ~1 + Time + I(Time^2) + Nestling + VOR)
   
-  RWBL.model.list = create.model.list("Nest")
-  RWBL4.results = mark.wrapper(RWBL.model.list,
-                               data = RWBL.pr,
+  YHBL.model.list = create.model.list("Nest")
+  YHBL4.results = mark.wrapper(YHBL.model.list,
+                               data = YHBL.pr,
                                adjust = FALSE,
                                delete = TRUE)
 }
 
 # Results of candidate model set
-RWBL4.results <- RWBL4.run()
-RWBL4.results
+YHBL4.results <- YHBL4.run()
+YHBL4.results
 
-coef(RWBL4.results$S.stage)
-confint(RWBL4.results$S.stage, level = 0.85)
+coef(YHBL4.results$S.stage)
+confint(YHBL4.results$S.stage, level = 0.85)
 
-RWBL4.results$S.stage$results$real |> 
+YHBL4.results$S.stage$results$real |> 
   summarize(estimate = mean(estimate),
             se = mean(se),
             lcl = mean(lcl),
             ucl = mean(ucl))
 
-(RWBL.real <- as.data.frame(RWBL4.results$S.stage$results$real) |> 
+(YHBL.real <- as.data.frame(YHBL4.results$S.stage$results$real) |> 
     rownames_to_column(var = "Group") |> 
     mutate(Stage = case_when(
       grepl("20210", Group) ~ "Incubating",
@@ -246,19 +247,19 @@ RWBL4.results$S.stage$results$real |>
 # Plotting beta coefficients ----------------------------------------------
 
 
-RWBL.beta <- coef(RWBL4.results$S.grazed) |>
-  cbind(confint(RWBL4.results$S.grazed, level = 0.85)) |> 
+YHBL.beta <- coef(YHBL4.results$S.grazed) |>
+  cbind(confint(YHBL4.results$S.grazed, level = 0.85)) |> 
   select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
            "lcl" = "7.5 %",
            "ucl" = "92.5 %"))
 
-RWBL.beta$Variable <- gsub("S:", "", RWBL.beta$Variable)
+YHBL.beta$Variable <- gsub("S:", "", YHBL.beta$Variable)
 
-str(RWBL.beta)
+str(YHBL.beta)
 
-(RWBL.plot <- ggplot(RWBL.beta[4:5,], 
+(YHBL.plot <- ggplot(YHBL.beta[4:5,], 
                      aes(x = Variable,
                          y = Coefficient)) +
     geom_hline(yintercept = 0,
@@ -297,12 +298,12 @@ str(RWBL.beta)
 # Creating predictive plots -----------------------------------------------
 
 
-RWBL.ddl <- make.design.data(RWBL.pr) |> 
+YHBL.ddl <- make.design.data(YHBL.pr) |> 
   as.data.frame()
 
-max(RWBL.ddl$S.Age)
+max(YHBL.ddl$S.Age)
 
-filter(RWBL.ddl, 
+filter(YHBL.ddl, 
        S.Nestling == 0 & S.time == 1 & S.Year == 2021| 
          S.Nestling == 0 & S.time == 18  & S.Year == 2021| 
          S.Nestling == 0 & S.time == 36  & S.Year == 2021| 
@@ -314,10 +315,10 @@ filter(RWBL.ddl,
          S.Nestling == 1 & S.time == 54  & S.Year == 2021| 
          S.Nestling == 1 & S.time == 72 & S.Year == 2021)
 
-plotdata <- RWBL4.results$S.grazed
+plotdata <- YHBL4.results$S.grazed
 
-grazed.values <- seq(from = min(RWBL.surv$grazed), 
-                     to = max(RWBL.surv$grazed), 
+grazed.values <- seq(from = min(YHBL.surv$grazed), 
+                     to = max(YHBL.surv$grazed), 
                      length = 100)
 
 
@@ -336,7 +337,7 @@ time.pred$estimates <- fill(time.pred$estimates, Stage, .direction = "down")
 
 time.pred$estimates$Day <- 1:73
 
-(RWBLtime.plot <- ggplot(time.pred$estimates, 
+(YHBLtime.plot <- ggplot(time.pred$estimates, 
                          aes(x = Day, 
                              y = estimate)) +
     geom_line(linewidth = 1.5,
@@ -382,7 +383,7 @@ stage.pred$estimates <- fill(stage.pred$estimates, Stage, .direction = "down")
 
 stage.pred$estimates$Day <- c(1, 18, 36, 54, 72)
 
-(RWBLstage.plot <- ggplot(transform(stage.pred$estimates,
+(YHBLstage.plot <- ggplot(transform(stage.pred$estimates,
                                     Day = factor(Day, levels = c("1", "18", "36",
                                                                  "54", "72"))), 
                           aes(x = Stage, 
@@ -477,7 +478,7 @@ grazed.pred$estimates$Day[nst36] <- "36"
 grazed.pred$estimates$Day[nst54] <- "54"
 grazed.pred$estimates$Day[nst72] <- "72"
 
-(RWBLgrazed.plot <- ggplot(transform(grazed.pred$estimates,
+(YHBLgrazed.plot <- ggplot(transform(grazed.pred$estimates,
                                      Day = factor(Day, levels = c("1", "18", "36",
                                                                   "54", "72"))), 
                            aes(x = covdata, 
@@ -520,29 +521,29 @@ grazed.pred$estimates$Day[nst72] <- "72"
          y = "Daily Survival Rate"))
 
 
-ggsave(RWBL.plot,
-       filename = "outputs/figs/betaRWBL.png",
+ggsave(YHBL.plot,
+       filename = "outputs/figs/betaYHBL.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
-ggsave(RWBLtime.plot,
-       filename = "outputs/figs/timeRWBL.png",
+ggsave(YHBLtime.plot,
+       filename = "outputs/figs/timeYHBL.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
-ggsave(RWBLstage.plot,
-       filename = "outputs/figs/stageRWBL.png",
+ggsave(YHBLstage.plot,
+       filename = "outputs/figs/stageYHBL.png",
        dpi = "print",
        bg = "white",
        height = 6,
        width = 6)
 
-ggsave(RWBLgrazed.plot,
-       filename = "outputs/figs/grazedRWBL.png",
+ggsave(YHBLgrazed.plot,
+       filename = "outputs/figs/grazedYHBL.png",
        dpi = "print",
        bg = "white",
        height = 6,

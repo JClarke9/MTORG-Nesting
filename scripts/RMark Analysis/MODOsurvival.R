@@ -45,7 +45,7 @@ MODO.surv <- subset(MODO.surv,
                     subset = !MISSING)
 
 MODO.surv$Year <- factor(MODO.surv$Year,
-                         levels = c("2021", "2022", "2023"))
+                         levels = c("2021", "2022", "2023", "2024"))
 
 MODO.surv$Nestling <- factor(MODO.surv$Nestling,
                              level = c("0", "1"))
@@ -101,6 +101,9 @@ MODO1.run <- function()
 # Results of candidate model set
 MODO1.results <- MODO1.run()
 MODO1.results
+
+coef(MODO1.results$S.year)
+confint(MODO1.results$S.year, level = 0.85)
 
 coef(MODO1.results$S.quad)
 confint(MODO1.results$S.quad, level = 0.85)
@@ -225,8 +228,10 @@ MODO4.results$S.kbg$results$real |>
       grepl("20210", Group) ~ "Incubating",
       grepl("20220", Group) ~ "Incubating",
       grepl("20230", Group) ~ "Incubating",
+      grepl("20240", Group) ~ "Incubating",
       grepl("20211", Group) ~ "Nestling",
       grepl("20221", Group) ~ "Nestling",
+      grepl("20231", Group) ~ "Nestling",
       grepl("20231", Group) ~ "Nestling")) |> 
     group_by(Stage) |> 
     summarize(estimate = mean(estimate), 
@@ -292,20 +297,6 @@ str(MODO.beta)
 MODO.ddl <- make.design.data(MODO.pr) |> 
   as.data.frame()
 
-max(MODO.ddl$S.Age)
-
-filter(MODO.ddl, 
-       S.Nestling == 0 & S.time == 1 & S.Year == 2021| 
-         S.Nestling == 0 & S.time == 18  & S.Year == 2021| 
-         S.Nestling == 0 & S.time == 36  & S.Year == 2021| 
-         S.Nestling == 0 & S.time == 54  & S.Year == 2021| 
-         S.Nestling == 0 & S.time == 72 & S.Year == 2021|
-         S.Nestling == 1 & S.time == 1 & S.Year == 2021| 
-         S.Nestling == 1 & S.time == 18  & S.Year == 2021| 
-         S.Nestling == 1 & S.time == 36  & S.Year == 2021| 
-         S.Nestling == 1 & S.time == 54  & S.Year == 2021| 
-         S.Nestling == 1 & S.time == 72 & S.Year == 2021)
-
 plotdata <- MODO4.results$S.kbg
 
 kbg.values <- seq(from = min(MODO.surv$KBG), 
@@ -313,12 +304,26 @@ kbg.values <- seq(from = min(MODO.surv$KBG),
                   length = 100)
 
 
+max(MODO.ddl$S.Age)
+
+filter(MODO.ddl, 
+       S.Nestling == 0 & S.time == 1 & S.Year == 2021| 
+         S.Nestling == 0 & S.time == 18  & S.Year == 2021| 
+         S.Nestling == 0 & S.time == 36  & S.Year == 2021| 
+         S.Nestling == 0 & S.time == 54  & S.Year == 2021| 
+         S.Nestling == 0 & S.time == 74 & S.Year == 2021|
+         S.Nestling == 1 & S.time == 1 & S.Year == 2021| 
+         S.Nestling == 1 & S.time == 18  & S.Year == 2021| 
+         S.Nestling == 1 & S.time == 36  & S.Year == 2021| 
+         S.Nestling == 1 & S.time == 54  & S.Year == 2021| 
+         S.Nestling == 1 & S.time == 74 & S.Year == 2021)
+
 time.pred <- covariate.predictions(plotdata,
                                    data = data.frame(KBG = mean(kbg.values)),
-                                   indices = c(1:72, 217:288))
+                                   indices = c(1:74, 301:374))
 
 inc <- which(time.pred$estimates$par.index == 1)
-nst <- which(time.pred$estimates$par.index == 217)
+nst <- which(time.pred$estimates$par.index == 301)
 
 time.pred$estimates$Stage <- NA
 time.pred$estimates$Stage[inc] <- "Incubating"
@@ -326,7 +331,7 @@ time.pred$estimates$Stage[nst] <- "Nestling"
 
 time.pred$estimates <- fill(time.pred$estimates, Stage, .direction = "down")
 
-time.pred$estimates$Day <- 1:72
+time.pred$estimates$Day <- 1:74
 
 (MODOtime.plot <- ggplot(time.pred$estimates, 
                          aes(x = Day, 
@@ -361,11 +366,11 @@ time.pred$estimates$Day <- 1:72
 
 stage.pred <- covariate.predictions(plotdata,
                                     data = data.frame(KBG = mean(kbg.values)),
-                                    indices = c(1, 18, 36, 54, 72,
-                                                217, 234, 252, 270, 288))
+                                    indices = c(1, 18, 36, 54, 74,
+                                                301, 318, 336, 354, 374))
 
 inc <- which(stage.pred$estimates$par.index == 1)
-nst <- which(stage.pred$estimates$par.index == 217)
+nst <- which(stage.pred$estimates$par.index == 301)
 
 stage.pred$estimates$Stage <- NA
 stage.pred$estimates$Stage[inc] <- "Incubating"
@@ -420,59 +425,59 @@ stage.pred$estimates$Day <- c(1, 18, 36, 54, 72)
 
 kbg.pred <- covariate.predictions(plotdata,
                                   data = data.frame(KBG = kbg.values),
-                                  indices = c(1, 18, 36, 54, 72,
-                                              217, 234, 252, 270, 288))
+                                  indices = c(1, 18, 36, 54, 74,
+                                              301, 318, 336, 354, 374))
 
 inc1 <- which(kbg.pred$estimates$par.index == 1)
 inc18 <- which(kbg.pred$estimates$par.index == 18)
 inc36 <- which(kbg.pred$estimates$par.index == 36)
 inc54 <- which(kbg.pred$estimates$par.index == 54)
-inc72 <- which(kbg.pred$estimates$par.index == 72)
-nst1 <- which(kbg.pred$estimates$par.index == 217)
-nst18 <- which(kbg.pred$estimates$par.index == 234)
-nst36 <- which(kbg.pred$estimates$par.index == 252)
-nst54 <- which(kbg.pred$estimates$par.index == 270)
-nst72 <- which(kbg.pred$estimates$par.index == 288)
+inc74 <- which(kbg.pred$estimates$par.index == 74)
+nst1 <- which(kbg.pred$estimates$par.index == 301)
+nst18 <- which(kbg.pred$estimates$par.index == 318)
+nst36 <- which(kbg.pred$estimates$par.index == 336)
+nst54 <- which(kbg.pred$estimates$par.index == 354)
+nst74 <- which(kbg.pred$estimates$par.index == 374)
 
 kbg.pred$estimates$Group <- NA
 kbg.pred$estimates$Group[inc1] <- "Incubating1"
 kbg.pred$estimates$Group[inc18] <- "Incubating18"
 kbg.pred$estimates$Group[inc36] <- "Incubating36"
 kbg.pred$estimates$Group[inc54] <- "Incubating54"
-kbg.pred$estimates$Group[inc72] <- "Incubating72"
+kbg.pred$estimates$Group[inc74] <- "Incubating74"
 kbg.pred$estimates$Group[nst1] <- "Nestling1"
 kbg.pred$estimates$Group[nst18] <- "Nestling18"
 kbg.pred$estimates$Group[nst36] <- "Nestling36"
 kbg.pred$estimates$Group[nst54] <- "Nestling54"
-kbg.pred$estimates$Group[nst72] <- "Nestling72"
+kbg.pred$estimates$Group[nst74] <- "Nestling74"
 
 kbg.pred$estimates$Stage <- NA
 kbg.pred$estimates$Stage[inc1] <- "Incubating"
 kbg.pred$estimates$Stage[inc18] <- "Incubating"
 kbg.pred$estimates$Stage[inc36] <- "Incubating"
 kbg.pred$estimates$Stage[inc54] <- "Incubating"
-kbg.pred$estimates$Stage[inc72] <- "Incubating"
+kbg.pred$estimates$Stage[inc74] <- "Incubating"
 kbg.pred$estimates$Stage[nst1] <- "Nestling"
 kbg.pred$estimates$Stage[nst18] <- "Nestling"
 kbg.pred$estimates$Stage[nst36] <- "Nestling"
 kbg.pred$estimates$Stage[nst54] <- "Nestling"
-kbg.pred$estimates$Stage[nst72] <- "Nestling"
+kbg.pred$estimates$Stage[nst74] <- "Nestling"
 
 kbg.pred$estimates$Day <- NA
 kbg.pred$estimates$Day[inc1] <- "1"
 kbg.pred$estimates$Day[inc18] <- "18"
 kbg.pred$estimates$Day[inc36] <- "36"
 kbg.pred$estimates$Day[inc54] <- "54"
-kbg.pred$estimates$Day[inc72] <- "72"
+kbg.pred$estimates$Day[inc74] <- "74"
 kbg.pred$estimates$Day[nst1] <- "1"
 kbg.pred$estimates$Day[nst18] <- "18"
 kbg.pred$estimates$Day[nst36] <- "36"
 kbg.pred$estimates$Day[nst54] <- "54"
-kbg.pred$estimates$Day[nst72] <- "72"
+kbg.pred$estimates$Day[nst74] <- "74"
 
 (MODOkbg.plot <- ggplot(transform(kbg.pred$estimates,
                                   Day = factor(Day, levels = c("1", "18", "36",
-                                                               "54", "72"))), 
+                                                               "54", "74"))), 
                         aes(x = covdata, 
                             y = estimate,
                             groups = Group)) +
