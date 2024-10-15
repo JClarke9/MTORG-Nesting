@@ -73,8 +73,37 @@ NSHO.pr <- process.data(NSHO.surv,
                         groups = c("Year"),
                         model = "Nest")
 
-# Temporal candidate model set
+
+
+# Grazing candidate model set
 NSHO1.run <- function()
+{
+  # 1. DSR varies with time
+  S.null = list(formula = ~1)
+  
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + grazed)
+  
+  # 4. DSR varies with the previous  + NestAges grazing intensity
+  S.pDoD = list(formula = ~1 + pDoD)
+  
+  NSHO.model.list = create.model.list("Nest")
+  NSHO1.results = mark.wrapper(NSHO.model.list,
+                               data = NSHO.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
+}
+
+# Results of candidate model set
+NSHO1.results <- NSHO1.run()
+NSHO1.results
+
+coef(NSHO1.results$S.null)
+
+
+
+# Temporal candidate model set
+NSHO2.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
@@ -89,33 +118,10 @@ NSHO1.run <- function()
   S.year = list(formula = ~1 + Year)
   
   NSHO.model.list = create.model.list("Nest")
-  NSHO1.results = mark.wrapper(NSHO.model.list,
-                               data = NSHO.pr,
-                               adjust = FALSE,
-                               delete =TRUE)
-}
-
-# Results of candidate model set
-NSHO1.results <- NSHO1.run()
-NSHO1.results
-
-coef(NSHO1.results$S.null)
-
-
-# Biological candidate model set
-NSHO2.run <- function()
-{
-  # 1. DSR varies with time
-  S.null = list(formula = ~1)
-  
-  # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + NestAge)
-  
-  NSHO.model.list = create.model.list("Nest")
   NSHO2.results = mark.wrapper(NSHO.model.list,
                                data = NSHO.pr,
                                adjust = FALSE,
-                               delete = TRUE)
+                               delete =TRUE)
 }
 
 # Results of candidate model set
@@ -124,20 +130,15 @@ NSHO2.results
 
 coef(NSHO2.results$S.null)
 
-# Grazing candidate model set
+
+# Biological candidate model set
 NSHO3.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
   
-  # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + grazed)
-  
-  # 3. DSR varies with the number of days a nest experienced grazing
-  S.grazep = list(formula = ~1 + grazep)
-  
-  # 4. DSR varies with the previous  + NestAges grazing intensity
-  S.pDoD = list(formula = ~1 + pDoD)
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + NestAge)
   
   NSHO.model.list = create.model.list("Nest")
   NSHO3.results = mark.wrapper(NSHO.model.list,
@@ -151,6 +152,7 @@ NSHO3.results <- NSHO3.run()
 NSHO3.results
 
 coef(NSHO3.results$S.null)
+
 
 
 # Vegetation candidate model set
@@ -209,8 +211,8 @@ confint(NSHO4.results$S.brome, level = 0.85)
 # Plotting beta coefficients ----------------------------------------------
 
 
-NSHO.beta <- coef(NSHO4.results$S.vor) |>
-  cbind(confint(NSHO4.results$S.vor, level = 0.85)) |> 
+NSHO.beta <- coef(NSHO4.results$S.brome) |>
+  cbind(confint(NSHO4.results$S.brome, level = 0.85)) |> 
   select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
@@ -252,7 +254,7 @@ str(NSHO.beta)
           axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
           text = element_text(size = 12,                                              # change the size of the axis titles
                               colour = "black")) +                                    # change the color of the axis titles
-    labs(title = "Northern Pintail",
+    labs(title = "Northern Shoveler",
          x = NULL,
          y = expression("Beta " (beta))))
 
@@ -263,16 +265,16 @@ str(NSHO.beta)
 NSHO.ddl <- make.design.data(NSHO.pr) |> 
   as.data.frame()
 
-VORvalues <- seq(from = min(NSHO.surv$VOR),
-                 to = max(NSHO.surv$VOR),
-                 length = 100)
+BROMEvalues <- seq(from = min(NSHO.surv$SmoothB),
+                   to = max(NSHO.surv$SmoothB),
+                   length = 100)
 
 
-VOR.pred <- covariate.predictions(NSHO4.results$S.vor,
-                                  data = data.frame(VOR = VORvalues),
-                                  indices = 1)
+BROME.pred <- covariate.predictions(NSHO4.results$S.brome,
+                                    data = data.frame(SmoothB = BROMEvalues),
+                                    indices = 1)
 
-(NSHOvor.plot <- ggplot(VOR.pred$estimates, 
+(NSHObrome.plot <- ggplot(BROME.pred$estimates, 
                         aes(x = covdata, 
                             y = estimate)) +
     geom_line(linewidth = 1.5,
@@ -296,9 +298,9 @@ VOR.pred <- covariate.predictions(NSHO4.results$S.vor,
                               colour = "black"),                                    # change the color of the axis titles
           legend.background = element_rect(fill = NA),
           legend.position = "none") +
-    labs(title = "Northern Pintail",
+    labs(title = "Northern Shoveler",
          color = "Year",
-         x = "Visual Obstruction (dm)",
+         x = "Smooth Brome",
          y = "Daily Survival Rate"))
 
 
@@ -309,8 +311,8 @@ ggsave(NSHO.plot,
        height = 6,
        width = 6)
 
-ggsave(NSHOvor.plot,
-       filename = "outputs/figs/vorNSHO.png",
+ggsave(NSHObrome.plot,
+       filename = "outputs/figs/bromeNSHO.png",
        dpi = "print",
        bg = "white",
        height = 6,

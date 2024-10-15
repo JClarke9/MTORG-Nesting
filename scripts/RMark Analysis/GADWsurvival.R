@@ -70,20 +70,19 @@ GADW.pr <- process.data(GADW.surv,
                         groups = c("Year"),
                         model = "Nest")
 
-# Temporal candidate model set
+
+
+# Grazing candidate model set
 GADW1.run <- function()
 {
-  # 1. DSR varies with time
+  # 4. DSR varies with nest age
   S.null = list(formula = ~1)
   
-  # 2. DSR varies with time
-  S.time = list(formula = ~1 + Time)
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + grazed)
   
-  # 3. DSR varies with quadratic effect of date
-  S.quad = list(formula = ~1 + Time + I(Time^2))
-  
-  # 4. DSR varies with year
-  S.year = list(formula = ~1 + Year)
+  # 3. DSR varies with the previous Year + NestAges grazing intensity
+  S.pDoD = list(formula = ~1 + pDoD)
   
   GADW.model.list = create.model.list("Nest")
   GADW1.results = mark.wrapper(GADW.model.list,
@@ -96,18 +95,25 @@ GADW1.run <- function()
 GADW1.results <- GADW1.run()
 GADW1.results
 
-coef(GADW1.results$S.year)
-confint(GADW1.results$S.year, level = 0.85)
+coef(GADW1.results$S.grazed)
+confint(GADW1.results$S.grazed, level = 0.85)
 
 
-# Biological candidate model set
+
+# Temporal candidate model set
 GADW2.run <- function()
 {
-  # 1. DSR varies with year
-  S.year = list(formula = ~1 + Year)
+  # 1. DSR varies with time
+  S.grazed = list(formula = ~1 + grazed)
   
-  # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + Year + NestAge)
+  # 2. DSR varies with time
+  S.time = list(formula = ~1 + grazed + Time)
+  
+  # 3. DSR varies with quadratic effect of date
+  S.quad = list(formula = ~1 + grazed + Time + I(Time^2))
+  
+  # 4. DSR varies with year
+  S.year = list(formula = ~1 + grazed + Year)
   
   GADW.model.list = create.model.list("Nest")
   GADW2.results = mark.wrapper(GADW.model.list,
@@ -120,27 +126,22 @@ GADW2.run <- function()
 GADW2.results <- GADW2.run()
 GADW2.results
 
-coef(GADW2.results$S.age)
-confint(GADW2.results$S.age, level = 0.85)
+coef(GADW2.results$S.year)
+confint(GADW2.results$S.year, level = 0.85)
 
 
-# Grazing candidate model set
+
+# Biological candidate model set
 GADW3.run <- function()
 {
+  # 1. DSR varies with year
+  S.year = list(formula = ~1 + grazed + Year)
+  
   # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + Year + NestAge)
-  
-  # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + Year + NestAge + grazed)
-  
-  # 3. DSR varies with the number of days a nest experienced grazing
-  S.grazep = list(formula = ~1 + Year + NestAge + grazep)
-  
-  # 4. DSR varies with the previous Year + NestAges grazing intensity
-  S.pDoD = list(formula = ~1 + Year + NestAge + pDoD)
+  S.age = list(formula = ~1 + grazed + Year + NestAge)
   
   GADW.model.list = create.model.list("Nest")
-  GADW3.results = mark.wrapper(GADW.model.list,
+  GADW2.results = mark.wrapper(GADW.model.list,
                                data = GADW.pr,
                                adjust = FALSE,
                                delete = TRUE)
@@ -150,53 +151,45 @@ GADW3.run <- function()
 GADW3.results <- GADW3.run()
 GADW3.results
 
-coef(GADW3.results$S.grazed)
-confint(GADW3.results$S.grazed, level = 0.85)
-
-coef(GADW3.results$S.pDoD)
-confint(GADW3.results$S.pDoD, level = 0.85)
-
-coef(GADW3.results$grazep)
-confint(GADW3.results$S.grazep, level = 0.85)
-
-# I need to figure out how to handle this.
+coef(GADW3.results$S.age)
+confint(GADW3.results$S.age, level = 0.85)
 
 
 # Vegetation candidate model set
 GADW4.run <- function()
 {
   # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + Year + NestAge)
+  S.age = list(formula = ~1 + grazed + Year + NestAge)
   
   # 2. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + Year + NestAge + KBG)
+  S.kbg = list(formula =  ~1 + grazed + Year + NestAge + KBG)
   
   # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.brome = list(formula = ~1 + Year + NestAge + SmoothB)
+  S.brome = list(formula = ~1 + grazed + Year + NestAge + SmoothB)
   
   # 4. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + Year + NestAge + Litter)
+  S.lit = list(formula =  ~1 + grazed + Year + NestAge + Litter)
   
   # 5. DSR varies with Bare
-  S.bare = list(formula =  ~1 + Year + NestAge + Bare)
+  S.bare = list(formula =  ~1 + grazed + Year + NestAge + Bare)
   
   # 6. DSR varies with Forb
-  S.forb = list(formula =  ~1 + Year + NestAge + Forb)
+  S.forb = list(formula =  ~1 + grazed + Year + NestAge + Forb)
   
   # 7. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + Year + NestAge + Grasslike)
+  S.grass = list(formula =  ~1 + grazed + Year + NestAge + Grasslike)
   
   # 8. DSR varies with Woody
-  S.woody = list(formula =  ~1 + Year + NestAge + Woody)
+  S.woody = list(formula =  ~1 + grazed + Year + NestAge + Woody)
   
   # 9. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + Year + NestAge + LitterD)
+  S.litdep = list(formula =  ~1 + grazed + Year + NestAge + LitterD)
   
   # 10. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Year + NestAge + Veg.Height)
+  S.height = list(formula =  ~1 + grazed + Year + NestAge + Veg.Height)
   
   # 11. DSR varies with VOR
-  S.vor = list(formula =  ~1 + Year + NestAge + VOR)
+  S.vor = list(formula =  ~1 + grazed + Year + NestAge + VOR)
   
   GADW.model.list = create.model.list("Nest")
   GADW4.results = mark.wrapper(GADW.model.list,
@@ -223,7 +216,8 @@ GADW.real <- as.data.frame(GADW4.results$S.forb$results$real) |>
   mutate(Year = case_when(
     grepl("2021", Group) ~ "2021",
     grepl("2022", Group) ~ "2022",
-    grepl("2023", Group) ~ "2023")) |> 
+    grepl("2023", Group) ~ "2023",
+    grepl("2024", Group) ~ "2024")) |> 
   select(Year, estimate, se, lcl, ucl)
 
 (GADW.dsr <- GADW.real |> 
@@ -249,7 +243,7 @@ GADW.beta$Variable <- gsub("S:", "", GADW.beta$Variable)
 
 str(GADW.beta)
 
-(GADW.plot <- ggplot(GADW.beta[4:5,], 
+(GADW.plot <- ggplot(GADW.beta[c(2,6,7),], 
                      aes(x = Variable,
                          y = Coefficient)) +
     geom_hline(yintercept = 0,
@@ -298,21 +292,95 @@ Forbvalues <- seq(from = min(GADW.surv$Forb),
                   length = 100)
 
 
+filter(GADW.ddl, S.Year == 2021 & S.age %in% c(1:27))
+filter(GADW.ddl, S.Year == 2022 & S.age %in% c(1:27))
+filter(GADW.ddl, S.Year == 2023 & S.age %in% c(1:27))
+filter(GADW.ddl, S.Year == 2024 & S.age %in% c(1:27))
+
+
+AGE.pred <- covariate.predictions(plotdata,
+                                  data = data.frame(Forb = mean(Forbvalues)),
+                                  indices = c(2:28,
+                                              77:103,
+                                              152:178,
+                                              227:253))
+
+D1Y2021 <- which(AGE.pred$estimates$par.index == 2)
+D1Y2022 <- which(AGE.pred$estimates$par.index == 77)
+D1Y2023 <- which(AGE.pred$estimates$par.index == 152)
+D1Y2024 <- which(AGE.pred$estimates$par.index == 227)
+
+AGE.pred$estimates$Year <- NA
+AGE.pred$estimates$Year[D1Y2021] <- "2021"
+AGE.pred$estimates$Year[D1Y2022] <- "2022"
+AGE.pred$estimates$Year[D1Y2023] <- "2023"
+AGE.pred$estimates$Year[D1Y2024] <- "2024"
+
+AGE.pred$estimates <- fill(AGE.pred$estimates, Year, .direction = "down")
+
+AGE.pred$estimates$Day <- c(1:27)
+
+(GADWage.plot <- ggplot(transform(AGE.pred$estimates,
+                                  Year = factor(Year, levels = c("2021", "2022", "2023", "2024"))), 
+                        aes(x = Day, 
+                            y = estimate,
+                            groups = Year,
+                            fill = Year)) +
+    geom_line(linewidth = 1.5,
+              aes(color = Year)) +
+    scale_linetype_manual(values = c(1, 3, 2)) +
+    scale_colour_manual(values = c("#A2A4A2",
+                                   "#717F5B",
+                                   "#D4A634",
+                                   "goldenrod4")) +
+    scale_fill_manual(values = c("#A2A4A2",
+                                 "#717F5B",
+                                 "#D4A634",
+                                 "goldenrod4")) +
+    theme(plot.title = element_text(family = "my_font",                             # select the font for the title
+                                    size = 16,
+                                    hjust = .5),
+          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+          panel.background = element_rect(fill = NA,                                # make the interior background transparent
+                                          colour = NA),                           # remove any other colors
+          plot.background = element_rect(fill = NA,                                 # make the outer background transparent
+                                         colour = NA),                              # remove any other colors
+          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.text.y = element_text(size = 12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size = 12, colour = "black"),
+          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          text = element_text(size = 12,                                              # change the size of the axis titles
+                              colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill = NA),
+          legend.position = c(.85, .1),
+          legend.box = "horizontal") +
+    labs(title = "Gadwall",
+         color = "Year",
+         x = "Nest Age",
+         y = "Daily Survival Rate"))
+
+
+
 Forb.pred <- covariate.predictions(plotdata,
                                    data = data.frame(Forb = Forbvalues),
                                    indices = c(2, 16, 28,
-                                               71, 85, 97,
-                                               140, 153, 166))
+                                               77, 91, 103,
+                                               152, 166, 178,
+                                               227, 241, 253))
 
 D1Y2021 <- which(Forb.pred$estimates$par.index == 2)
 D15Y2021 <- which(Forb.pred$estimates$par.index == 16)
 D27Y2021 <- which(Forb.pred$estimates$par.index == 28)
-D1Y2022 <- which(Forb.pred$estimates$par.index == 71)
-D15Y2022 <- which(Forb.pred$estimates$par.index == 85)
-D27Y2022 <- which(Forb.pred$estimates$par.index == 97)
-D1Y2023 <- which(Forb.pred$estimates$par.index == 140)
-D15Y2023 <- which(Forb.pred$estimates$par.index == 153)
-D27Y2023 <- which(Forb.pred$estimates$par.index == 166)
+D1Y2022 <- which(Forb.pred$estimates$par.index == 77)
+D15Y2022 <- which(Forb.pred$estimates$par.index == 91)
+D27Y2022 <- which(Forb.pred$estimates$par.index == 103)
+D1Y2023 <- which(Forb.pred$estimates$par.index == 152)
+D15Y2023 <- which(Forb.pred$estimates$par.index == 166)
+D27Y2023 <- which(Forb.pred$estimates$par.index == 178)
+D1Y2024 <- which(Forb.pred$estimates$par.index == 227)
+D15Y2024 <- which(Forb.pred$estimates$par.index == 241)
+D27Y2024 <- which(Forb.pred$estimates$par.index == 253)
 
 Forb.pred$estimates$Year <- NA
 Forb.pred$estimates$Year[D1Y2021] <- "2021"
@@ -324,6 +392,9 @@ Forb.pred$estimates$Year[D27Y2022] <- "2022"
 Forb.pred$estimates$Year[D1Y2023] <- "2023"
 Forb.pred$estimates$Year[D15Y2023] <- "2023"
 Forb.pred$estimates$Year[D27Y2023] <- "2023"
+Forb.pred$estimates$Year[D1Y2024] <- "2024"
+Forb.pred$estimates$Year[D15Y2024] <- "2024"
+Forb.pred$estimates$Year[D27Y2024] <- "2024"
 
 Forb.pred$estimates$Day <- NA
 Forb.pred$estimates$Day[D1Y2021] <- "Day1"
@@ -335,9 +406,12 @@ Forb.pred$estimates$Day[D27Y2022] <- "Day27"
 Forb.pred$estimates$Day[D1Y2023] <- "Day1"
 Forb.pred$estimates$Day[D15Y2023] <- "Day15"
 Forb.pred$estimates$Day[D27Y2023] <- "Day27"
+Forb.pred$estimates$Day[D1Y2024] <- "Day1"
+Forb.pred$estimates$Day[D15Y2024] <- "Day15"
+Forb.pred$estimates$Day[D27Y2024] <- "Day27"
 
 (GADWforb.plot <- ggplot(transform(Forb.pred$estimates,
-                                   Year = factor(Year, levels = c("2021", "2022", "2023"))), 
+                                   Year = factor(Year, levels = c("2021", "2022", "2023", "2024"))), 
                          aes(x = covdata, 
                              y = estimate,
                              groups = Year,
@@ -347,10 +421,12 @@ Forb.pred$estimates$Day[D27Y2023] <- "Day27"
     scale_linetype_manual(values = c(1, 3, 2)) +
     scale_colour_manual(values = c("#A2A4A2",
                                    "#717F5B",
-                                   "#D4A634")) +
+                                   "#D4A634",
+                                   "goldenrod4")) +
     scale_fill_manual(values = c("#A2A4A2",
                                  "#717F5B",
-                                 "#D4A634")) +
+                                 "#D4A634",
+                                 "goldenrod4")) +
     theme(plot.title = element_text(family = "my_font",                             # select the font for the title
                                     size = 16,
                                     hjust = .5),
@@ -373,64 +449,6 @@ Forb.pred$estimates$Day[D27Y2023] <- "Day27"
     labs(title = "Gadwall",
          color = "Year",
          x = "Forb (Percent Cover)",
-         y = "Daily Survival Rate"))
-
-
-AGE.pred <- covariate.predictions(plotdata,
-                                  data = data.frame(Forb = mean(Forbvalues)),
-                                  indices = c(2:28,
-                                              71:97,
-                                              140:166))
-
-D1Y2021 <- which(AGE.pred$estimates$par.index == 2)
-D1Y2022 <- which(AGE.pred$estimates$par.index == 71)
-D1Y2023 <- which(AGE.pred$estimates$par.index == 140)
-
-AGE.pred$estimates$Year <- NA
-AGE.pred$estimates$Year[D1Y2021] <- "2021"
-AGE.pred$estimates$Year[D1Y2022] <- "2022"
-AGE.pred$estimates$Year[D1Y2023] <- "2023"
-
-AGE.pred$estimates <- fill(AGE.pred$estimates, Year, .direction = "down")
-
-AGE.pred$estimates$Day <- c(1:27)
-
-(GADWage.plot <- ggplot(transform(AGE.pred$estimates,
-                                  Year = factor(Year, levels = c("2021", "2022", "2023"))), 
-                        aes(x = Day, 
-                            y = estimate,
-                            groups = Year,
-                            fill = Year)) +
-    geom_line(linewidth = 1.5,
-              aes(color = Year)) +
-    scale_linetype_manual(values = c(1, 3, 2)) +
-    scale_colour_manual(values = c("#A2A4A2",
-                                   "#717F5B",
-                                   "#D4A634")) +
-    scale_fill_manual(values = c("#A2A4A2",
-                                 "#717F5B",
-                                 "#D4A634")) +
-    theme(plot.title = element_text(family = "my_font",                             # select the font for the title
-                                    size = 16,
-                                    hjust = .5),
-          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-          panel.background = element_rect(fill = NA,                                # make the interior background transparent
-                                          colour = NA),                           # remove any other colors
-          plot.background = element_rect(fill = NA,                                 # make the outer background transparent
-                                         colour = NA),                              # remove any other colors
-          axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text.y = element_text(size = 12, colour = "black"),                    # color the axis text
-          axis.text.x = element_text(size = 12, colour = "black"),
-          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text = element_text(size = 12,                                              # change the size of the axis titles
-                              colour = "black"),                                    # change the color of the axis titles
-          legend.background = element_rect(fill = NA),
-          legend.position = c(.85, .1),
-          legend.box = "horizontal") +
-    labs(title = "Gadwall",
-         color = "Year",
-         x = "Nest Age",
          y = "Daily Survival Rate"))
 
 

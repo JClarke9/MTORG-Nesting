@@ -75,8 +75,38 @@ WEME.pr <- process.data(WEME.surv,
                                    'Nestling'),
                         model = 'Nest')
 
-# Temporal candidate model set
+
+
+# Grazing candidate model set
 WEME1.run <- function()
+{
+  # 5. DSR varies with nest age
+  S.null = list(formula = ~1)
+  
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + grazed)
+  
+  # 4. DSR varies with the previous years grazing intensity
+  S.pDoD = list(formula = ~1 + pDoD)
+  
+  WEME.model.list = create.model.list('Nest')
+  WEME1.results = mark.wrapper(WEME.model.list,
+                               data = WEME.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
+}
+
+# Results of candidate model set
+WEME1.results <- WEME1.run()
+WEME1.results
+
+coef(WEME1.results$S.null)
+confint(WEME1.results$S.null, level = 0.85)
+
+
+
+# Temporal candidate model set
+WEME2.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
@@ -91,21 +121,22 @@ WEME1.run <- function()
   S.year = list(formula = ~1 + Year)
   
   WEME.model.list = create.model.list('Nest')
-  WEME1.results = mark.wrapper(WEME.model.list,
+  WEME2.results = mark.wrapper(WEME.model.list,
                                data = WEME.pr,
                                adjust = FALSE,
                                delete = TRUE)
 }
 
 # Results of candidate model set
-WEME1.results <- WEME1.run()
-WEME1.results
+WEME2.results <- WEME2.run()
+WEME2.results
 
-coef(WEME1.results$S.null)
+coef(WEME2.results$S.null)
+
 
 
 # Biological candidate model set
-WEME2.run <- function()
+WEME3.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
@@ -123,36 +154,6 @@ WEME2.run <- function()
   S.stage = list(formula = ~1 + Nestling)
   
   WEME.model.list = create.model.list('Nest')
-  WEME2.results = mark.wrapper(WEME.model.list,
-                               data = WEME.pr,
-                               adjust = FALSE,
-                               delete = TRUE)
-}
-
-# Results of candidate model set
-WEME2.results <- WEME2.run()
-WEME2.results
-
-coef(WEME2.results$S.stage)
-confint(WEME2.results$S.stage, level = 0.85)
-
-
-# Grazing candidate model set
-WEME3.run <- function()
-{
-  # 5. DSR varies with nest age
-  S.stage = list(formula = ~1 + Nestling)
-  
-  # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + Nestling + grazed)
-  
-  # 3. DSR varies with the number of days a nest experienced grazing
-  S.grazep = list(formula = ~1 + Nestling + grazep)
-  
-  # 4. DSR varies with the previous years grazing intensity
-  S.pDoD = list(formula = ~1 + Nestling + pDoD)
-  
-  WEME.model.list = create.model.list('Nest')
   WEME3.results = mark.wrapper(WEME.model.list,
                                data = WEME.pr,
                                adjust = FALSE,
@@ -165,6 +166,7 @@ WEME3.results
 
 coef(WEME3.results$S.stage)
 confint(WEME3.results$S.stage, level = 0.85)
+
 
 
 # Vegetation candidate model set
@@ -298,12 +300,12 @@ str(WEME.beta)
 WEME.ddl <- make.design.data(WEME.pr) |> 
   as.data.frame()
 
+plotdata <- WEME4.results$S.stage
+
+
 filter(WEME.ddl, 
        S.Nestling == 0 & S.time == 1 & S.Year == 2021| 
          S.Nestling == 1 & S.time == 1 & S.Year == 2021)
-
-plotdata <- WEME4.results$S.stage
-
 
 stage.pred <- covariate.predictions(plotdata,
                                     indices = c(1, 305))

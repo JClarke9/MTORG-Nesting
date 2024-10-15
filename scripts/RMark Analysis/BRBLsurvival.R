@@ -76,20 +76,19 @@ BRBL.pr <- process.data(BRBL.surv,
                                    "Nestling"),
                         model = "Nest")
 
-# Temporal candidate model set
+
+
+# Grazing candidate model set
 BRBL1.run <- function()
 {
-  # 1. DSR varies with time
+  # 1. DSR varies with nest age
   S.null = list(formula = ~1)
   
-  # 2. DSR varies with time
-  S.time = list(formula = ~1 + Time)
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + grazed)
   
-  # 3. DSR varies with quadratic effect of date
-  S.quad = list(formula = ~1 + Time + I(Time^2))
-  
-  # 4. DSR varies with year
-  S.year = list(formula = ~1 + Year)
+  # 3. DSR varies with the previous Year + Nestlings grazing intensity
+  S.pDoD = list(formula = ~1 + pDoD)
   
   BRBL.model.list = create.model.list("Nest")
   BRBL1.results = mark.wrapper(BRBL.model.list,
@@ -102,27 +101,25 @@ BRBL1.run <- function()
 BRBL1.results <- BRBL1.run()
 BRBL1.results
 
-coef(BRBL1.results$S.year)
-confint(BRBL1.results$S.year, level = 0.85)
+coef(BRBL1.results$S.pDoD)
+confint(BRBL1.results$S.pDoD, level = 0.85)
 
 
-# Biological candidate model set
+
+# Temporal candidate model set
 BRBL2.run <- function()
 {
-  # 1. DSR varies with year
-  S.year = list(formula = ~1 + Year)
+  # 1. DSR varies with time
+  S.pDoD = list(formula = ~pDoD)
   
-  # 2. DSR varies with BHCO number
-  S.bhcon = list(formula = ~1 + Year + BHCONum)
+  # 2. DSR varies with time
+  S.time = list(formula = ~1 + pDoD + Time)
   
-  # 2. DSR varies with BHCO number
-  S.bhcop = list(formula = ~1 + Year + BHCOPres)
+  # 3. DSR varies with quadratic effect of date
+  S.quad = list(formula = ~1 + pDoD + Time + I(Time^2))
   
-  # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + Year + NestAge)
-  
-  # 5. DSR varies with nest age
-  S.stage = list(formula = ~1 + Year + Nestling)
+  # 4. DSR varies with year
+  S.year = list(formula = ~1 + pDoD + Year)
   
   BRBL.model.list = create.model.list("Nest")
   BRBL2.results = mark.wrapper(BRBL.model.list,
@@ -135,24 +132,28 @@ BRBL2.run <- function()
 BRBL2.results <- BRBL2.run()
 BRBL2.results
 
-coef(BRBL2.results$S.stage)
-confint(BRBL2.results$S.stage, level = 0.85)
+coef(BRBL2.results$S.year)
+confint(BRBL2.results$S.year, level = 0.85)
 
 
-# Grazing candidate model set
+
+# Biological candidate model set
 BRBL3.run <- function()
 {
+  # 1. DSR varies with year
+  S.year = list(formula = ~1 + pDoD + Year)
+  
+  # 2. DSR varies with BHCO number
+  S.bhcon = list(formula = ~1 + pDoD + Year + BHCONum)
+  
+  # 2. DSR varies with BHCO number
+  S.bhcop = list(formula = ~1 + pDoD + Year + BHCOPres)
+  
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + pDoD + Year + NestAge)
+  
   # 5. DSR varies with nest age
-  S.stage = list(formula = ~1 + Year + Nestling)
-  
-  # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + Year + Nestling + grazed)
-  
-  # 3. DSR varies with the number of days a nest experienced grazing
-  S.grazep = list(formula = ~1 + Year + Nestling + grazep)
-  
-  # 4. DSR varies with the previous Year + Nestlings grazing intensity
-  S.pDoD = list(formula = ~1 + Year + Nestling + pDoD)
+  S.stage = list(formula = ~1 + pDoD + Year + Nestling)
   
   BRBL.model.list = create.model.list("Nest")
   BRBL3.results = mark.wrapper(BRBL.model.list,
@@ -169,41 +170,42 @@ coef(BRBL3.results$S.stage)
 confint(BRBL3.results$S.stage, level = 0.85)
 
 
+
 # Vegetation candidate model set
 BRBL4.run <- function()
 {
   # 5. DSR varies with nest age
-  S.stage = list(formula = ~1 + Year + Nestling)
+  S.stage = list(formula = ~1 + pDoD + Year + Nestling)
   
   # 2. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + Year + Nestling + KBG)
+  S.kbg = list(formula =  ~1 + pDoD + Year + Nestling + KBG)
   
   # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.brome = list(formula = ~1 + Year + Nestling + SmoothB)
+  S.brome = list(formula = ~1 + pDoD + Year + Nestling + SmoothB)
   
   # 4. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + Year + Nestling + Litter)
+  S.lit = list(formula =  ~1 + pDoD + Year + Nestling + Litter)
   
   # 5. DSR varies with Bare
-  S.bare = list(formula =  ~1 + Year + Nestling + Bare)
+  S.bare = list(formula =  ~1 + pDoD + Year + Nestling + Bare)
   
   # 6. DSR varies with Forb
-  S.forb = list(formula =  ~1 + Year + Nestling + Forb)
+  S.forb = list(formula =  ~1 + pDoD + Year + Nestling + Forb)
   
   # 7. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + Year + Nestling + Grasslike)
+  S.grass = list(formula =  ~1 + pDoD + Year + Nestling + Grasslike)
   
   # 8. DSR varies with Woody
-  S.woody = list(formula =  ~1 + Year + Nestling + Woody)
+  S.woody = list(formula =  ~1 + pDoD + Year + Nestling + Woody)
   
   # 9. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + Year + Nestling + LitterD)
+  S.litdep = list(formula =  ~1 + pDoD + Year + Nestling + LitterD)
   
   # 10. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Year + Nestling + Veg.Height)
+  S.height = list(formula =  ~1 + pDoD + Year + Nestling + Veg.Height)
   
   # 11. DSR varies with VOR
-  S.vor = list(formula =  ~1 + Year + Nestling + VOR)
+  S.vor = list(formula =  ~1 + pDoD + Year + Nestling + VOR)
   
   BRBL.model.list = create.model.list("Nest")
   BRBL4.results = mark.wrapper(BRBL.model.list,
@@ -218,6 +220,8 @@ BRBL4.results
 
 coef(BRBL4.results$S.lit)
 confint(BRBL4.results$S.lit, level = 0.85)
+
+
 
 BRBL4.results$S.lit$results$real |> 
   summarize(estimate = mean(estimate),
@@ -267,7 +271,7 @@ BRBL.beta$Variable <- gsub("S:", "", BRBL.beta$Variable)
 
 str(BRBL.beta)
 
-(BRBL.plot <- ggplot(BRBL.beta[2:5,], 
+(BRBL.plot <- ggplot(BRBL.beta[c(2,7),], 
                      aes(x = Variable,
                          y = Coefficient)) +
     geom_hline(yintercept = 0,

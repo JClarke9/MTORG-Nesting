@@ -75,9 +75,42 @@ YHBL.pr <- process.data(YHBL.surv,
                                    "Nestling"),
                         model = "Nest")
 
+
+
+# Grazing candidate model set
+YHBL1.run <- function()
+{
+  # 5. DSR varies with nest age
+  S.null = list(formula = ~1)
+  
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + grazed)
+  
+  # 4. DSR varies with the previous years grazing intensity
+  S.pDoD = list(formula = ~1 + pDoD)
+  
+  YHBL.model.list = create.model.list("Nest")
+  YHBL1.results = mark.wrapper(YHBL.model.list,
+                               data = YHBL.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
+}
+
+# Results of candidate model set
+YHBL1.results <- YHBL1.run()
+YHBL1.results
+
+coef(YHBL1.results$S.pDoD)
+confint(YHBL1.results$S.pDoD, level = 0.85)
+
+coef(YHBL1.results$S.grazed)
+confint(YHBL1.results$S.grazed, level = 0.85)
+
+
+
 # Temporal candidate model set
 # I didn't include year because most years we didn't have many nests
-YHBL1.run <- function()
+YHBL2.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
@@ -96,19 +129,19 @@ YHBL1.run <- function()
 }
 
 # Results of candidate model set
-YHBL1.results <- YHBL1.run()
-YHBL1.results
+YHBL2.results <- YHBL2.run()
+YHBL2.results
 
-coef(YHBL1.results$S.time)
-confint(YHBL1.results$S.time, level = 0.85)
+coef(YHBL2.results$S.time)
+confint(YHBL2.results$S.time, level = 0.85)
 
-coef(YHBL1.results$S.quad)
-confint(YHBL1.results$S.quad, level = 0.85)
+coef(YHBL2.results$S.quad)
+confint(YHBL2.results$S.quad, level = 0.85)
 
 
 
 # Biological candidate model set
-YHBL2.run <- function()
+YHBL3.run <- function()
 {
   # 3. DSR varies with quadratic effect of date
   S.time = list(formula = ~1 + Time)
@@ -126,36 +159,6 @@ YHBL2.run <- function()
   S.stage = list(formula = ~1 + Time + Nestling)
   
   YHBL.model.list = create.model.list("Nest")
-  YHBL2.results = mark.wrapper(YHBL.model.list,
-                               data = YHBL.pr,
-                               adjust = FALSE,
-                               delete = TRUE)
-}
-
-# Results of candidate model set
-YHBL2.results <- YHBL2.run()
-YHBL2.results
-
-coef(YHBL2.results$S.stage)
-confint(YHBL2.results$S.stage, level = 0.85)
-
-
-# Grazing candidate model set
-YHBL3.run <- function()
-{
-  # 5. DSR varies with nest age
-  S.stage = list(formula = ~1 + Time + I(Time^2) + Nestling)
-  
-  # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + Time + I(Time^2) + Nestling + grazed)
-  
-  # 3. DSR varies with the number of days a nest experienced grazing
-  S.grazep = list(formula = ~1 + Time + I(Time^2) + Nestling + grazep)
-  
-  # 4. DSR varies with the previous years grazing intensity
-  S.pDoD = list(formula = ~1 + Time + I(Time^2) + Nestling + pDoD)
-  
-  YHBL.model.list = create.model.list("Nest")
   YHBL3.results = mark.wrapper(YHBL.model.list,
                                data = YHBL.pr,
                                adjust = FALSE,
@@ -166,8 +169,9 @@ YHBL3.run <- function()
 YHBL3.results <- YHBL3.run()
 YHBL3.results
 
-coef(YHBL2.results$S.stage)
-confint(YHBL2.results$S.stage, level = 0.85)
+coef(YHBL3.results$S.stage)
+confint(YHBL3.results$S.stage, level = 0.85)
+
 
 
 # Vegetation candidate model set

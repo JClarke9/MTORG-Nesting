@@ -73,8 +73,37 @@ NOPI.pr <- process.data(NOPI.surv,
                         groups = c("Year"),
                         model = "Nest")
 
-# Temporal candidate model set
+
+
+# Grazing candidate model set
 NOPI1.run <- function()
+{
+  # 1. DSR varies with time
+  S.null = list(formula = ~1)
+  
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + grazed)
+  
+  # 4. DSR varies with the previous  + NestAges grazing intensity
+  S.pDoD = list(formula = ~1 + pDoD)
+  
+  NOPI.model.list = create.model.list("Nest")
+  NOPI1.results = mark.wrapper(NOPI.model.list,
+                               data = NOPI.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
+}
+
+# Results of candidate model set
+NOPI1.results <- NOPI1.run()
+NOPI1.results
+
+coef(NOPI1.results$S.null)
+
+
+
+# Temporal candidate model set
+NOPI2.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
@@ -89,33 +118,10 @@ NOPI1.run <- function()
   S.year = list(formula = ~1 + Year)
   
   NOPI.model.list = create.model.list("Nest")
-  NOPI1.results = mark.wrapper(NOPI.model.list,
-                               data = NOPI.pr,
-                               adjust = FALSE,
-                               delete =TRUE)
-}
-
-# Results of candidate model set
-NOPI1.results <- NOPI1.run()
-NOPI1.results
-
-coef(NOPI1.results$S.null)
-
-
-# Biological candidate model set
-NOPI2.run <- function()
-{
-  # 1. DSR varies with time
-  S.null = list(formula = ~1)
-  
-  # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + NestAge)
-  
-  NOPI.model.list = create.model.list("Nest")
   NOPI2.results = mark.wrapper(NOPI.model.list,
                                data = NOPI.pr,
                                adjust = FALSE,
-                               delete = TRUE)
+                               delete =TRUE)
 }
 
 # Results of candidate model set
@@ -124,20 +130,16 @@ NOPI2.results
 
 coef(NOPI2.results$S.null)
 
-# Grazing candidate model set
+
+
+# Biological candidate model set
 NOPI3.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
   
-  # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + grazed)
-  
-  # 3. DSR varies with the number of days a nest experienced grazing
-  S.grazep = list(formula = ~1 + grazep)
-  
-  # 4. DSR varies with the previous  + NestAges grazing intensity
-  S.pDoD = list(formula = ~1 + pDoD)
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + NestAge)
   
   NOPI.model.list = create.model.list("Nest")
   NOPI3.results = mark.wrapper(NOPI.model.list,
@@ -151,6 +153,7 @@ NOPI3.results <- NOPI3.run()
 NOPI3.results
 
 coef(NOPI3.results$S.null)
+
 
 
 # Vegetation candidate model set

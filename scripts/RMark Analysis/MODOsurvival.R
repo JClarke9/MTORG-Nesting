@@ -76,8 +76,37 @@ MODO.pr <- process.data(MODO.surv,
                                    "Nestling"),
                         model = "Nest")
 
-# Temporal candidate model set
+
+
+# Grazing candidate model set
 MODO1.run <- function()
+{
+  # 5. DSR varies with nest age
+  S.null = list(formula = ~1)
+  
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + grazed)
+  
+  # 4. DSR varies with the previous years grazing intensity
+  S.pDoD = list(formula = ~1 + pDoD)
+  
+  MODO.model.list = create.model.list("Nest")
+  MODO1.results = mark.wrapper(MODO.model.list,
+                               data = MODO.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
+}
+
+# Results of candidate model set
+MODO1.results <- MODO1.run()
+MODO1.results
+
+coef(MODO1.results$S.null)
+
+
+
+# Temporal candidate model set
+MODO2.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
@@ -92,36 +121,6 @@ MODO1.run <- function()
   S.year = list(formula = ~1 + Year)
   
   MODO.model.list = create.model.list("Nest")
-  MODO1.results = mark.wrapper(MODO.model.list,
-                               data = MODO.pr,
-                               adjust = FALSE,
-                               delete = TRUE)
-}
-
-# Results of candidate model set
-MODO1.results <- MODO1.run()
-MODO1.results
-
-coef(MODO1.results$S.year)
-confint(MODO1.results$S.year, level = 0.85)
-
-coef(MODO1.results$S.quad)
-confint(MODO1.results$S.quad, level = 0.85)
-
-
-# Biological candidate model set
-MODO2.run <- function()
-{
-  # 3. DSR varies with quadratic effect of date
-  S.quad = list(formula = ~1 + Time + I(Time^2))
-  
-  # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + Time + I(Time^2) + NestAge)
-  
-  # 5. DSR varies with nest age
-  S.stage = list(formula = ~1 + Time + I(Time^2) + Nestling)
-  
-  MODO.model.list = create.model.list("Nest")
   MODO2.results = mark.wrapper(MODO.model.list,
                                data = MODO.pr,
                                adjust = FALSE,
@@ -132,24 +131,24 @@ MODO2.run <- function()
 MODO2.results <- MODO2.run()
 MODO2.results
 
-coef(MODO2.results$S.stage)
-confint(MODO2.results$S.stage, level = 0.85)
+coef(MODO2.results$S.year)
+confint(MODO2.results$S.year, level = 0.85)
+
+coef(MODO2.results$S.quad)
+confint(MODO2.results$S.quad, level = 0.85)
 
 
-# Grazing candidate model set
+# Biological candidate model set
 MODO3.run <- function()
 {
+  # 3. DSR varies with quadratic effect of date
+  S.quad = list(formula = ~1 + Time + I(Time^2))
+  
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + Time + I(Time^2) + NestAge)
+  
   # 5. DSR varies with nest age
   S.stage = list(formula = ~1 + Time + I(Time^2) + Nestling)
-  
-  # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + Time + I(Time^2) + Nestling + grazed)
-  
-  # 3. DSR varies with the number of days a nest experienced grazing
-  S.grazep = list(formula = ~1 + Time + I(Time^2) + Nestling + grazep)
-  
-  # 4. DSR varies with the previous years grazing intensity
-  S.pDoD = list(formula = ~1 + Time + I(Time^2) + Nestling + pDoD)
   
   MODO.model.list = create.model.list("Nest")
   MODO3.results = mark.wrapper(MODO.model.list,
@@ -164,6 +163,7 @@ MODO3.results
 
 coef(MODO3.results$S.stage)
 confint(MODO3.results$S.stage, level = 0.85)
+
 
 
 # Vegetation candidate model set
@@ -232,7 +232,7 @@ MODO4.results$S.kbg$results$real |>
       grepl("20211", Group) ~ "Nestling",
       grepl("20221", Group) ~ "Nestling",
       grepl("20231", Group) ~ "Nestling",
-      grepl("20231", Group) ~ "Nestling")) |> 
+      grepl("20241", Group) ~ "Nestling")) |> 
     group_by(Stage) |> 
     summarize(estimate = mean(estimate), 
               se = mean(se), 
@@ -378,11 +378,11 @@ stage.pred$estimates$Stage[nst] <- "Nestling"
 
 stage.pred$estimates <- fill(stage.pred$estimates, Stage, .direction = "down")
 
-stage.pred$estimates$Day <- c(1, 18, 36, 54, 72)
+stage.pred$estimates$Day <- c(1, 18, 36, 54, 74)
 
 (MODOstage.plot <- ggplot(transform(stage.pred$estimates,
                                     Day = factor(Day, levels = c("1", "18", "36",
-                                                                 "54", "72"))), 
+                                                                 "54", "74"))), 
                           aes(x = Stage, 
                               y = estimate,
                               groups = Day,
@@ -555,3 +555,4 @@ rm(list = ls(all = TRUE))
 # Then, execute 'cleanup(ask = FALSE)' to delete orphaned output
 # files from MARK. Execute '?cleanup' to learn more
 cleanup(ask = FALSE)
+

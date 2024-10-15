@@ -74,8 +74,37 @@ BWTE.pr <- process.data(BWTE.surv,
                         groups = "Year",
                         model = "Nest")
 
-# Temporal candidate model set
+
+
+# Grazing candidate model set
 BWTE1.run <- function()
+{
+  # 4. DSR varies with nest age
+  S.null = list(formula = ~1)
+  
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + grazed)
+  
+  # 4. DSR varies with the previous Year + NestAges grazing intensity
+  S.pDoD = list(formula = ~1 + pDoD)
+  
+  BWTE.model.list = create.model.list("Nest")
+  BWTE1.results = mark.wrapper(BWTE.model.list,
+                               data = BWTE.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
+}
+
+# Results of candidate model set
+BWTE1.results <- BWTE1.run()
+BWTE1.results
+
+coef(BWTE1.results$S.null)
+
+
+
+# Temporal candidate model set
+BWTE2.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
@@ -90,22 +119,23 @@ BWTE1.run <- function()
   S.year = list(formula = ~1 + Year)
   
   BWTE.model.list = create.model.list("Nest")
-  BWTE1.results = mark.wrapper(BWTE.model.list,
+  BWTE2.results = mark.wrapper(BWTE.model.list,
                                data = BWTE.pr,
                                adjust = FALSE,
                                delete = TRUE)
 }
 
 # Results of candidate model set
-BWTE1.results <- BWTE1.run()
-BWTE1.results
+BWTE2.results <- BWTE2.run()
+BWTE2.results
 
-coef(BWTE1.results$S.year)
-confint(BWTE1.results$S.year, level = 0.85)
+coef(BWTE2.results$S.year)
+confint(BWTE2.results$S.year, level = 0.85)
+
 
 
 # Biological candidate model set
-BWTE2.run <- function()
+BWTE3.run <- function()
 {
   # 4. DSR varies with year
   S.year = list(formula = ~1 + Year)
@@ -121,41 +151,12 @@ BWTE2.run <- function()
 }
 
 # Results of candidate model set
-BWTE2.results <- BWTE2.run()
-BWTE2.results
-
-coef(BWTE2.results$S.age)
-confint(BWTE2.results$S.age, level = 0.85)
-
-
-# Grazing candidate model set
-BWTE3.run <- function()
-{
-  # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + Year + NestAge)
-  
-  # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + Year + NestAge + grazed)
-  
-  # 3. DSR varies with the number of days a nest experienced grazing
-  S.grazep = list(formula = ~1 + Year + NestAge + grazep)
-  
-  # 4. DSR varies with the previous Year + NestAges grazing intensity
-  S.pDoD = list(formula = ~1 + Year + NestAge + pDoD)
-  
-  BWTE.model.list = create.model.list("Nest")
-  BWTE3.results = mark.wrapper(BWTE.model.list,
-                               data = BWTE.pr,
-                               adjust = FALSE,
-                               delete = TRUE)
-}
-
-# Results of candidate model set
 BWTE3.results <- BWTE3.run()
 BWTE3.results
 
 coef(BWTE3.results$S.age)
 confint(BWTE3.results$S.age, level = 0.85)
+
 
 
 # Vegetation candidate model set
@@ -208,6 +209,8 @@ BWTE4.results
 coef(BWTE4.results$S.height)
 confint(BWTE4.results$S.height, level = 0.85)
 
+
+
 BWTE4.results$S.height$results$real |> 
   summarize(estimate = mean(estimate),
             se = mean(se),
@@ -244,7 +247,7 @@ BWTE.beta$Variable <- gsub("S:", "", BWTE.beta$Variable)
 
 str(BWTE.beta)
 
-(BWTE.plot <- ggplot(BWTE.beta[2:5,], 
+(BWTE.plot <- ggplot(BWTE.beta[5:6,], 
                      aes(x = Variable,
                          y = Coefficient)) +
     geom_hline(yintercept = 0,

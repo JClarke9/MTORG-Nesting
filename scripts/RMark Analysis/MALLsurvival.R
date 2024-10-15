@@ -73,8 +73,37 @@ MALL.pr <- process.data(MALL.surv,
                         groups = c("Year"),
                         model = "Nest")
 
-# Temporal candidate model set
+
+
+# Grazing candidate model set
 MALL1.run <- function()
+{
+  # 1. DSR varies with time
+  S.null = list(formula = ~1)
+  
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + grazed)
+  
+  # 4. DSR varies with the previous  + NestAges grazing intensity
+  S.pDoD = list(formula = ~1 + pDoD)
+  
+  MALL.model.list = create.model.list("Nest")
+  MALL1.results = mark.wrapper(MALL.model.list,
+                               data = MALL.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
+}
+
+# Results of candidate model set
+MALL1.results <- MALL1.run()
+MALL1.results
+
+coef(MALL1.results$S.null)
+
+
+
+# Temporal candidate model set
+MALL2.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
@@ -89,33 +118,10 @@ MALL1.run <- function()
   S.year = list(formula = ~1 + Year)
   
   MALL.model.list = create.model.list("Nest")
-  MALL1.results = mark.wrapper(MALL.model.list,
-                               data = MALL.pr,
-                               adjust = FALSE,
-                               delete =TRUE)
-}
-
-# Results of candidate model set
-MALL1.results <- MALL1.run()
-MALL1.results
-
-coef(MALL1.results$S.null)
-
-
-# Biological candidate model set
-MALL2.run <- function()
-{
-  # 1. DSR varies with time
-  S.null = list(formula = ~1)
-  
-  # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + NestAge)
-  
-  MALL.model.list = create.model.list("Nest")
   MALL2.results = mark.wrapper(MALL.model.list,
                                data = MALL.pr,
                                adjust = FALSE,
-                               delete = TRUE)
+                               delete =TRUE)
 }
 
 # Results of candidate model set
@@ -124,20 +130,16 @@ MALL2.results
 
 coef(MALL2.results$S.null)
 
-# Grazing candidate model set
+
+
+# Biological candidate model set
 MALL3.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
   
-  # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + grazed)
-  
-  # 3. DSR varies with the number of days a nest experienced grazing
-  S.grazep = list(formula = ~1 + grazep)
-  
-  # 4. DSR varies with the previous  + NestAges grazing intensity
-  S.pDoD = list(formula = ~1 + pDoD)
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + NestAge)
   
   MALL.model.list = create.model.list("Nest")
   MALL3.results = mark.wrapper(MALL.model.list,
@@ -151,6 +153,7 @@ MALL3.results <- MALL3.run()
 MALL3.results
 
 coef(MALL3.results$S.null)
+
 
 
 # Vegetation candidate model set
@@ -168,8 +171,8 @@ MALL4.run <- function()
   # 4. DSR varies with Litter (correlated with KBG)
   S.lit = list(formula =  ~1 + Litter)
   
-  # 5. DSR varies with Bare
-  S.bare = list(formula =  ~1 + Bare)
+  # 5. DSR varies with Bare - most of the bare was 0
+  # S.bare = list(formula =  ~1 + Bare)
   
   # 6. DSR varies with Forb
   S.forb = list(formula =  ~1 + Forb)
@@ -200,17 +203,17 @@ MALL4.run <- function()
 MALL4.results <- MALL4.run()
 MALL4.results
 
-coef(MALL4.results$S.bare)
-confint(MALL4.results$S.bare, level = 0.85)
+coef(MALL4.results$S.lit)
+confint(MALL4.results$S.lit, level = 0.85)
 
-(MALL.dsr <- as.data.frame(MALL4.results$S.bare$results$real))
+(MALL.dsr <- as.data.frame(MALL4.results$S.lit$results$real))
 
 
 # Plotting beta coefficients ----------------------------------------------
 
 
-MALL.beta <- coef(MALL4.results$S.vor) |>
-  cbind(confint(MALL4.results$S.vor, level = 0.85)) |> 
+MALL.beta <- coef(MALL4.results$S.lit) |>
+  cbind(confint(MALL4.results$S.lit, level = 0.85)) |> 
   select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
@@ -263,16 +266,16 @@ str(MALL.beta)
 MALL.ddl <- make.design.data(MALL.pr) |> 
   as.data.frame()
 
-VORvalues <- seq(from = min(MALL.surv$VOR),
-                 to = max(MALL.surv$VOR),
+Litter.values <- seq(from = min(MALL.surv$Litter),
+                 to = max(MALL.surv$Litter),
                  length = 100)
 
 
-VOR.pred <- covariate.predictions(MALL4.results$S.vor,
-                                  data = data.frame(VOR = VORvalues),
+lit.pred <- covariate.predictions(MALL4.results$S.lit,
+                                  data = data.frame(Litter = Litter.values),
                                   indices = 1)
 
-(MALLvor.plot <- ggplot(VOR.pred$estimates, 
+(MALLlit.plot <- ggplot(lit.pred$estimates, 
                         aes(x = covdata, 
                             y = estimate)) +
     geom_line(linewidth = 1.5,
@@ -296,9 +299,9 @@ VOR.pred <- covariate.predictions(MALL4.results$S.vor,
                               colour = "black"),                                    # change the color of the axis titles
           legend.background = element_rect(fill = NA),
           legend.position = "none") +
-    labs(title = "Northern Pintail",
+    labs(title = "Mallard",
          color = "Year",
-         x = "Visual Obstruction (dm)",
+         x = "Litter (Percent Cover)",
          y = "Daily Survival Rate"))
 
 
@@ -309,8 +312,8 @@ ggsave(MALL.plot,
        height = 6,
        width = 6)
 
-ggsave(MALLvor.plot,
-       filename = "outputs/figs/vorMALL.png",
+ggsave(MALLlit.plot,
+       filename = "outputs/figs/litMALL.png",
        dpi = "print",
        bg = "white",
        height = 6,

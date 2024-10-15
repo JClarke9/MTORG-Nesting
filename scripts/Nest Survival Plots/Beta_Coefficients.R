@@ -22,7 +22,7 @@ nest$Nestling <- factor(nest$Nestling,
                         levels = c("0", "1"))
 
 nest$Year <- factor(nest$Year,
-                    levels = c("2021", "2022", "2023"))
+                    levels = c("2021", "2022", "2023", "2024"))
 
 # This loop creates a new data frame for each species and removes any
 # dataframes from the environment that aren't over 30 observations.
@@ -82,7 +82,7 @@ BRBL.trt <- mark(BRBL.surv,
                             "Nestling"),
                  adjust = FALSE,
                  delete = TRUE, 
-                 model.parameters = list(S = list(formula =  ~1 + Year + Nestling + Litter)))
+                 model.parameters = list(S = list(formula =  ~1 + pDod + Year + Nestling + Litter)))
 
 CCSP.trt <- mark(CCSP.surv, 
                  nocc = max(CCSP.surv$LastChecked), 
@@ -107,7 +107,7 @@ RWBL.trt <- mark(RWBL.surv,
                  groups = "Nestling",
                  adjust = FALSE,
                  delete = TRUE, 
-                 model.parameters = list(S = list(formula =  ~1 + Time + I(Time^2) + Nestling + grazed)))
+                 model.parameters = list(S = list(formula =  ~1 + Time + I(Time^2) + Nestling)))
 
 GADW.trt <- mark(GADW.surv, 
                  nocc = max(GADW.surv$LastChecked), 
@@ -115,7 +115,7 @@ GADW.trt <- mark(GADW.surv,
                  groups = "Year",
                  adjust = FALSE,
                  delete = TRUE, 
-                 model.parameters = list(S = list(formula =  ~1 + Year + NestAge + Forb)))
+                 model.parameters = list(S = list(formula =  ~1 + grazed + Year + NestAge + Forb)))
 
 NOPI.trt <- mark(NOPI.surv, 
                  nocc = max(NOPI.surv$LastChecked), 
@@ -131,6 +131,22 @@ BWTE.trt <- mark(BWTE.surv,
                  adjust = FALSE,
                  delete = TRUE, 
                  model.parameters = list(S = list(formula =  ~1 + Year + NestAge + Veg.Height)))
+
+MALL.trt <- mark(MALL.surv, 
+                 nocc = max(MALL.surv$LastChecked), 
+                 model = "Nest",
+                 groups = "Year",
+                 adjust = FALSE,
+                 delete = TRUE, 
+                 model.parameters = list(S = list(formula =  ~1 + Litter)))
+
+NSHO.trt <- mark(NSHO.surv, 
+                 nocc = max(NSHO.surv$LastChecked), 
+                 model = "Nest",
+                 groups = "Year",
+                 adjust = FALSE,
+                 delete = TRUE, 
+                 model.parameters = list(S = list(formula =  ~1 + SmoothB)))
 
 
 # Pull out Beta coefficients ----------------------------------------------
