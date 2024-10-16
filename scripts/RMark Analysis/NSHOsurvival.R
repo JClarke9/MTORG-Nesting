@@ -102,7 +102,6 @@ NSHO1.results <- NSHO1.run()
 NSHO1.results
 
 coef(NSHO1.results$S.null)
-confint(NSHO1.results$S.null, level = 0.85)
 
 
 
@@ -127,7 +126,6 @@ NSHO2.results <- NSHO2.run()
 NSHO2.results
 
 coef(NSHO2.results$S.null)
-confint(NSHO2.results$S.mull, level = 0.85)
 
 
 # Grazing candidate model set
@@ -154,7 +152,6 @@ NSHO3.results <- NSHO3.run()
 NSHO3.results
 
 coef(NSHO3.results$S.null)
-confint(NSHO3.results$S.null, level = 0.85)
 
 
 

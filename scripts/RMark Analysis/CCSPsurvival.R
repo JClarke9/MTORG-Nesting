@@ -243,19 +243,24 @@ confint(CCSP5.results$S.bare, level = 0.85)
 coef(CCSP5.results$S.litdep)
 confint(CCSP5.results$S.litdep, level = 0.85)
 
-CCSP5.results$S.bare$results$real |> 
+
+CCSP6.results <- mark(CCSP.surv, 
+                      nocc = max(CCSP.surv$LastChecked), 
+                      model = "Nest", 
+                      groups = c("Year",
+                                 "Nestling"),
+                      adjust = FALSE,
+                      delete = TRUE, 
+                      model.parameters = list(S = list(formula = ~1 + Year + Nestling + LitterD + Bare)))
+
+
+CCSP6.results$results$real |> 
   summarize(estimate = mean(estimate),
             se = mean(se),
             lcl = mean(lcl),
             ucl = mean(ucl))
 
-CCSP5.results$S.litdep$results$real |> 
-  summarize(estimate = mean(estimate),
-            se = mean(se),
-            lcl = mean(lcl),
-            ucl = mean(ucl))
-
-(CCSP.realBARE <- as.data.frame(CCSP5.results$S.bare$results$real) |> 
+(CCSP.real <- as.data.frame(CCSP6.results$results$real) |> 
     rownames_to_column(var = "Group") |> 
     mutate(Year = case_when(
       grepl("2021", Group) ~ "2021",
@@ -273,38 +278,11 @@ CCSP5.results$S.litdep$results$real |>
         grepl("20241", Group) ~ "Nestling")) |> 
     select(Year, Stage, estimate, se, lcl, ucl))
 
-(CCSP.realLITDEP <- as.data.frame(CCSP5.results$S.litdep$results$real) |> 
-    rownames_to_column(var = "Group") |> 
-    mutate(Year = case_when(
-      grepl("2021", Group) ~ "2021",
-      grepl("2022", Group) ~ "2022",
-      grepl("2023", Group) ~ "2023",
-      grepl("2024", Group) ~ "2024"),
-      Stage = case_when(
-        grepl("20210", Group) ~ "Incubating",
-        grepl("20220", Group) ~ "Incubating",
-        grepl("20230", Group) ~ "Incubating",
-        grepl("20240", Group) ~ "Incubating",
-        grepl("20211", Group) ~ "Nestling",
-        grepl("20221", Group) ~ "Nestling",
-        grepl("20231", Group) ~ "Nestling",
-        grepl("20241", Group) ~ "Nestling")) |> 
-    select(Year, Stage, estimate, se, lcl, ucl))
-
-(CCSP.year <- CCSP.realBARE |> 
+(CCSP.year <- CCSP.real |> 
     group_by(Year) |> 
     summarize(mean = mean(estimate)))
 
-(CCSP.stage <- CCSP.realBARE |> 
-    group_by(Stage) |> 
-    summarize(mean = mean(estimate)))
-
-
-(CCSP.year <- CCSP.realLITDEP |> 
-    group_by(Year) |> 
-    summarize(mean = mean(estimate)))
-
-(CCSP.stage <- CCSP.realLITDEP |> 
+(CCSP.stage <- CCSP.real |> 
     group_by(Stage) |> 
     summarize(mean = mean(estimate)))
 
@@ -314,8 +292,8 @@ CCSP5.results$S.litdep$results$real |>
 # I need to model average my estimates
 
 
-CCSP.beta <- coef(CCSP4.results$S.stage) |>
-  cbind(confint(CCSP4.results$S.stage, level = 0.85)) |> 
+CCSP.beta <- coef(CCSP6.results) |>
+  cbind(confint(CCSP6.results, level = 0.85)) |> 
   select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
@@ -326,7 +304,7 @@ CCSP.beta$Variable <- gsub("S:", "", CCSP.beta$Variable)
 
 str(CCSP.beta)
 
-(CCSP.plot <- ggplot(CCSP.beta[4,], 
+(CCSP.plot <- ggplot(CCSP.beta[6:7,], 
                      aes(x = Variable,
                          y = Coefficient)) +
     geom_hline(yintercept = 0,
@@ -368,39 +346,57 @@ str(CCSP.beta)
 CCSP.ddl <- make.design.data(CCSP.pr) |> 
   as.data.frame()
 
+plotdata <- CCSP6.results
+
+barevalues <- seq(from = min(CCSP.surv$Bare),
+                  to = max(CCSP.surv$Bare),
+                  length = 100)
+
+litdvalues <- seq(from = min(CCSP.surv$LitterD),
+                  to = max(CCSP.surv$LitterD),
+                  length = 100)
+
+
+
 filter(CCSP.ddl, S.age == 0)
 
-plotdata <- CCSP4.results$S.stage
-
 stage.pred <- covariate.predictions(plotdata,
-                                    indices = c(1, 79, 157,
-                                                235, 313, 391))
+                                    data = data.frame(Bare = mean(barevalues),
+                                                      LitterD = mean(litdvalues)),
+                                    indices = c(1, 89, 177, 265, 
+                                                353, 441, 529, 617))
 
 inc2021 <- which(stage.pred$estimates$par.index == 1)
-inc2022 <- which(stage.pred$estimates$par.index == 79)
-inc2023 <- which(stage.pred$estimates$par.index == 157)
-nst2021 <- which(stage.pred$estimates$par.index == 235)
-nst2022 <- which(stage.pred$estimates$par.index == 313)
-nst2023 <- which(stage.pred$estimates$par.index == 391)
+inc2022 <- which(stage.pred$estimates$par.index == 89)
+inc2023 <- which(stage.pred$estimates$par.index == 177)
+inc2024 <- which(stage.pred$estimates$par.index == 265)
+nst2021 <- which(stage.pred$estimates$par.index == 353)
+nst2022 <- which(stage.pred$estimates$par.index == 441)
+nst2023 <- which(stage.pred$estimates$par.index == 529)
+nst2024 <- which(stage.pred$estimates$par.index == 617)
 
 stage.pred$estimates$Year <- NA
 stage.pred$estimates$Year[inc2021] <- "2021"
 stage.pred$estimates$Year[inc2022] <- "2022"
 stage.pred$estimates$Year[inc2023] <- "2023"
+stage.pred$estimates$Year[inc2024] <- "2024"
 stage.pred$estimates$Year[nst2021] <- "2021"
 stage.pred$estimates$Year[nst2022] <- "2022"
 stage.pred$estimates$Year[nst2023] <- "2023"
+stage.pred$estimates$Year[nst2024] <- "2024"
 
 stage.pred$estimates$Stage <- NA
 stage.pred$estimates$Stage[inc2021] <- "Incubating"
 stage.pred$estimates$Stage[inc2022] <- "Incubating"
 stage.pred$estimates$Stage[inc2023] <- "Incubating"
+stage.pred$estimates$Stage[inc2024] <- "Incubating"
 stage.pred$estimates$Stage[nst2021] <- "Nestling"
 stage.pred$estimates$Stage[nst2022] <- "Nestling"
 stage.pred$estimates$Stage[nst2023] <- "Nestling"
+stage.pred$estimates$Stage[nst2024] <- "Nestling"
 
 (CCSPstage.plot <- ggplot(transform(stage.pred$estimates,
-                                    Year = factor(Year, levels = c("2021", "2022", "2023"))), 
+                                    Year = factor(Year, levels = c("2021", "2022", "2023", "2024"))), 
                           aes(x = Stage, 
                               y = estimate,
                               groups = Year,
@@ -410,10 +406,12 @@ stage.pred$estimates$Stage[nst2023] <- "Nestling"
     scale_linetype_manual(values = c(1, 3, 2)) +
     scale_colour_manual(values = c("#A2A4A2",
                                    "#717F5B",
-                                   "#D4A634")) +
+                                   "#D4A634",
+                                   "goldenrod4")) +
     scale_fill_manual(values = c("#A2A4A2",
                                  "#717F5B",
-                                 "#D4A634")) +
+                                 "#D4A634",
+                                 "goldenrod4")) +
     theme(plot.title = element_text(family = "my_font",                             # select the font for the title
                                     size = 16,
                                     hjust = .5),
@@ -438,6 +436,160 @@ stage.pred$estimates$Stage[nst2023] <- "Nestling"
          y = "Daily Survival Rate"))
 
 
+bare.pred <- covariate.predictions(plotdata,
+                                   data = data.frame(Bare = barevalues,
+                                                     LitterD = mean(litdvalues)),
+                                   indices = c(1, 89, 177, 265, 
+                                               353, 441, 529, 617))
+
+inc2021 <- which(bare.pred$estimates$par.index == 1)
+inc2022 <- which(bare.pred$estimates$par.index == 89)
+inc2023 <- which(bare.pred$estimates$par.index == 177)
+inc2024 <- which(bare.pred$estimates$par.index == 265)
+nst2021 <- which(bare.pred$estimates$par.index == 353)
+nst2022 <- which(bare.pred$estimates$par.index == 441)
+nst2023 <- which(bare.pred$estimates$par.index == 529)
+nst2024 <- which(bare.pred$estimates$par.index == 617)
+
+bare.pred$estimates$Year <- NA
+bare.pred$estimates$Year[inc2021] <- "2021"
+bare.pred$estimates$Year[inc2022] <- "2022"
+bare.pred$estimates$Year[inc2023] <- "2023"
+bare.pred$estimates$Year[inc2024] <- "2024"
+bare.pred$estimates$Year[nst2021] <- "2021"
+bare.pred$estimates$Year[nst2022] <- "2022"
+bare.pred$estimates$Year[nst2023] <- "2023"
+bare.pred$estimates$Year[nst2024] <- "2024"
+
+bare.pred$estimates$Stage <- NA
+bare.pred$estimates$Stage[inc2021] <- "Incubating"
+bare.pred$estimates$Stage[inc2022] <- "Incubating"
+bare.pred$estimates$Stage[inc2023] <- "Incubating"
+bare.pred$estimates$Stage[inc2024] <- "Incubating"
+bare.pred$estimates$Stage[nst2021] <- "Nestling"
+bare.pred$estimates$Stage[nst2022] <- "Nestling"
+bare.pred$estimates$Stage[nst2023] <- "Nestling"
+bare.pred$estimates$Stage[nst2024] <- "Nestling"
+
+(CCSPbare.plot <- ggplot(transform(bare.pred$estimates,
+                                    Year = factor(Year, levels = c("2021", "2022", "2023", "2024"))), 
+                          aes(x = Bare, 
+                              y = estimate,
+                              groups = Year,
+                              fill = Year)) +
+    geom_line(linewidth = 1.5,
+              aes(color = Year)) +
+    scale_linetype_manual(values = c(1, 3, 2)) +
+    scale_colour_manual(values = c("#A2A4A2",
+                                   "#717F5B",
+                                   "#D4A634",
+                                   "goldenrod4")) +
+    scale_fill_manual(values = c("#A2A4A2",
+                                 "#717F5B",
+                                 "#D4A634",
+                                 "goldenrod4")) +
+    theme(plot.title = element_text(family = "my_font",                             # select the font for the title
+                                    size = 16,
+                                    hjust = .5),
+          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+          panel.background = element_rect(fill = NA,                                # make the interior background transparent
+                                          colour = NA),                           # remove any other colors
+          plot.background = element_rect(fill = NA,                                 # make the outer background transparent
+                                         colour = NA),                              # remove any other colors
+          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.text.y = element_text(size = 12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size = 12, colour = "black"),
+          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          text = element_text(size = 12,                                              # change the size of the axis titles
+                              colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill = NA),
+          legend.position = c(.85, .1),
+          legend.box = "horizontal") +
+    facet_grid(~Stage) + 
+    labs(title = "Clay-colored Sparrow",
+         color = "Year",
+         x = "Bare Ground (Percent Cover)",
+         y = "Daily Survival Rate"))
+
+
+litd.pred <- covariate.predictions(plotdata,
+                                   data = data.frame(Bare = mean(barevalues),
+                                                     LitterD = litdvalues),
+                                   indices = c(1, 89, 177, 265, 
+                                               353, 441, 529, 617))
+
+inc2021 <- which(litd.pred$estimates$par.index == 1)
+inc2022 <- which(litd.pred$estimates$par.index == 89)
+inc2023 <- which(litd.pred$estimates$par.index == 177)
+inc2024 <- which(litd.pred$estimates$par.index == 265)
+nst2021 <- which(litd.pred$estimates$par.index == 353)
+nst2022 <- which(litd.pred$estimates$par.index == 441)
+nst2023 <- which(litd.pred$estimates$par.index == 529)
+nst2024 <- which(litd.pred$estimates$par.index == 617)
+
+litd.pred$estimates$Year <- NA
+litd.pred$estimates$Year[inc2021] <- "2021"
+litd.pred$estimates$Year[inc2022] <- "2022"
+litd.pred$estimates$Year[inc2023] <- "2023"
+litd.pred$estimates$Year[inc2024] <- "2024"
+litd.pred$estimates$Year[nst2021] <- "2021"
+litd.pred$estimates$Year[nst2022] <- "2022"
+litd.pred$estimates$Year[nst2023] <- "2023"
+litd.pred$estimates$Year[nst2024] <- "2024"
+
+litd.pred$estimates$Stage <- NA
+litd.pred$estimates$Stage[inc2021] <- "Incubating"
+litd.pred$estimates$Stage[inc2022] <- "Incubating"
+litd.pred$estimates$Stage[inc2023] <- "Incubating"
+litd.pred$estimates$Stage[inc2024] <- "Incubating"
+litd.pred$estimates$Stage[nst2021] <- "Nestling"
+litd.pred$estimates$Stage[nst2022] <- "Nestling"
+litd.pred$estimates$Stage[nst2023] <- "Nestling"
+litd.pred$estimates$Stage[nst2024] <- "Nestling"
+
+(CCSPlitd.plot <- ggplot(transform(litd.pred$estimates,
+                                   Year = factor(Year, levels = c("2021", "2022", "2023", "2024"))), 
+                         aes(x = LitterD, 
+                             y = estimate,
+                             groups = Year,
+                             fill = Year)) +
+    geom_line(linewidth = 1.5,
+              aes(color = Year)) +
+    scale_linetype_manual(values = c(1, 3, 2)) +
+    scale_colour_manual(values = c("#A2A4A2",
+                                   "#717F5B",
+                                   "#D4A634",
+                                   "goldenrod4")) +
+    scale_fill_manual(values = c("#A2A4A2",
+                                 "#717F5B",
+                                 "#D4A634",
+                                 "goldenrod4")) +
+    theme(plot.title = element_text(family = "my_font",                             # select the font for the title
+                                    size = 16,
+                                    hjust = .5),
+          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+          panel.background = element_rect(fill = NA,                                # make the interior background transparent
+                                          colour = NA),                           # remove any other colors
+          plot.background = element_rect(fill = NA,                                 # make the outer background transparent
+                                         colour = NA),                              # remove any other colors
+          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.text.y = element_text(size = 12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size = 12, colour = "black"),
+          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          text = element_text(size = 12,                                              # change the size of the axis titles
+                              colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill = NA),
+          legend.position = c(.85, .1),
+          legend.box = "horizontal") +
+    facet_grid(~Stage) + 
+    labs(title = "Clay-colored Sparrow",
+         color = "Year",
+         x = "Litter Depth (mm)",
+         y = "Daily Survival Rate"))
+
+
 ggsave(CCSP.plot,
        filename = "outputs/figs/betaCCSP.png",
        dpi = "print",
@@ -447,6 +599,20 @@ ggsave(CCSP.plot,
 
 ggsave(CCSPstage.plot,
        filename = "outputs/figs/stageCCSP.png",
+       dpi = "print",
+       bg = "white",
+       height = 6,
+       width = 6)
+
+ggsave(CCSPbare.plot,
+       filename = "outputs/figs/bareCCSP.png",
+       dpi = "print",
+       bg = "white",
+       height = 6,
+       width = 6)
+
+ggsave(CCSPlitd.plot,
+       filename = "outputs/figs/litdCCSP.png",
        dpi = "print",
        bg = "white",
        height = 6,

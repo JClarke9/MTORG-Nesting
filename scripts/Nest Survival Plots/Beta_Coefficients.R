@@ -82,7 +82,7 @@ BRBL.trt <- mark(BRBL.surv,
                             "Nestling"),
                  adjust = FALSE,
                  delete = TRUE, 
-                 model.parameters = list(S = list(formula =  ~1 + pDod + Year + Nestling + Litter)))
+                 model.parameters = list(S = list(formula =  ~1 + Year + Nestling + Litter)))
 
 CCSP.trt <- mark(CCSP.surv, 
                  nocc = max(CCSP.surv$LastChecked), 
@@ -91,15 +91,16 @@ CCSP.trt <- mark(CCSP.surv,
                             "Nestling"),
                  adjust = FALSE,
                  delete = TRUE, 
-                 model.parameters = list(S = list(formula =  ~1 + Year + Nestling)))
+                 model.parameters = list(S = list(formula =  ~1 + Year + Nestling + LitterD + Bare)))
 
 MODO.trt <- mark(MODO.surv, 
                  nocc = max(MODO.surv$LastChecked), 
                  model = "Nest", 
-                 groups = "Nestling",
+                 groups = c("Year",
+                            "Nestling"),
                  adjust = FALSE,
                  delete = TRUE, 
-                 model.parameters = list(S = list(formula =  ~1 + Time + I(Time^2) + Nestling + KBG)))
+                 model.parameters = list(S = list(formula =  ~1 + Year + Time + I(Time^2) + Nestling + KBG)))
 
 RWBL.trt <- mark(RWBL.surv, 
                  nocc = max(RWBL.surv$LastChecked), 
@@ -107,7 +108,7 @@ RWBL.trt <- mark(RWBL.surv,
                  groups = "Nestling",
                  adjust = FALSE,
                  delete = TRUE, 
-                 model.parameters = list(S = list(formula =  ~1 + Time + Nestling)))
+                 model.parameters = list(S = list(formula =  ~1 + Time + Nestling + BHCONum)))
 
 GADW.trt <- mark(GADW.surv, 
                  nocc = max(GADW.surv$LastChecked), 
@@ -115,7 +116,7 @@ GADW.trt <- mark(GADW.surv,
                  groups = "Year",
                  adjust = FALSE,
                  delete = TRUE, 
-                 model.parameters = list(S = list(formula =  ~1 + grazed + Year + NestAge + Forb)))
+                 model.parameters = list(S = list(formula =  ~1 + Year + NestAge + grazed + pDoD + Forb)))
 
 NOPI.trt <- mark(NOPI.surv, 
                  nocc = max(NOPI.surv$LastChecked), 
@@ -224,6 +225,24 @@ BWTE.beta <- coef(BWTE.trt) |>
            "ucl" = "92.5 %")) |> 
   mutate(Species = "BWTE")
 
+MALL.beta <- coef(MALL.trt) |>
+  cbind(confint(MALL.trt, level = 0.85)) |> 
+  select(estimate, `7.5 %`, `92.5 %`) |> 
+  rownames_to_column(var = "Variable") |> 
+  rename(c("Coefficient" = "estimate",
+           "lcl" = "7.5 %",
+           "ucl" = "92.5 %")) |> 
+  mutate(Species = "MALL")
+
+NSHO.beta <- coef(NSHO.trt) |>
+  cbind(confint(NSHO.trt, level = 0.85)) |> 
+  select(estimate, `7.5 %`, `92.5 %`) |> 
+  rownames_to_column(var = "Variable") |> 
+  rename(c("Coefficient" = "estimate",
+           "lcl" = "7.5 %",
+           "ucl" = "92.5 %")) |> 
+  mutate(Species = "NSHO")
+
 beta <- bind_rows(WEME.beta,
                   BRBL.beta,
                   CCSP.beta, 
@@ -231,7 +250,9 @@ beta <- bind_rows(WEME.beta,
                   RWBL.beta,
                   GADW.beta,
                   NOPI.beta,
-                  BWTE.beta)
+                  BWTE.beta,
+                  MALL.beta,
+                  NSHO.beta)
 
 unique(beta$Variable)
 
@@ -240,21 +261,26 @@ beta$Variable <- case_match(beta$Variable,
                             "S:Nestling1" ~ "Nestling",
                             "S:Year2022" ~ "Year 2022",
                             "S:Year2023" ~ "Year 2023",
+                            "S:Year2024" ~ "Year 2024",
                             "S:Litter" ~ "Litter Cover",
+                            "S:LitterD" ~ "Litter Depth",
+                            "S:Bare" ~ "Bare Ground",
                             "S:Time" ~ "Time",
                             "S:I(Time^2)" ~ "Time^2",
                             "S:KBG" ~ "KBG Cover",
-                            "S:grazed" ~ "Days Grazed",
                             "S:NestAge" ~ "Nest Age",
+                            "S:grazed" ~ "Days Grazed",
+                            "S:pDoD" ~ "Past DoD",
                             "S:Forb" ~ "Forb Cover",
                             "S:VOR" ~ "VOR",
-                            "S:Veg.Height" ~ "Veg Height")
+                            "S:Veg.Height" ~ "Veg Height",
+                            "S:SmoothB" ~ "Smooth Brome")
 
 beta$Variable <- factor(beta$Variable,
-                        levels = c("Intercept", "Year 2022", "Year 2023", "Time",
-                                   "Time^2", "Nest Age", "Nestling", "Grazing Presence",
-                                   "Days Grazed", "KBG Cover", "Forb Cover", "Litter Cover", "Veg Height",
-                                   "VOR"))
+                        levels = c("Intercept", "Year 2022", "Year 2023", "Year 20224", "Time",
+                                   "Time^2", "Nest Age", "Nestling", "Past DoD", "Days Grazed",
+                                   "KBG Cover", "Forb Cover", "Smooth Brome", "Litter Cover",
+                                   "Bare Ground", "Litter Depth", "Veg Height", "VOR"))
 
 
 # Plot the data -----------------------------------------------------------
@@ -263,7 +289,9 @@ beta$Variable <- factor(beta$Variable,
 (betaF.plot <- ggplot(beta, 
                      aes(x = Variable,
                          y = Coefficient,
-                         fill = Species)) +
+                         fill = factor(Species,
+                                       levels = c("WEME", "BRBL", "MODO", "CCSP", "RWBL",
+                                                  "GADW", "BWTE", "NOPI", "MALL", "NSHO")))) +
     geom_hline(yintercept = 0,
                colour = gray(1/2), 
                lty = 2) +
@@ -271,14 +299,16 @@ beta$Variable <- factor(beta$Variable,
              stat = "identity",
              colour = "black",
              width = 0.7) +
-    scale_fill_manual(values = c('#A2A4A2', 
+    scale_fill_manual(values = c('#D4A634', 
+                                 '#D4A634', 
+                                 '#D4A634', 
+                                 '#D4A634', 
+                                 '#D4A634',
                                  '#A2A4A2', 
                                  '#A2A4A2', 
-                                 '#D4A634', 
-                                 '#D4A634', 
-                                 '#D4A634', 
-                                 '#D4A634', 
-                                 '#D4A634')) +
+                                 '#A2A4A2', 
+                                 '#A2A4A2', 
+                                 '#A2A4A2')) +
     geom_errorbar(aes(ymin = lcl,
                       ymax = ucl),
                   position = position_dodge(0.7),
@@ -303,6 +333,7 @@ beta$Variable <- factor(beta$Variable,
                               colour = "black")) +
     labs(title = "Top Model Effect Sizes",
          x = NULL,
+         fill = "Species",
          y = expression("Beta " (beta))))
 
 
@@ -310,23 +341,27 @@ beta_f <- filter(beta, Variable != "Intercept" & Variable != "Year 2022" & Varia
                    Variable != "Time" & Variable != "Time^2" & Variable != "Nestling" & Variable != "Nest Age")
 
 beta_f$Species <- factor(beta_f$Species,
-                         levels = c("GADW", "BWTE", "NOPI", 
-                                    "RWBL", "MODO", "BRBL"))
+                         levels = c("BRBL", "MODO", "CCSP",
+                                    "GADW", "BWTE", "NOPI", "MALL", "NSHO"))
 
 beta_f$Type <- ifelse(beta_f$Species == "GADW", "FAC",
                       ifelse(beta_f$Species == "BWTE", "FAC",
                              ifelse(beta_f$Species == "NOPI", "FAC",
-                                    ifelse(beta_f$Species == "RWBL", "FAC",
-                                           ifelse(beta_f$Species == "MODO", "FAC",
-                                                  ifelse(beta_f$Species == "BRBL", "OBL",
-                                                         NA))))))
+                                    ifelse(beta_f$Species == "MALL", "FAC",
+                                           ifelse(beta_f$Species == "NSHO", "FAC",
+                                                  ifelse(beta_f$Species == "RWBL", "FAC",
+                                                         ifelse(beta_f$Species == "MODO", "FAC",
+                                                                ifelse(beta_f$Species == "BRBL", "OBL",
+                                                                       ifelse(beta_f$Species == "CCSP", "FAC",
+                                                                              ifelse(beta_f$Species == "WEME", "OBL",
+                                                                                     NA))))))))))
 
 beta_f$Type <- factor(beta_f$Type,
                       levels = c("OBL", "FAC"))
-
-beta_f$Variable <- factor(beta_f$Variable,
-                          levels = c("Days Grazed", "KBG Cover", "Litter Cover", 
-                                     "Forb Cover", "Veg Height", "VOR"))
+# 
+# beta_f$Variable <- factor(beta_f$Variable,
+#                           levels = c("Days Grazed", "KBG Cover", "Litter Cover", 
+#                                      "Forb Cover", "Veg Height", "VOR"))
 
 (beta.plot <- ggplot(beta_f, 
                      aes(x = Variable,
@@ -345,14 +380,14 @@ beta_f$Variable <- factor(beta_f$Variable,
                   width = 0.5,
                   linewidth = 0.7,
                   colour = "black") +
-    scale_fill_manual(values = c('#A2A4A2', 
+    scale_fill_manual(values = c('#D4A634', 
+                                 '#D4A634', 
+                                 '#D4A634',
                                  '#A2A4A2', 
                                  '#A2A4A2', 
-                                 '#D4A634', 
-                                 '#D4A634', 
-                                 '#D4A634', 
-                                 '#D4A634', 
-                                 '#D4A634')) +
+                                 '#A2A4A2',
+                                 '#A2A4A2', 
+                                 '#A2A4A2')) +
     guides(fill = guide_legend(byrow = TRUE)) +
     theme(plot.title = element_text(family = "my_font",
                                     hjust = 0.5,
@@ -366,20 +401,24 @@ beta_f$Variable <- factor(beta_f$Variable,
           plot.background = element_rect(fill = NA,
                                          colour = NA),
           axis.line = element_line(colour = "black"),
-          axis.text = element_text(size = 24, 
+          axis.text.y = element_text(size = 18, 
                                    colour = "black"),
+          axis.text.x = element_text(size = 18, 
+                                     colour = "black",
+                                     angle = -45),
           axis.ticks = element_line(colour = "black"),
-          text = element_text(size = 24,
+          text = element_text(size = 18,
                               colour = "black",
                               family = "my_font"),
           legend.background = element_blank(),
           legend.title = element_text(family = "my_font",
-                                      size = 30),
+                                      size = 20),
           legend.text = element_text(family = "my_font",
-                                     size = 24),
+                                     size = 18),
           legend.key.width = unit(2, "cm")) +
     labs(title = "Factors Influencing Nest Survival",
          x = NULL,
+         fill = "Species",
          y = expression("Beta " (beta))))
 
 # library(cowplot)

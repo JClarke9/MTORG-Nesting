@@ -141,31 +141,6 @@ confint(MODO2.results$S.stage, level = 0.85)
 
 
 
-# Biological candidate model set
-MODO3.run <- function()
-{
-  # 1. DSR varies with nest stage
-  S.stage = list(formula = ~1 + Year + Time + I(Time^2) + Nestling)
-  
-  # 2. DSR varies with BHCO number
-  S.bhcon = list(formula = ~1 + Year + Time + I(Time^2) + BHCONum)
-  
-  MODO.model.list = create.model.list("Nest")
-  MODO3.results = mark.wrapper(MODO.model.list,
-                               data = MODO.pr,
-                               adjust = FALSE,
-                               delete = TRUE)
-}
-
-# Results of candidate model set
-MODO3.results <- MODO3.run()
-MODO3.results
-
-coef(MODO3.results$S.stage)
-confint(MODO3.results$S.stage, level = 0.85)
-
-
-
 # Grazing candidate model set
 MODO4.run <- function()
 {
@@ -344,100 +319,74 @@ kbg.values <- seq(from = min(MODO.surv$KBG),
 
 max(MODO.ddl$S.Age)
 
-filter(MODO.ddl, 
-       S.Nestling == 0 & S.time == 1 & S.Year == 2021| 
-         S.Nestling == 0 & S.time == 18  & S.Year == 2021| 
-         S.Nestling == 0 & S.time == 36  & S.Year == 2021| 
-         S.Nestling == 0 & S.time == 54  & S.Year == 2021| 
-         S.Nestling == 0 & S.time == 74 & S.Year == 2021|
-         S.Nestling == 1 & S.time == 1 & S.Year == 2021| 
-         S.Nestling == 1 & S.time == 18  & S.Year == 2021| 
-         S.Nestling == 1 & S.time == 36  & S.Year == 2021| 
-         S.Nestling == 1 & S.time == 54  & S.Year == 2021| 
-         S.Nestling == 1 & S.time == 74 & S.Year == 2021)
+filter(MODO.ddl, S.Nestling == 0 & S.time %in% c(1:74) & S.Year == 2021)
+filter(MODO.ddl, S.Nestling == 0 & S.time %in% c(1:74) & S.Year == 2022)
+filter(MODO.ddl, S.Nestling == 0 & S.time %in% c(1:74) & S.Year == 2023)
+filter(MODO.ddl, S.Nestling == 0 & S.time %in% c(1:74) & S.Year == 2024)
+filter(MODO.ddl, S.Nestling == 1 & S.time %in% c(1:74) & S.Year == 2021)
+filter(MODO.ddl, S.Nestling == 1 & S.time %in% c(1:74) & S.Year == 2022)
+filter(MODO.ddl, S.Nestling == 1 & S.time %in% c(1:74) & S.Year == 2023)
+filter(MODO.ddl, S.Nestling == 1 & S.time %in% c(1:74) & S.Year == 2024)
 
 time.pred <- covariate.predictions(plotdata,
                                    data = data.frame(KBG = mean(kbg.values)),
-                                   indices = c(1:74, 301:374))
+                                   indices = c(1:74,
+                                               76:149,
+                                               151:224,
+                                               226:299,
+                                               301:374,
+                                               376:449,
+                                               451:524,
+                                               526:599))
 
-inc <- which(time.pred$estimates$par.index == 1)
-nst <- which(time.pred$estimates$par.index == 301)
+inc2021 <- which(time.pred$estimates$par.index %in% c(1:74))
+inc2022 <- which(time.pred$estimates$par.index %in% c(76:149))
+inc2023 <- which(time.pred$estimates$par.index %in% c(151:224))
+inc2024 <- which(time.pred$estimates$par.index %in% c(226:299))
+nst2021 <- which(time.pred$estimates$par.index %in% c(301:374))
+nst2022 <- which(time.pred$estimates$par.index %in% c(376:449))
+nst2023 <- which(time.pred$estimates$par.index %in% c(451:524))
+nst2024 <- which(time.pred$estimates$par.index %in% c(526:599))
+
+time.pred$estimates$Year <- NA
+time.pred$estimates$Year[inc2021] <- "2021"
+time.pred$estimates$Year[inc2022] <- "2022"
+time.pred$estimates$Year[inc2023] <- "2023"
+time.pred$estimates$Year[inc2024] <- "2024"
+time.pred$estimates$Year[nst2021] <- "2021"
+time.pred$estimates$Year[nst2022] <- "2022"
+time.pred$estimates$Year[nst2023] <- "2023"
+time.pred$estimates$Year[nst2024] <- "2024"
 
 time.pred$estimates$Stage <- NA
-time.pred$estimates$Stage[inc] <- "Incubating"
-time.pred$estimates$Stage[nst] <- "Nestling"
+time.pred$estimates$Stage[inc2021] <- "Incubating"
+time.pred$estimates$Stage[inc2022] <- "Incubating"
+time.pred$estimates$Stage[inc2023] <- "Incubating"
+time.pred$estimates$Stage[inc2024] <- "Incubating"
+time.pred$estimates$Stage[nst2021] <- "Nestling"
+time.pred$estimates$Stage[nst2022] <- "Nestling"
+time.pred$estimates$Stage[nst2023] <- "Nestling"
+time.pred$estimates$Stage[nst2024] <- "Nestling"
 
-time.pred$estimates <- fill(time.pred$estimates, Stage, .direction = "down")
+time.pred$estimates$Day <- c(1:74)
 
-time.pred$estimates$Day <- 1:74
-
-(MODOtime.plot <- ggplot(time.pred$estimates, 
+(MODOtime.plot <- ggplot(transform(time.pred$estimates,
+                                   Year = factor(Year, levels = c("2021", "2022", "2023", "2024"))), 
                          aes(x = Day, 
-                             y = estimate)) +
+                             y = estimate,
+                             groups = Year,
+                             fill = Year)) +
     geom_line(linewidth = 1.5,
-              aes(color = "model.index")) +
-    scale_colour_manual(values = c('#D4A634')) +
-    scale_fill_manual(values = c('#D4A634')) +
-    theme(plot.title = element_text(family = "my_font",                             # select the font for the title
-                                    size = 16,
-                                    hjust = .5),
-          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
-          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
-          panel.background = element_rect(fill = NA,                                # make the interior background transparent
-                                          colour = NA),                           # remove any other colors
-          plot.background = element_rect(fill = NA,                                 # make the outer background transparent
-                                         colour = NA),                              # remove any other colors
-          axis.line = element_line(colour = "black"),                             # color the x and y axis
-          axis.text.y = element_text(size=12, colour = "black"),                    # color the axis text
-          axis.text.x = element_text(size=12, colour = "black"),
-          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
-          text = element_text(size = 12,                                              # change the size of the axis titles
-                              colour = "black"),                                    # change the color of the axis titles
-          legend.background = element_rect(fill = NA),
-          legend.position = "none") +
-    facet_grid(~Stage) +
-    labs(title = "Mourning Dove",
-         color = "Year",
-         x = "Julian Day",
-         y = "Daily Survival Rate"))
-
-
-stage.pred <- covariate.predictions(plotdata,
-                                    data = data.frame(KBG = mean(kbg.values)),
-                                    indices = c(1, 18, 36, 54, 74,
-                                                301, 318, 336, 354, 374))
-
-inc <- which(stage.pred$estimates$par.index == 1)
-nst <- which(stage.pred$estimates$par.index == 301)
-
-stage.pred$estimates$Stage <- NA
-stage.pred$estimates$Stage[inc] <- "Incubating"
-stage.pred$estimates$Stage[nst] <- "Nestling"
-
-stage.pred$estimates <- fill(stage.pred$estimates, Stage, .direction = "down")
-
-stage.pred$estimates$Day <- c(1, 18, 36, 54, 74)
-
-(MODOstage.plot <- ggplot(transform(stage.pred$estimates,
-                                    Day = factor(Day, levels = c("1", "18", "36",
-                                                                 "54", "74"))), 
-                          aes(x = Stage, 
-                              y = estimate,
-                              groups = Day,
-                              fill = Day)) +
-    geom_point(size = 4,
-               aes(color = Day)) +
+              aes(color = Year)) +
     scale_linetype_manual(values = c(1, 3, 2)) +
-    scale_colour_manual(values = c('#A2A4A2',
-                                   '#717F5B',
-                                   '#D4A634',
-                                   'red',
-                                   'black')) +
-    scale_fill_manual(values = c('#A2A4A2',
-                                 '#717F5B',
-                                 '#D4A634',
-                                 'red',
-                                 'black')) +
+    scale_colour_manual(values = c("#A2A4A2",
+                                   "#717F5B",
+                                   "#D4A634",
+                                   "goldenrod4")) +
+    scale_fill_manual(values = c("#A2A4A2",
+                                 "#717F5B",
+                                 "#D4A634",
+                                 "goldenrod4")) +
     theme(plot.title = element_text(family = "my_font",                             # select the font for the title
                                     size = 16,
                                     hjust = .5),
@@ -456,6 +405,94 @@ stage.pred$estimates$Day <- c(1, 18, 36, 54, 74)
           legend.background = element_rect(fill = NA),
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
+    facet_grid(~Stage) +
+    labs(title = "Mourning Dove",
+         x = "time",
+         y = "Daily Survival Rate"))
+
+
+stage.pred <- covariate.predictions(plotdata,
+                                    data = data.frame(KBG = mean(kbg.values)),
+                                    indices = c(1, 18, 36, 54, 74,
+                                                76, 93, 111, 129, 149,
+                                                151, 168, 186, 204, 224,
+                                                226, 243, 261, 279, 229,
+                                                301, 318, 336, 354, 374,
+                                                376, 393, 411, 429, 449,
+                                                451, 468, 486, 504, 524,
+                                                526, 543, 561, 579, 599))
+
+inc2021 <- which(stage.pred$estimates$par.index == 1)
+inc2022 <- which(stage.pred$estimates$par.index == 76)
+inc2023 <- which(stage.pred$estimates$par.index == 151)
+inc2024 <- which(stage.pred$estimates$par.index == 226)
+nst2021 <- which(stage.pred$estimates$par.index == 301)
+nst2022 <- which(stage.pred$estimates$par.index == 376)
+nst2023 <- which(stage.pred$estimates$par.index == 451)
+nst2024 <- which(stage.pred$estimates$par.index == 526)
+
+stage.pred$estimates$Year <- NA
+stage.pred$estimates$Year[inc2021] <- "2021"
+stage.pred$estimates$Year[inc2022] <- "2022"
+stage.pred$estimates$Year[inc2023] <- "2023"
+stage.pred$estimates$Year[inc2024] <- "2024"
+stage.pred$estimates$Year[nst2021] <- "2021"
+stage.pred$estimates$Year[nst2022] <- "2022"
+stage.pred$estimates$Year[nst2023] <- "2023"
+stage.pred$estimates$Year[nst2024] <- "2024"
+
+stage.pred$estimates$Stage <- NA
+stage.pred$estimates$Stage[inc2021] <- "Incubating"
+stage.pred$estimates$Stage[inc2022] <- "Incubating"
+stage.pred$estimates$Stage[inc2023] <- "Incubating"
+stage.pred$estimates$Stage[inc2024] <- "Incubating"
+stage.pred$estimates$Stage[nst2021] <- "Nestling"
+stage.pred$estimates$Stage[nst2022] <- "Nestling"
+stage.pred$estimates$Stage[nst2023] <- "Nestling"
+stage.pred$estimates$Stage[nst2024] <- "Nestling"
+
+stage.pred$estimates <- fill(stage.pred$estimates, Year, .direction = "down")
+stage.pred$estimates <- fill(stage.pred$estimates, Stage, .direction = "down")
+
+stage.pred$estimates$Day <- c(1, 18, 36, 54, 74)
+
+(MODOstage.plot <- ggplot(transform(stage.pred$estimates,
+                                    Day = factor(Day, levels = c("1", "18", "36",
+                                                                 "54", "74"))), 
+                          aes(x = Stage, 
+                              y = estimate,
+                              groups = Year,
+                              fill = Year)) +
+    geom_point(size = 4,
+               aes(color = Year)) +
+    scale_linetype_manual(values = c(1, 3, 2)) +
+    scale_colour_manual(values = c("#A2A4A2",
+                                   "#717F5B",
+                                   "#D4A634",
+                                   "goldenrod4")) +
+    scale_fill_manual(values = c("#A2A4A2",
+                                 "#717F5B",
+                                 "#D4A634",
+                                 "goldenrod4")) +
+    theme(plot.title = element_text(family = "my_font",                             # select the font for the title
+                                    size = 16,
+                                    hjust = .5),
+          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+          panel.background = element_rect(fill = NA,                                # make the interior background transparent
+                                          colour = NA),                           # remove any other colors
+          plot.background = element_rect(fill = NA,                                 # make the outer background transparent
+                                         colour = NA),                              # remove any other colors
+          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.text.y = element_text(size = 12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size = 12, colour = "black"),
+          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          text = element_text(size = 12,                                              # change the size of the axis titles
+                              colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill = NA),
+          legend.position = c(.85, .1),
+          legend.box = "horizontal") +
+    facet_wrap(~Day) +
     labs(title = "Mourning Dove",
          x = "Stage",
          y = "Daily Survival Rate"))
@@ -464,73 +501,64 @@ stage.pred$estimates$Day <- c(1, 18, 36, 54, 74)
 kbg.pred <- covariate.predictions(plotdata,
                                   data = data.frame(KBG = kbg.values),
                                   indices = c(1, 18, 36, 54, 74,
-                                              301, 318, 336, 354, 374))
+                                              76, 93, 111, 129, 149,
+                                              151, 168, 186, 204, 224,
+                                              226, 243, 261, 279, 229,
+                                              301, 318, 336, 354, 374,
+                                              376, 393, 411, 429, 449,
+                                              451, 468, 486, 504, 524,
+                                              526, 543, 561, 579, 599))
 
-inc1 <- which(kbg.pred$estimates$par.index == 1)
-inc18 <- which(kbg.pred$estimates$par.index == 18)
-inc36 <- which(kbg.pred$estimates$par.index == 36)
-inc54 <- which(kbg.pred$estimates$par.index == 54)
-inc74 <- which(kbg.pred$estimates$par.index == 74)
-nst1 <- which(kbg.pred$estimates$par.index == 301)
-nst18 <- which(kbg.pred$estimates$par.index == 318)
-nst36 <- which(kbg.pred$estimates$par.index == 336)
-nst54 <- which(kbg.pred$estimates$par.index == 354)
-nst74 <- which(kbg.pred$estimates$par.index == 374)
+inc2021 <- which(kbg.pred$estimates$par.index == 1)
+inc2022 <- which(kbg.pred$estimates$par.index == 76)
+inc2023 <- which(kbg.pred$estimates$par.index == 151)
+inc2024 <- which(kbg.pred$estimates$par.index == 226)
+nst2021 <- which(kbg.pred$estimates$par.index == 301)
+nst2022 <- which(kbg.pred$estimates$par.index == 376)
+nst2023 <- which(kbg.pred$estimates$par.index == 451)
+nst2024 <- which(kbg.pred$estimates$par.index == 526)
 
-kbg.pred$estimates$Group <- NA
-kbg.pred$estimates$Group[inc1] <- "Incubating1"
-kbg.pred$estimates$Group[inc18] <- "Incubating18"
-kbg.pred$estimates$Group[inc36] <- "Incubating36"
-kbg.pred$estimates$Group[inc54] <- "Incubating54"
-kbg.pred$estimates$Group[inc74] <- "Incubating74"
-kbg.pred$estimates$Group[nst1] <- "Nestling1"
-kbg.pred$estimates$Group[nst18] <- "Nestling18"
-kbg.pred$estimates$Group[nst36] <- "Nestling36"
-kbg.pred$estimates$Group[nst54] <- "Nestling54"
-kbg.pred$estimates$Group[nst74] <- "Nestling74"
+kbg.pred$estimates$Year <- NA
+kbg.pred$estimates$Year[inc2021] <- "2021"
+kbg.pred$estimates$Year[inc2022] <- "2022"
+kbg.pred$estimates$Year[inc2023] <- "2023"
+kbg.pred$estimates$Year[inc2024] <- "2024"
+kbg.pred$estimates$Year[nst2021] <- "2021"
+kbg.pred$estimates$Year[nst2022] <- "2022"
+kbg.pred$estimates$Year[nst2023] <- "2023"
+kbg.pred$estimates$Year[nst2024] <- "2024"
 
 kbg.pred$estimates$Stage <- NA
-kbg.pred$estimates$Stage[inc1] <- "Incubating"
-kbg.pred$estimates$Stage[inc18] <- "Incubating"
-kbg.pred$estimates$Stage[inc36] <- "Incubating"
-kbg.pred$estimates$Stage[inc54] <- "Incubating"
-kbg.pred$estimates$Stage[inc74] <- "Incubating"
-kbg.pred$estimates$Stage[nst1] <- "Nestling"
-kbg.pred$estimates$Stage[nst18] <- "Nestling"
-kbg.pred$estimates$Stage[nst36] <- "Nestling"
-kbg.pred$estimates$Stage[nst54] <- "Nestling"
-kbg.pred$estimates$Stage[nst74] <- "Nestling"
+kbg.pred$estimates$Stage[inc2021] <- "Incubating"
+kbg.pred$estimates$Stage[inc2022] <- "Incubating"
+kbg.pred$estimates$Stage[inc2023] <- "Incubating"
+kbg.pred$estimates$Stage[inc2024] <- "Incubating"
+kbg.pred$estimates$Stage[nst2021] <- "Nestling"
+kbg.pred$estimates$Stage[nst2022] <- "Nestling"
+kbg.pred$estimates$Stage[nst2023] <- "Nestling"
+kbg.pred$estimates$Stage[nst2024] <- "Nestling"
 
-kbg.pred$estimates$Day <- NA
-kbg.pred$estimates$Day[inc1] <- "1"
-kbg.pred$estimates$Day[inc18] <- "18"
-kbg.pred$estimates$Day[inc36] <- "36"
-kbg.pred$estimates$Day[inc54] <- "54"
-kbg.pred$estimates$Day[inc74] <- "74"
-kbg.pred$estimates$Day[nst1] <- "1"
-kbg.pred$estimates$Day[nst18] <- "18"
-kbg.pred$estimates$Day[nst36] <- "36"
-kbg.pred$estimates$Day[nst54] <- "54"
-kbg.pred$estimates$Day[nst74] <- "74"
+kbg.pred$estimates <- fill(kbg.pred$estimates, Year, .direction = "down")
+kbg.pred$estimates <- fill(kbg.pred$estimates, Stage, .direction = "down")
+
+kbg.pred$estimates$Day <- c(1, 18, 36, 54, 74)
 
 (MODOkbg.plot <- ggplot(transform(kbg.pred$estimates,
-                                  Day = factor(Day, levels = c("1", "18", "36",
-                                                               "54", "74"))), 
+                                  Year = factor(Year, levels = c("2021", "2022", "2023", "2024"))), 
                         aes(x = covdata, 
                             y = estimate,
-                            groups = Group)) +
+                            groups = Year,
+                            fill = Year)) +
     geom_line(linewidth = 1.5,
-              aes(color = Day)) +
-    scale_colour_manual(values = c('#A2A4A2',
-                                   '#717F5B',
-                                   '#D4A634',
-                                   'red',
-                                   'black')) +
-    scale_fill_manual(values = c('#A2A4A2',
-                                 '#717F5B',
-                                 '#D4A634',
-                                 'red',
-                                 'black')) +
+              aes(color = Year)) +
+    scale_colour_manual(values = c("#A2A4A2",
+                                   "#717F5B",
+                                   "#D4A634",
+                                   "goldenrod4")) +
+    scale_fill_manual(values = c("#A2A4A2",
+                                 "#717F5B",
+                                 "#D4A634",
+                                 "goldenrod4")) +
     theme(plot.title = element_text(family = "my_font",                             # select the font for the title
                                     size = 16,
                                     hjust = .5),
@@ -549,7 +577,7 @@ kbg.pred$estimates$Day[nst74] <- "74"
           legend.background = element_rect(fill = NA),
           legend.position = c(.95, .15),
           legend.box = "horizontal") +
-    facet_grid(~Stage) +
+    facet_grid(~Stage + Day) +
     labs(title = "Mourning Dove",
          color = "Day",
          x = "Kentucky Bluegrass (Percent Cover)",

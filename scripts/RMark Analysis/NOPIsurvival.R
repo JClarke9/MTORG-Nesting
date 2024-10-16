@@ -102,7 +102,6 @@ NOPI1.results <- NOPI1.run()
 NOPI1.results
 
 coef(NOPI1.results$S.null)
-confint(NOPI1.results$S.null, level = 0.85)
 
 
 
@@ -127,7 +126,6 @@ NOPI2.results <- NOPI2.run()
 NOPI2.results
 
 coef(NOPI2.results$S.null)
-confint(NOPI2.results$S.null, level = 0.85)
 
 
 # Grazing candidate model set
@@ -154,7 +152,6 @@ NOPI3.results <- NOPI3.run()
 NOPI3.results
 
 coef(NOPI3.results$S.null)
-confint(NOPI3.results$S.null, level = 0.85)
 
 
 
@@ -214,13 +211,13 @@ confint(NOPI4.results$S.vor, level = 0.85)
 (NOPI.dsrLIT <- as.data.frame(NOPI4.results$S.lit$results$real))
 (NOPI.dsrVOR <- as.data.frame(NOPI4.results$S.vor$results$real))
 
-NOPI.final <- mark(NOPI.surv,
-                   nocc = max(NOPI.surv$LastChecked),
-                   model = "Nest",
-                   groups = "Year",
-                   adjust = FALSE,
-                   delete = TRUE,
-                   model.parameters = list(S = list(formula = ~1 + Litter + VOR)))
+NOPI5.results <- mark(NOPI.surv,
+                      nocc = max(NOPI.surv$LastChecked),
+                      model = "Nest",
+                      groups = "Year",
+                      adjust = FALSE,
+                      delete = TRUE,
+                      model.parameters = list(S = list(formula = ~1 + Litter + VOR)))
 
 coef(NOPI.final)
 confint(NOPI.final, level = 0.85)
@@ -230,8 +227,8 @@ confint(NOPI.final, level = 0.85)
 # Plotting beta coefficients ----------------------------------------------
 
 
-NOPI.beta <- coef(NOPI.final) |>
-  cbind(confint(NOPI.final, level = 0.85)) |> 
+NOPI.beta <- coef(NOPI5.results) |>
+  cbind(confint(NOPI5.results, level = 0.85)) |> 
   select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
@@ -293,7 +290,7 @@ VORvalues <- seq(from = min(NOPI.surv$VOR),
                  length = 100)
 
 
-VOR.pred <- covariate.predictions(NOPI.final,
+VOR.pred <- covariate.predictions(NOPI5.results,
                                   data = data.frame(VOR = VORvalues,
                                                     Litter = mean(LITvalues)),
                                   indices = 1)
@@ -328,7 +325,7 @@ VOR.pred <- covariate.predictions(NOPI.final,
          y = "Daily Survival Rate"))
 
 
-LIT.pred <- covariate.predictions(NOPI.final,
+LIT.pred <- covariate.predictions(NOPI5.results,
                                   data = data.frame(VOR = mean(VORvalues),
                                                     Litter = LITvalues),
                                   indices = 1)

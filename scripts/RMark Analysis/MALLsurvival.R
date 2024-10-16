@@ -102,7 +102,6 @@ MALL1.results <- MALL1.run()
 MALL1.results
 
 coef(MALL1.results$S.null)
-confint(MALL1.results$S.null, level = 0.85)
 
 
 
@@ -127,7 +126,6 @@ MALL2.results <- MALL2.run()
 MALL2.results
 
 coef(MALL2.results$S.null)
-confint(MALL2.results$S.null, level = 0.85)
 
 
 # Grazing candidate model set
@@ -153,8 +151,7 @@ MALL3.run <- function()
 MALL3.results <- MALL3.run()
 MALL3.results
 
-coef(MALL3.results$S.age)
-confint(MALL3.results$S.age, level = 0.85)
+coef(MALL3.results$S.null)
 
 
 

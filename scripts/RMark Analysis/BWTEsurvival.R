@@ -135,7 +135,7 @@ confint(BWTE2.results$S.age, level = 0.85)
 BWTE3.run <- function()
 {
   # 1. DSR varies with year
-  S.year = list(formula = ~1 + Year + NestAge)
+  S.age = list(formula = ~1 + Year + NestAge)
   
   # 2. DSR varies with the number of days a nest experienced grazing
   S.grazed = list(formula = ~1 + Year + NestAge + grazed)
