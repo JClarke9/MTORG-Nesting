@@ -77,34 +77,8 @@ RWBL.pr <- process.data(RWBL.surv,
 
 
 
-# Grazing candidate model set
-RWBL1.run <- function()
-{
-  # 5. DSR varies with nest age
-  S.null = list(formula = ~1)
-  
-  # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + grazed)
-  
-  # 4. DSR varies with the previous years grazing intensity
-  S.pDoD = list(formula = ~1 + pDoD)
-  
-  RWBL.model.list = create.model.list("Nest")
-  RWBL1.results = mark.wrapper(RWBL.model.list,
-                               data = RWBL.pr,
-                               adjust = FALSE,
-                               delete = TRUE)
-}
-
-# Results of candidate model set
-RWBL1.results <- RWBL1.run()
-RWBL1.results
-
-coef(RWBL1.results$S.null)
-
-
 # Temporal candidate model set
-RWBL2.run <- function()
+RWBL1.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
@@ -119,6 +93,37 @@ RWBL2.run <- function()
   S.year = list(formula = ~1 + Year)
   
   RWBL.model.list = create.model.list("Nest")
+  RWBL1.results = mark.wrapper(RWBL.model.list,
+                               data = RWBL.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
+}
+
+# Results of candidate model set
+RWBL1.results <- RWBL1.run()
+RWBL1.results
+
+# both of the quadratic effects overlap zero
+coef(RWBL1.results$S.quad)
+confint(RWBL1.results$S.quad, level = 0.85)
+
+coef(RWBL1.results$S.time)
+confint(RWBL1.results$S.time, level = 0.85)
+
+
+# Nest stage/age candidate model set
+RWBL2.run <- function()
+{
+  # 1. DSR varies with time
+  S.time = list(formula = ~1 + Time)
+  
+  # 2. DSR varies with nest stage
+  S.stage = list(formula = ~1 + Time + Nestling)
+  
+  # 3. DSR varies with nest age
+  S.age = list(formula = ~1 + Time + NestAge)
+  
+  RWBL.model.list = create.model.list("Nest")
   RWBL2.results = mark.wrapper(RWBL.model.list,
                                data = RWBL.pr,
                                adjust = FALSE,
@@ -129,28 +134,19 @@ RWBL2.run <- function()
 RWBL2.results <- RWBL2.run()
 RWBL2.results
 
-coef(RWBL2.results$S.quad)
-confint(RWBL2.results$S.quad, level = 0.85)
+coef(RWBL2.results$S.stage)
+confint(RWBL2.results$S.stage, level = 0.85)
 
 
 
 # Biological candidate model set
 RWBL3.run <- function()
 {
-  # 3. DSR varies with quadratic effect of date
-  S.quad = list(formula = ~1 + Time + I(Time^2))
+  # 1. DSR varies with year
+  S.stage = list(formula = ~1 + Time + Nestling)
   
   # 2. DSR varies with BHCO number
-  S.bhcon = list(formula = ~1 + Time + I(Time^2) + BHCONum)
-  
-  # 2. DSR varies with BHCO number
-  S.bhcop = list(formula = ~1 + Time + I(Time^2) + BHCOPres)
-  
-  # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + Time + I(Time^2) + NestAge)
-  
-  # 5. DSR varies with nest age
-  S.stage = list(formula = ~1 + Time + I(Time^2) + Nestling)
+  S.bhcon = list(formula = ~1 + Time + Nestling + BHCONum)
   
   RWBL.model.list = create.model.list("Nest")
   RWBL3.results = mark.wrapper(RWBL.model.list,
@@ -163,46 +159,22 @@ RWBL3.run <- function()
 RWBL3.results <- RWBL3.run()
 RWBL3.results
 
-coef(RWBL3.results$S.stage)
-confint(RWBL3.results$S.stage, level = 0.85)
+coef(RWBL3.results$S.bhcon)
+confint(RWBL3.results$S.bhcon, level = 0.85)
 
 
 
-# Vegetation candidate model set
+# Grazing candidate model set
 RWBL4.run <- function()
 {
+  # 1. DSR varies with BHCO number
+  S.bhcon = list(formula = ~1 + Time + Nestling + BHCONum)
+  
   # 2. DSR varies with the number of days a nest experienced grazing
-  S.stage = list(formula = ~1 + Time + I(Time^2) + Nestling)
+  S.grazed = list(formula = ~1 + Time + Nestling + BHCONum + grazed)
   
-  # 2. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + Time + I(Time^2) + Nestling + KBG)
-  
-  # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.brome = list(formula = ~1 + Time + I(Time^2) + Nestling + SmoothB)
-  
-  # 4. DSR varies with Litter (correlated with KBG)
-  # S.lit = list(formula =  ~1 + Time + I(Time^2) + Nestling + Litter)
-  
-  # 5. DSR varies with Bare
-  #S.bare = list(formula =  ~1 + Time + I(Time^2) + Nestling + Bare)
-  
-  # 6. DSR varies with Forb
-  S.forb = list(formula =  ~1 + Time + I(Time^2) + Nestling + Forb)
-  
-  # 7. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + Time + I(Time^2) + Nestling + Grasslike)
-  
-  # 8. DSR varies with Woody
-  S.woody = list(formula =  ~1 + Time + I(Time^2) + Nestling + Woody)
-  
-  # 9. DSR varies with Litter Depth (correlated with VOR)
-  #S.litdep = list(formula =  ~1 + Time + I(Time^2) + Nestling + LitterD)
-  
-  # 10. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Time + I(Time^2) + Nestling + Veg.Height)
-  
-  # 11. DSR varies with VOR
-  S.vor = list(formula =  ~1 + Time + I(Time^2) + Nestling + VOR)
+  # 3. DSR varies with the previous Year + Nestlings grazing intensity
+  S.pDoD = list(formula = ~1 + Time + Nestling + BHCONum + pDoD)
   
   RWBL.model.list = create.model.list("Nest")
   RWBL4.results = mark.wrapper(RWBL.model.list,
@@ -215,38 +187,88 @@ RWBL4.run <- function()
 RWBL4.results <- RWBL4.run()
 RWBL4.results
 
-coef(RWBL4.results$S.stage)
-confint(RWBL4.results$S.stage, level = 0.85)
+coef(RWBL4.results$S.bhcon)
+confint(RWBL4.results$S.bhcon, level = 0.85)
 
-RWBL4.results$S.stage$results$real |> 
+
+# Vegetation candidate model set
+RWBL5.run <- function()
+{
+  # 1. DSR varies with BHCO number
+  S.bhcon = list(formula = ~1 + Time + Nestling + BHCONum)
+  
+  # 2. DSR varies with KBG
+  S.kbg = list(formula = ~1 + Time + Nestling + BHCONum + KBG)
+  
+  # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
+  S.brome = list(formula = ~1 + Time + Nestling + BHCONum + SmoothB)
+  
+  # 4. DSR varies with Litter (correlated with KBG) - NA values
+  # S.lit = list(formula = ~1 + Time + Nestling + BHCONum + Litter)
+  
+  # 5. DSR varies with Bare - NA values
+  # S.bare = list(formula = ~1 + Time + Nestling + BHCONum + Bare)
+  
+  # 6. DSR varies with Forb
+  S.forb = list(formula = ~1 + Time + Nestling + BHCONum + Forb)
+  
+  # 7. DSR varies with Grasslike  (correlated with KBG)
+  S.grass = list(formula = ~1 + Time + Nestling + BHCONum + Grasslike)
+  
+  # 8. DSR varies with Woody
+  S.woody = list(formula = ~1 + Time + Nestling + BHCONum + Woody)
+  
+  # 9. DSR varies with Litter Depth (correlated with VOR) - NA values
+  # S.litdep = list(formula = ~1 + Time + Nestling + BHCONum + LitterD)
+  
+  # 10. DSR varies with Veg Height (correlated with VOR)
+  S.height = list(formula = ~1 + Time + Nestling + BHCONum + Veg.Height)
+  
+  # 11. DSR varies with VOR
+  S.vor = list(formula = ~1 + Time + Nestling + BHCONum + VOR)
+  
+  RWBL.model.list = create.model.list("Nest")
+  RWBL5.results = mark.wrapper(RWBL.model.list,
+                               data = RWBL.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
+}
+
+# Results of candidate model set
+RWBL5.results <- RWBL5.run()
+RWBL5.results
+
+coef(RWBL5.results$S.bhcon)
+confint(RWBL5.results$S.bhcon, level = 0.85)
+
+
+
+RWBL5.results$S.bhcon$results$real |> 
   summarize(estimate = mean(estimate),
             se = mean(se),
             lcl = mean(lcl),
             ucl = mean(ucl))
 
-(RWBL.real <- as.data.frame(RWBL4.results$S.stage$results$real) |> 
+(RWBL.real <- as.data.frame(RWBL5.results$S.bhcon$results$real) |> 
     rownames_to_column(var = "Group") |> 
     mutate(Stage = case_when(
       grepl("20210", Group) ~ "Incubating",
-      grepl("20220", Group) ~ "Incubating",
       grepl("20230", Group) ~ "Incubating",
       grepl("20240", Group) ~ "Incubating",
       grepl("20211", Group) ~ "Nestling",
       grepl("20221", Group) ~ "Nestling",
       grepl("20231", Group) ~ "Nestling",
       grepl("20241", Group) ~ "Nestling")) |> 
+    select(Stage, estimate, se, lcl, ucl) |> 
     group_by(Stage) |> 
-    summarize(estimate = mean(estimate), 
-              se = mean(se), 
-              lcl = mean(lcl), 
-              ucl = mean(ucl)))
+    summarize(mean = mean(estimate)))
 
 
 # Plotting beta coefficients ----------------------------------------------
 
 
-RWBL.beta <- coef(RWBL4.results$S.stage) |>
-  cbind(confint(RWBL4.results$S.stage, level = 0.85)) |> 
+RWBL.beta <- coef(RWBL4.results$S.bhcon) |>
+  cbind(confint(RWBL4.results$S.bhcon, level = 0.85)) |> 
   select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
@@ -299,7 +321,7 @@ str(RWBL.beta)
 RWBL.ddl <- make.design.data(RWBL.pr) |> 
   as.data.frame()
 
-plotdata <- RWBL4.results$S.stage
+plotdata <- RWBL5.results$S.bhcon
 
 
 max(RWBL.ddl$S.Age)

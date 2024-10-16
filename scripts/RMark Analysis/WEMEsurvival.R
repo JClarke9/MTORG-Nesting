@@ -77,36 +77,8 @@ WEME.pr <- process.data(WEME.surv,
 
 
 
-# Grazing candidate model set
-WEME1.run <- function()
-{
-  # 5. DSR varies with nest age
-  S.null = list(formula = ~1)
-  
-  # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + grazed)
-  
-  # 4. DSR varies with the previous years grazing intensity
-  S.pDoD = list(formula = ~1 + pDoD)
-  
-  WEME.model.list = create.model.list('Nest')
-  WEME1.results = mark.wrapper(WEME.model.list,
-                               data = WEME.pr,
-                               adjust = FALSE,
-                               delete = TRUE)
-}
-
-# Results of candidate model set
-WEME1.results <- WEME1.run()
-WEME1.results
-
-coef(WEME1.results$S.null)
-confint(WEME1.results$S.null, level = 0.85)
-
-
-
 # Temporal candidate model set
-WEME2.run <- function()
+WEME1.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
@@ -120,7 +92,34 @@ WEME2.run <- function()
   # 4. DSR varies with year
   S.year = list(formula = ~1 + Year)
   
-  WEME.model.list = create.model.list('Nest')
+  WEME.model.list = create.model.list("Nest")
+  WEME1.results = mark.wrapper(WEME.model.list,
+                               data = WEME.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
+}
+
+# Results of candidate model set
+WEME1.results <- WEME1.run()
+WEME1.results
+
+coef(WEME1.results$S.null)
+
+
+
+# Nest stage/age candidate model set
+WEME2.run <- function()
+{
+  # 1. DSR varies with time
+  S.null = list(formula = ~1)
+  
+  # 2. DSR varies with nest stage
+  S.stage = list(formula = ~1 + Nestling)
+  
+  # 3. DSR varies with nest age
+  S.age = list(formula = ~1 + NestAge)
+  
+  WEME.model.list = create.model.list("Nest")
   WEME2.results = mark.wrapper(WEME.model.list,
                                data = WEME.pr,
                                adjust = FALSE,
@@ -131,29 +130,21 @@ WEME2.run <- function()
 WEME2.results <- WEME2.run()
 WEME2.results
 
-coef(WEME2.results$S.null)
+coef(WEME2.results$S.stage)
+confint(WEME2.results$S.stage, level = 0.85)
 
 
 
 # Biological candidate model set
 WEME3.run <- function()
 {
-  # 1. DSR varies with time
-  S.null = list(formula = ~1)
-  
-  # 2. DSR varies with BHCO number
-  S.bhcon = list(formula = ~1 + BHCONum)
-  
-  # 2. DSR varies with BHCO number
-  S.bhcop = list(formula = ~1 + BHCOPres)
-  
-  # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + NestAge)
-  
-  # 5. DSR varies with nest age
+  # 1. DSR varies with year
   S.stage = list(formula = ~1 + Nestling)
   
-  WEME.model.list = create.model.list('Nest')
+  # 2. DSR varies with BHCO number
+  S.bhcon = list(formula = ~1 + Nestling + BHCONum)
+  
+  WEME.model.list = create.model.list("Nest")
   WEME3.results = mark.wrapper(WEME.model.list,
                                data = WEME.pr,
                                adjust = FALSE,
@@ -169,43 +160,19 @@ confint(WEME3.results$S.stage, level = 0.85)
 
 
 
-# Vegetation candidate model set
+# Grazing candidate model set
 WEME4.run <- function()
 {
-  # 5. DSR varies with nest age
+  # 1. DSR varies with year
   S.stage = list(formula = ~1 + Nestling)
   
-  # 2. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + Nestling + KBG)
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + Nestling + grazed)
   
-  # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.brome = list(formula = ~1 + Nestling + SmoothB)
+  # 3. DSR varies with the previous Year + Nestlings grazing intensity
+  S.pDoD = list(formula = ~1 + Nestling + pDoD)
   
-  # 4. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + Nestling + Litter)
-  
-  # 5. DSR varies with Bare
-  S.bare = list(formula =  ~1 + Nestling + Bare)
-  
-  # 6. DSR varies with Forb
-  S.forb = list(formula =  ~1 + Nestling + Forb)
-  
-  # 7. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + Nestling + Grasslike)
-  
-  # 8. DSR varies with Woody
-  S.woody = list(formula =  ~1 + Nestling + Woody)
-  
-  # 9. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + Nestling + LitterD)
-  
-  # 10. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Nestling + Veg.Height)
-  
-  # 11. DSR varies with VOR
-  S.vor = list(formula =  ~1 + Nestling + VOR)
-  
-  WEME.model.list = create.model.list('Nest')
+  WEME.model.list = create.model.list("Nest")
   WEME4.results = mark.wrapper(WEME.model.list,
                                data = WEME.pr,
                                adjust = FALSE,
@@ -219,35 +186,79 @@ WEME4.results
 coef(WEME4.results$S.stage)
 confint(WEME4.results$S.stage, level = 0.85)
 
-WEME4.results$S.stage$results$real |> 
+
+
+# Vegetation candidate model set
+WEME5.run <- function()
+{
+  # 1. DSR varies with year
+  S.stage = list(formula = ~1 + Nestling)
+  
+  # 2. DSR varies with KBG
+  S.kbg = list(formula = ~1 + Nestling + KBG)
+  
+  # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
+  S.brome = list(formula = ~1 + Nestling + SmoothB)
+  
+  # 4. DSR varies with Litter (correlated with KBG)
+  S.lit = list(formula = ~1 + Nestling + Litter)
+  
+  # 5. DSR varies with Bare
+  S.bare = list(formula = ~1 + Nestling + Bare)
+  
+  # 6. DSR varies with Forb
+  S.forb = list(formula = ~1 + Nestling + Forb)
+  
+  # 7. DSR varies with Grasslike  (correlated with KBG)
+  S.grass = list(formula = ~1 + Nestling + Grasslike)
+  
+  # 8. DSR varies with Woody
+  S.woody = list(formula = ~1 + Nestling + Woody)
+  
+  # 9. DSR varies with Litter Depth (correlated with VOR)
+  S.litdep = list(formula = ~1 + Nestling + LitterD)
+  
+  # 10. DSR varies with Veg Height (correlated with VOR)
+  S.height = list(formula = ~1 + Nestling + Veg.Height)
+  
+  # 11. DSR varies with VOR
+  S.vor = list(formula = ~1 + Nestling + VOR)
+  
+  WEME.model.list = create.model.list("Nest")
+  WEME5.results = mark.wrapper(WEME.model.list,
+                               data = WEME.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
+}
+
+# Results of candidate model set
+WEME5.results <- WEME5.run()
+WEME5.results
+
+coef(WEME5.results$S.stage)
+confint(WEME5.results$S.stage, level = 0.85)
+
+
+
+WEME5.results$S.stage$results$real |> 
   summarize(estimate = mean(estimate),
             se = mean(se),
             lcl = mean(lcl),
             ucl = mean(ucl))
 
-(WEME.real <- as.data.frame(WEME4.results$S.stage$results$real) |> 
-    rownames_to_column(var = 'Group') |> 
+(WEME.real <- as.data.frame(WEME5.results$S.lit$results$real) |> 
+    rownames_to_column(var = "Group") |> 
     mutate(Stage = case_when(
-      grepl('20210', Group) ~ 'Incubating',
-      grepl('20220', Group) ~ 'Incubating',
-      grepl('20230', Group) ~ 'Incubating',
-      grepl('20240', Group) ~ 'Incubating',
-      grepl('20211', Group) ~ 'Nestling',
-      grepl('20221', Group) ~ 'Nestling',
-      grepl('20231', Group) ~ 'Nestling',
-      grepl('20241', Group) ~ 'Nestling')) |> 
-    group_by(Stage) |> 
-    summarize(estimate = mean(estimate), 
-              se = mean(se), 
-              lcl = mean(lcl), 
-              ucl = mean(ucl)))
+      grepl("20210", Group) ~ "Incubating",
+      grepl("20211", Group) ~ "Nestling")) |> 
+    select(Stage, estimate, se, lcl, ucl))
 
 
 # Plotting beta coefficients ----------------------------------------------
 
 
-WEME.beta <- coef(WEME4.results$S.stage) |>
-  cbind(confint(WEME4.results$S.stage, level = 0.85)) |> 
+WEME.beta <- coef(WEME5.results$S.stage) |>
+  cbind(confint(WEME5.results$S.stage, level = 0.85)) |> 
   select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = 'Variable') |> 
   rename(c('Coefficient' = 'estimate',
@@ -300,7 +311,7 @@ str(WEME.beta)
 WEME.ddl <- make.design.data(WEME.pr) |> 
   as.data.frame()
 
-plotdata <- WEME4.results$S.stage
+plotdata <- WEME5.results$S.stage
 
 
 filter(WEME.ddl, 

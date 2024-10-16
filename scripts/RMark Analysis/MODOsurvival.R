@@ -78,35 +78,8 @@ MODO.pr <- process.data(MODO.surv,
 
 
 
-# Grazing candidate model set
-MODO1.run <- function()
-{
-  # 5. DSR varies with nest age
-  S.null = list(formula = ~1)
-  
-  # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + grazed)
-  
-  # 4. DSR varies with the previous years grazing intensity
-  S.pDoD = list(formula = ~1 + pDoD)
-  
-  MODO.model.list = create.model.list("Nest")
-  MODO1.results = mark.wrapper(MODO.model.list,
-                               data = MODO.pr,
-                               adjust = FALSE,
-                               delete = TRUE)
-}
-
-# Results of candidate model set
-MODO1.results <- MODO1.run()
-MODO1.results
-
-coef(MODO1.results$S.null)
-
-
-
 # Temporal candidate model set
-MODO2.run <- function()
+MODO1.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
@@ -121,6 +94,38 @@ MODO2.run <- function()
   S.year = list(formula = ~1 + Year)
   
   MODO.model.list = create.model.list("Nest")
+  MODO1.results = mark.wrapper(MODO.model.list,
+                               data = MODO.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
+}
+
+# Results of candidate model set
+MODO1.results <- MODO1.run()
+MODO1.results
+
+coef(MODO1.results$S.quad)
+confint(MODO1.results$S.quad, level = 0.85)
+
+# only 2023 doesn't overlap zero
+coef(MODO1.results$S.year)
+confint(MODO1.results$S.year, level = 0.85)
+
+
+
+# Nest stage/age candidate model set
+MODO2.run <- function()
+{
+  # 1. DSR varies with year and quadratic
+  S.yearQuad = list(formula = ~1 + Year + Time + I(Time^2))
+  
+  # 2. DSR varies with nest stage
+  S.stage = list(formula = ~1 + Year + Time + I(Time^2) + Nestling)
+  
+  # 3. DSR varies with nest age
+  S.age = list(formula = ~1 + Year + Time + I(Time^2) + NestAge)
+  
+  MODO.model.list = create.model.list("Nest")
   MODO2.results = mark.wrapper(MODO.model.list,
                                data = MODO.pr,
                                adjust = FALSE,
@@ -131,24 +136,19 @@ MODO2.run <- function()
 MODO2.results <- MODO2.run()
 MODO2.results
 
-coef(MODO2.results$S.year)
-confint(MODO2.results$S.year, level = 0.85)
+coef(MODO2.results$S.stage)
+confint(MODO2.results$S.stage, level = 0.85)
 
-coef(MODO2.results$S.quad)
-confint(MODO2.results$S.quad, level = 0.85)
 
 
 # Biological candidate model set
 MODO3.run <- function()
 {
-  # 3. DSR varies with quadratic effect of date
-  S.quad = list(formula = ~1 + Time + I(Time^2))
+  # 1. DSR varies with nest stage
+  S.stage = list(formula = ~1 + Year + Time + I(Time^2) + Nestling)
   
-  # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + Time + I(Time^2) + NestAge)
-  
-  # 5. DSR varies with nest age
-  S.stage = list(formula = ~1 + Time + I(Time^2) + Nestling)
+  # 2. DSR varies with BHCO number
+  S.bhcon = list(formula = ~1 + Year + Time + I(Time^2) + BHCONum)
   
   MODO.model.list = create.model.list("Nest")
   MODO3.results = mark.wrapper(MODO.model.list,
@@ -166,41 +166,17 @@ confint(MODO3.results$S.stage, level = 0.85)
 
 
 
-# Vegetation candidate model set
+# Grazing candidate model set
 MODO4.run <- function()
 {
-  # 5. DSR varies with nest age
-  S.stage = list(formula = ~1 + Time + I(Time^2) + Nestling)
+  # 1. DSR varies with nest stage
+  S.stage = list(formula = ~1 + Year + Time + I(Time^2) + Nestling)
   
-  # 2. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + Time + I(Time^2) + Nestling + KBG)
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + Year + Time + I(Time^2) + Nestling + grazed)
   
-  # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.brome = list(formula = ~1 + Time + I(Time^2) + Nestling + SmoothB)
-  
-  # 4. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + Time + I(Time^2) + Nestling + Litter)
-  
-  # 5. DSR varies with Bare
-  S.bare = list(formula =  ~1 + Time + I(Time^2) + Nestling + Bare)
-  
-  # 6. DSR varies with Forb
-  S.forb = list(formula =  ~1 + Time + I(Time^2) + Nestling + Forb)
-  
-  # 7. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + Time + I(Time^2) + Nestling + Grasslike)
-  
-  # 8. DSR varies with Woody
-  S.woody = list(formula =  ~1 + Time + I(Time^2) + Nestling + Woody)
-  
-  # 9. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + Time + I(Time^2) + Nestling + LitterD)
-  
-  # 10. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Time + I(Time^2) + Nestling + Veg.Height)
-  
-  # 11. DSR varies with VOR
-  S.vor = list(formula =  ~1 + Time + I(Time^2) + Nestling + VOR)
+  # 3. DSR varies with the previous Year + Nestlings grazing intensity
+  S.pDoD = list(formula = ~1 + Year + Time + I(Time^2) + Nestling + pDoD)
   
   MODO.model.list = create.model.list("Nest")
   MODO4.results = mark.wrapper(MODO.model.list,
@@ -213,38 +189,100 @@ MODO4.run <- function()
 MODO4.results <- MODO4.run()
 MODO4.results
 
-coef(MODO4.results$S.kbg)
-confint(MODO4.results$S.kbg, level = 0.85)
+coef(MODO4.results$S.stage)
+confint(MODO4.results$S.stage, level = 0.85)
 
-MODO4.results$S.kbg$results$real |> 
+
+
+# Vegetation candidate model set
+MODO5.run <- function()
+{
+  # 1. DSR varies with nest stage
+  S.stage = list(formula = ~1 + Year + Time + I(Time^2) + Nestling)
+  
+  # 2. DSR varies with KBG
+  S.kbg = list(formula = ~1 + Year + Time + I(Time^2) + Nestling + KBG)
+  
+  # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
+  S.brome = list(formula = ~1 + Year + Time + I(Time^2) + Nestling + SmoothB)
+  
+  # 4. DSR varies with Litter (correlated with KBG)
+  S.lit = list(formula = ~1 + Year + Time + I(Time^2) + Nestling + Litter)
+  
+  # 5. DSR varies with Bare
+  S.bare = list(formula = ~1 + Year + Time + I(Time^2) + Nestling + Bare)
+  
+  # 6. DSR varies with Forb
+  S.forb = list(formula = ~1 + Year + Time + I(Time^2) + Nestling + Forb)
+  
+  # 7. DSR varies with Grasslike  (correlated with KBG)
+  S.grass = list(formula = ~1 + Year + Time + I(Time^2) + Nestling + Grasslike)
+  
+  # 8. DSR varies with Woody
+  S.woody = list(formula = ~1 + Year + Time + I(Time^2) + Nestling + Woody)
+  
+  # 9. DSR varies with Litter Depth (correlated with VOR)
+  S.litdep = list(formula = ~1 + Year + Time + I(Time^2) + Nestling + LitterD)
+  
+  # 10. DSR varies with Veg Height (correlated with VOR)
+  S.height = list(formula = ~1 + Year + Time + I(Time^2) + Nestling + Veg.Height)
+  
+  # 11. DSR varies with VOR
+  S.vor = list(formula = ~1 + Year + Time + I(Time^2) + Nestling + VOR)
+  
+  MODO.model.list = create.model.list("Nest")
+  MODO5.results = mark.wrapper(MODO.model.list,
+                               data = MODO.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
+}
+
+# Results of candidate model set
+MODO5.results <- MODO5.run()
+MODO5.results
+
+coef(MODO5.results$S.kbg)
+confint(MODO5.results$S.kbg, level = 0.85)
+
+
+
+MODO5.results$S.kbg$results$real |> 
   summarize(estimate = mean(estimate),
             se = mean(se),
             lcl = mean(lcl),
             ucl = mean(ucl))
 
-(MODO.real <- as.data.frame(MODO4.results$S.kbg$results$real) |> 
+(MODO.real <- as.data.frame(MODO5.results$S.kbg$results$real) |> 
     rownames_to_column(var = "Group") |> 
-    mutate(Stage = case_when(
-      grepl("20210", Group) ~ "Incubating",
-      grepl("20220", Group) ~ "Incubating",
-      grepl("20230", Group) ~ "Incubating",
-      grepl("20240", Group) ~ "Incubating",
-      grepl("20211", Group) ~ "Nestling",
-      grepl("20221", Group) ~ "Nestling",
-      grepl("20231", Group) ~ "Nestling",
-      grepl("20241", Group) ~ "Nestling")) |> 
+    mutate(Year = case_when(
+      grepl("2021", Group) ~ "2021",
+      grepl("2022", Group) ~ "2022",
+      grepl("2023", Group) ~ "2023",
+      grepl("2024", Group) ~ "2024"),
+      Stage = case_when(
+        grepl("20210", Group) ~ "Incubating",
+        grepl("20230", Group) ~ "Incubating",
+        grepl("20240", Group) ~ "Incubating",
+        grepl("20211", Group) ~ "Nestling",
+        grepl("20221", Group) ~ "Nestling",
+        grepl("20231", Group) ~ "Nestling",
+        grepl("20241", Group) ~ "Nestling")) |> 
+    select(Year, Stage, estimate, se, lcl, ucl))
+
+(MODO.year <- MODO.real |> 
+    group_by(Year) |> 
+    summarize(mean = mean(estimate)))
+
+(MODO.stage <- MODO.real |> 
     group_by(Stage) |> 
-    summarize(estimate = mean(estimate), 
-              se = mean(se), 
-              lcl = mean(lcl), 
-              ucl = mean(ucl)))
+    summarize(mean = mean(estimate)))
 
 
 # Plotting beta coefficients ----------------------------------------------
 
 
-MODO.beta <- coef(MODO4.results$S.kbg) |>
-  cbind(confint(MODO4.results$S.kbg, level = 0.85)) |> 
+MODO.beta <- coef(MODO5.results$S.kbg) |>
+  cbind(confint(MODO5.results$S.kbg, level = 0.85)) |> 
   select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
@@ -255,7 +293,7 @@ MODO.beta$Variable <- gsub("S:", "", MODO.beta$Variable)
 
 str(MODO.beta)
 
-(MODO.plot <- ggplot(MODO.beta[4:5,], 
+(MODO.plot <- ggplot(MODO.beta[c(8),], 
                      aes(x = Variable,
                          y = Coefficient)) +
     geom_hline(yintercept = 0,
@@ -297,7 +335,7 @@ str(MODO.beta)
 MODO.ddl <- make.design.data(MODO.pr) |> 
   as.data.frame()
 
-plotdata <- MODO4.results$S.kbg
+plotdata <- MODO5.results$S.kbg
 
 kbg.values <- seq(from = min(MODO.surv$KBG), 
                   to = max(MODO.surv$KBG), 

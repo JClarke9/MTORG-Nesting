@@ -75,35 +75,8 @@ MALL.pr <- process.data(MALL.surv,
 
 
 
-# Grazing candidate model set
-MALL1.run <- function()
-{
-  # 1. DSR varies with time
-  S.null = list(formula = ~1)
-  
-  # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + grazed)
-  
-  # 4. DSR varies with the previous  + NestAges grazing intensity
-  S.pDoD = list(formula = ~1 + pDoD)
-  
-  MALL.model.list = create.model.list("Nest")
-  MALL1.results = mark.wrapper(MALL.model.list,
-                               data = MALL.pr,
-                               adjust = FALSE,
-                               delete = TRUE)
-}
-
-# Results of candidate model set
-MALL1.results <- MALL1.run()
-MALL1.results
-
-coef(MALL1.results$S.null)
-
-
-
 # Temporal candidate model set
-MALL2.run <- function()
+MALL1.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
@@ -118,10 +91,35 @@ MALL2.run <- function()
   S.year = list(formula = ~1 + Year)
   
   MALL.model.list = create.model.list("Nest")
+  MALL1.results = mark.wrapper(MALL.model.list,
+                               data = MALL.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
+}
+
+# Results of candidate model set
+MALL1.results <- MALL1.run()
+MALL1.results
+
+coef(MALL1.results$S.null)
+confint(MALL1.results$S.null, level = 0.85)
+
+
+
+# Biological candidate model set
+MALL2.run <- function()
+{
+  # 1. DSR varies with time
+  S.null = list(formula = ~1)
+  
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + NestAge)
+  
+  MALL.model.list = create.model.list("Nest")
   MALL2.results = mark.wrapper(MALL.model.list,
                                data = MALL.pr,
                                adjust = FALSE,
-                               delete =TRUE)
+                               delete = TRUE)
 }
 
 # Results of candidate model set
@@ -129,17 +127,20 @@ MALL2.results <- MALL2.run()
 MALL2.results
 
 coef(MALL2.results$S.null)
+confint(MALL2.results$S.null, level = 0.85)
 
 
-
-# Biological candidate model set
+# Grazing candidate model set
 MALL3.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
   
-  # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + NestAge)
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + grazed)
+  
+  # 4. DSR varies with the previous Year + NestAges grazing intensity
+  S.pDoD = list(formula = ~1 + pDoD)
   
   MALL.model.list = create.model.list("Nest")
   MALL3.results = mark.wrapper(MALL.model.list,
@@ -152,7 +153,8 @@ MALL3.run <- function()
 MALL3.results <- MALL3.run()
 MALL3.results
 
-coef(MALL3.results$S.null)
+coef(MALL3.results$S.age)
+confint(MALL3.results$S.age, level = 0.85)
 
 
 
@@ -255,7 +257,7 @@ str(MALL.beta)
           axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
           text = element_text(size = 12,                                              # change the size of the axis titles
                               colour = "black")) +                                    # change the color of the axis titles
-    labs(title = "Northern Pintail",
+    labs(title = "Mallard",
          x = NULL,
          y = expression("Beta " (beta))))
 

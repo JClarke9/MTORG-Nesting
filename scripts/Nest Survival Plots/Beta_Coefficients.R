@@ -107,7 +107,7 @@ RWBL.trt <- mark(RWBL.surv,
                  groups = "Nestling",
                  adjust = FALSE,
                  delete = TRUE, 
-                 model.parameters = list(S = list(formula =  ~1 + Time + I(Time^2) + Nestling)))
+                 model.parameters = list(S = list(formula =  ~1 + Time + Nestling)))
 
 GADW.trt <- mark(GADW.surv, 
                  nocc = max(GADW.surv$LastChecked), 
@@ -122,7 +122,7 @@ NOPI.trt <- mark(NOPI.surv,
                  model = "Nest",
                  adjust = FALSE,
                  delete = TRUE, 
-                 model.parameters = list(S = list(formula =  ~1 + VOR)))
+                 model.parameters = list(S = list(formula =  ~1 + Litter + VOR)))
 
 BWTE.trt <- mark(BWTE.surv, 
                  nocc = max(BWTE.surv$LastChecked), 

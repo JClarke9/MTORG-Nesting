@@ -75,35 +75,8 @@ NOPI.pr <- process.data(NOPI.surv,
 
 
 
-# Grazing candidate model set
-NOPI1.run <- function()
-{
-  # 1. DSR varies with time
-  S.null = list(formula = ~1)
-  
-  # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + grazed)
-  
-  # 4. DSR varies with the previous  + NestAges grazing intensity
-  S.pDoD = list(formula = ~1 + pDoD)
-  
-  NOPI.model.list = create.model.list("Nest")
-  NOPI1.results = mark.wrapper(NOPI.model.list,
-                               data = NOPI.pr,
-                               adjust = FALSE,
-                               delete = TRUE)
-}
-
-# Results of candidate model set
-NOPI1.results <- NOPI1.run()
-NOPI1.results
-
-coef(NOPI1.results$S.null)
-
-
-
 # Temporal candidate model set
-NOPI2.run <- function()
+NOPI1.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
@@ -118,10 +91,35 @@ NOPI2.run <- function()
   S.year = list(formula = ~1 + Year)
   
   NOPI.model.list = create.model.list("Nest")
+  NOPI1.results = mark.wrapper(NOPI.model.list,
+                               data = NOPI.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
+}
+
+# Results of candidate model set
+NOPI1.results <- NOPI1.run()
+NOPI1.results
+
+coef(NOPI1.results$S.null)
+confint(NOPI1.results$S.null, level = 0.85)
+
+
+
+# Biological candidate model set
+NOPI2.run <- function()
+{
+  # 1. DSR varies with time
+  S.null = list(formula = ~1)
+  
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + NestAge)
+  
+  NOPI.model.list = create.model.list("Nest")
   NOPI2.results = mark.wrapper(NOPI.model.list,
                                data = NOPI.pr,
                                adjust = FALSE,
-                               delete =TRUE)
+                               delete = TRUE)
 }
 
 # Results of candidate model set
@@ -129,17 +127,20 @@ NOPI2.results <- NOPI2.run()
 NOPI2.results
 
 coef(NOPI2.results$S.null)
+confint(NOPI2.results$S.null, level = 0.85)
 
 
-
-# Biological candidate model set
+# Grazing candidate model set
 NOPI3.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
   
-  # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + NestAge)
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + grazed)
+  
+  # 4. DSR varies with the previous Year + NestAges grazing intensity
+  S.pDoD = list(formula = ~1 + pDoD)
   
   NOPI.model.list = create.model.list("Nest")
   NOPI3.results = mark.wrapper(NOPI.model.list,
@@ -153,6 +154,7 @@ NOPI3.results <- NOPI3.run()
 NOPI3.results
 
 coef(NOPI3.results$S.null)
+confint(NOPI3.results$S.null, level = 0.85)
 
 
 
@@ -212,12 +214,24 @@ confint(NOPI4.results$S.vor, level = 0.85)
 (NOPI.dsrLIT <- as.data.frame(NOPI4.results$S.lit$results$real))
 (NOPI.dsrVOR <- as.data.frame(NOPI4.results$S.vor$results$real))
 
+NOPI.final <- mark(NOPI.surv,
+                   nocc = max(NOPI.surv$LastChecked),
+                   model = "Nest",
+                   groups = "Year",
+                   adjust = FALSE,
+                   delete = TRUE,
+                   model.parameters = list(S = list(formula = ~1 + Litter + VOR)))
+
+coef(NOPI.final)
+confint(NOPI.final, level = 0.85)
+
+
 
 # Plotting beta coefficients ----------------------------------------------
 
 
-NOPI.beta <- coef(NOPI4.results$S.vor) |>
-  cbind(confint(NOPI4.results$S.vor, level = 0.85)) |> 
+NOPI.beta <- coef(NOPI.final) |>
+  cbind(confint(NOPI.final, level = 0.85)) |> 
   select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
@@ -228,7 +242,7 @@ NOPI.beta$Variable <- gsub("S:", "", NOPI.beta$Variable)
 
 str(NOPI.beta)
 
-(NOPI.plot <- ggplot(NOPI.beta[2,], 
+(NOPI.plot <- ggplot(NOPI.beta[2:3,], 
                      aes(x = Variable,
                          y = Coefficient)) +
     geom_hline(yintercept = 0,
@@ -270,17 +284,22 @@ str(NOPI.beta)
 NOPI.ddl <- make.design.data(NOPI.pr) |> 
   as.data.frame()
 
+LITvalues <- seq(from = min(NOPI.surv$Litter),
+                 to = max(NOPI.surv$Litter),
+                 length = 100)
+
 VORvalues <- seq(from = min(NOPI.surv$VOR),
                  to = max(NOPI.surv$VOR),
                  length = 100)
 
 
-VOR.pred <- covariate.predictions(NOPI4.results$S.vor,
-                                  data = data.frame(VOR = VORvalues),
+VOR.pred <- covariate.predictions(NOPI.final,
+                                  data = data.frame(VOR = VORvalues,
+                                                    Litter = mean(LITvalues)),
                                   indices = 1)
 
 (NOPIvor.plot <- ggplot(VOR.pred$estimates, 
-                        aes(x = covdata, 
+                        aes(x = VOR, 
                             y = estimate)) +
     geom_line(linewidth = 1.5,
               aes(color = "model.index")) +
@@ -309,6 +328,40 @@ VOR.pred <- covariate.predictions(NOPI4.results$S.vor,
          y = "Daily Survival Rate"))
 
 
+LIT.pred <- covariate.predictions(NOPI.final,
+                                  data = data.frame(VOR = mean(VORvalues),
+                                                    Litter = LITvalues),
+                                  indices = 1)
+
+(NOPIlit.plot <- ggplot(LIT.pred$estimates, 
+                        aes(x = Litter, 
+                            y = estimate)) +
+    geom_line(linewidth = 1.5,
+              aes(color = "model.index")) +
+    scale_colour_manual(values = c('#D4A634')) +
+    scale_fill_manual(values = c('#D4A634')) +
+    theme(plot.title = element_text(family = "my_font",                             # select the font for the title
+                                    size = 16,
+                                    hjust = .5),
+          panel.grid.major = element_blank(),                                     # remove the vertical grid lines
+          panel.grid.minor = element_blank(),                                     # remove the horizontal grid lines
+          panel.background = element_rect(fill = NA,                                # make the interior background transparent
+                                          colour = NA),                           # remove any other colors
+          plot.background = element_rect(fill = NA,                                 # make the outer background transparent
+                                         colour = NA),                              # remove any other colors
+          axis.line = element_line(colour = "black"),                             # color the x and y axis
+          axis.text.y = element_text(size = 12, colour = "black"),                    # color the axis text
+          axis.text.x = element_text(size = 12, colour = "black"),
+          axis.ticks = element_line(colour = "black"),                            # change the colors of the axis tick marks
+          text = element_text(size = 12,                                              # change the size of the axis titles
+                              colour = "black"),                                    # change the color of the axis titles
+          legend.background = element_rect(fill = NA),
+          legend.position = "none") +
+    labs(title = "Northern Pintail",
+         color = "Year",
+         x = "Litter (Percent Cover)",
+         y = "Daily Survival Rate"))
+
 ggsave(NOPI.plot,
        filename = "outputs/figs/betaNOPI.png",
        dpi = "print",
@@ -318,6 +371,13 @@ ggsave(NOPI.plot,
 
 ggsave(NOPIvor.plot,
        filename = "outputs/figs/vorNOPI.png",
+       dpi = "print",
+       bg = "white",
+       height = 6,
+       width = 6)
+
+ggsave(NOPIlit.plot,
+       filename = "outputs/figs/litNOPI.png",
        dpi = "print",
        bg = "white",
        height = 6,

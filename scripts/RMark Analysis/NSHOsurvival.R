@@ -75,35 +75,8 @@ NSHO.pr <- process.data(NSHO.surv,
 
 
 
-# Grazing candidate model set
-NSHO1.run <- function()
-{
-  # 1. DSR varies with time
-  S.null = list(formula = ~1)
-  
-  # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + grazed)
-  
-  # 4. DSR varies with the previous  + NestAges grazing intensity
-  S.pDoD = list(formula = ~1 + pDoD)
-  
-  NSHO.model.list = create.model.list("Nest")
-  NSHO1.results = mark.wrapper(NSHO.model.list,
-                               data = NSHO.pr,
-                               adjust = FALSE,
-                               delete = TRUE)
-}
-
-# Results of candidate model set
-NSHO1.results <- NSHO1.run()
-NSHO1.results
-
-coef(NSHO1.results$S.null)
-
-
-
 # Temporal candidate model set
-NSHO2.run <- function()
+NSHO1.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
@@ -118,10 +91,35 @@ NSHO2.run <- function()
   S.year = list(formula = ~1 + Year)
   
   NSHO.model.list = create.model.list("Nest")
+  NSHO1.results = mark.wrapper(NSHO.model.list,
+                               data = NSHO.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
+}
+
+# Results of candidate model set
+NSHO1.results <- NSHO1.run()
+NSHO1.results
+
+coef(NSHO1.results$S.null)
+confint(NSHO1.results$S.null, level = 0.85)
+
+
+
+# Biological candidate model set
+NSHO2.run <- function()
+{
+  # 1. DSR varies with time
+  S.null = list(formula = ~1)
+  
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + NestAge)
+  
+  NSHO.model.list = create.model.list("Nest")
   NSHO2.results = mark.wrapper(NSHO.model.list,
                                data = NSHO.pr,
                                adjust = FALSE,
-                               delete =TRUE)
+                               delete = TRUE)
 }
 
 # Results of candidate model set
@@ -129,16 +127,20 @@ NSHO2.results <- NSHO2.run()
 NSHO2.results
 
 coef(NSHO2.results$S.null)
+confint(NSHO2.results$S.mull, level = 0.85)
 
 
-# Biological candidate model set
+# Grazing candidate model set
 NSHO3.run <- function()
 {
   # 1. DSR varies with time
   S.null = list(formula = ~1)
   
-  # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + NestAge)
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + grazed)
+  
+  # 4. DSR varies with the previous Year + NestAges grazing intensity
+  S.pDoD = list(formula = ~1 + pDoD)
   
   NSHO.model.list = create.model.list("Nest")
   NSHO3.results = mark.wrapper(NSHO.model.list,
@@ -152,6 +154,7 @@ NSHO3.results <- NSHO3.run()
 NSHO3.results
 
 coef(NSHO3.results$S.null)
+confint(NSHO3.results$S.null, level = 0.85)
 
 
 
@@ -300,7 +303,7 @@ BROME.pred <- covariate.predictions(NSHO4.results$S.brome,
           legend.position = "none") +
     labs(title = "Northern Shoveler",
          color = "Year",
-         x = "Smooth Brome",
+         x = "Smooth Brome (Percent Cover)",
          y = "Daily Survival Rate"))
 
 

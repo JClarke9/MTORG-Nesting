@@ -72,17 +72,20 @@ GADW.pr <- process.data(GADW.surv,
 
 
 
-# Grazing candidate model set
+# Temporal candidate model set
 GADW1.run <- function()
 {
-  # 4. DSR varies with nest age
+  # 1. DSR varies with time
   S.null = list(formula = ~1)
   
-  # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + grazed)
+  # 2. DSR varies with time
+  S.time = list(formula = ~1 + Time)
   
-  # 3. DSR varies with the previous Year + NestAges grazing intensity
-  S.pDoD = list(formula = ~1 + pDoD)
+  # 3. DSR varies with quadratic effect of date
+  S.quad = list(formula = ~1 + Time + I(Time^2))
+  
+  # 4. DSR varies with year
+  S.year = list(formula = ~1 + Year)
   
   GADW.model.list = create.model.list("Nest")
   GADW1.results = mark.wrapper(GADW.model.list,
@@ -95,25 +98,19 @@ GADW1.run <- function()
 GADW1.results <- GADW1.run()
 GADW1.results
 
-coef(GADW1.results$S.grazed)
-confint(GADW1.results$S.grazed, level = 0.85)
+coef(GADW1.results$S.year)
+confint(GADW1.results$S.year, level = 0.85)
 
 
 
-# Temporal candidate model set
+# Biological candidate model set
 GADW2.run <- function()
 {
-  # 1. DSR varies with time
-  S.grazed = list(formula = ~1 + grazed)
-  
-  # 2. DSR varies with time
-  S.time = list(formula = ~1 + grazed + Time)
-  
-  # 3. DSR varies with quadratic effect of date
-  S.quad = list(formula = ~1 + grazed + Time + I(Time^2))
-  
   # 4. DSR varies with year
-  S.year = list(formula = ~1 + grazed + Year)
+  S.year = list(formula = ~1 + Year)
+  
+  # 4. DSR varies with nest age
+  S.age = list(formula = ~1 + Year + NestAge)
   
   GADW.model.list = create.model.list("Nest")
   GADW2.results = mark.wrapper(GADW.model.list,
@@ -126,22 +123,24 @@ GADW2.run <- function()
 GADW2.results <- GADW2.run()
 GADW2.results
 
-coef(GADW2.results$S.year)
-confint(GADW2.results$S.year, level = 0.85)
+coef(GADW2.results$S.age)
+confint(GADW2.results$S.age, level = 0.85)
 
 
-
-# Biological candidate model set
+# Grazing candidate model set
 GADW3.run <- function()
 {
-  # 1. DSR varies with year
-  S.year = list(formula = ~1 + grazed + Year)
+  # 1. DSR varies with nest age
+  S.age = list(formula = ~1 + Year + NestAge)
   
-  # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + grazed + Year + NestAge)
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + Year + NestAge + grazed)
+  
+  # 4. DSR varies with the previous Year + NestAges grazing intensity
+  S.pDoD = list(formula = ~1 + Year + NestAge + pDoD)
   
   GADW.model.list = create.model.list("Nest")
-  GADW2.results = mark.wrapper(GADW.model.list,
+  GADW3.results = mark.wrapper(GADW.model.list,
                                data = GADW.pr,
                                adjust = FALSE,
                                delete = TRUE)
@@ -151,45 +150,48 @@ GADW3.run <- function()
 GADW3.results <- GADW3.run()
 GADW3.results
 
-coef(GADW3.results$S.age)
-confint(GADW3.results$S.age, level = 0.85)
+coef(GADW3.results$S.grazed)
+confint(GADW3.results$S.grazed, level = 0.85)
+
+coef(GADW3.results$S.pDoD)
+confint(GADW3.results$S.pDoD, level = 0.85)
 
 
 # Vegetation candidate model set
 GADW4.run <- function()
 {
-  # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + grazed + Year + NestAge)
+  # 1. DSR varies with grazing
+  S.grazing = list(formula = ~1 + Year + NestAge + grazed + pDoD)
   
   # 2. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + grazed + Year + NestAge + KBG)
+  S.kbg = list(formula =  ~1 + Year + NestAge + grazed + pDoD + KBG)
   
   # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.brome = list(formula = ~1 + grazed + Year + NestAge + SmoothB)
+  S.brome = list(formula = ~1 + Year + NestAge + grazed + pDoD + SmoothB)
   
   # 4. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + grazed + Year + NestAge + Litter)
+  S.lit = list(formula =  ~1 + Year + NestAge + grazed + pDoD + Litter)
   
   # 5. DSR varies with Bare
-  S.bare = list(formula =  ~1 + grazed + Year + NestAge + Bare)
+  S.bare = list(formula =  ~1 + Year + NestAge + grazed + pDoD + Bare)
   
   # 6. DSR varies with Forb
-  S.forb = list(formula =  ~1 + grazed + Year + NestAge + Forb)
+  S.forb = list(formula =  ~1 + Year + NestAge + grazed + pDoD + Forb)
   
   # 7. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + grazed + Year + NestAge + Grasslike)
+  S.grass = list(formula =  ~1 + Year + NestAge + grazed + pDoD + Grasslike)
   
   # 8. DSR varies with Woody
-  S.woody = list(formula =  ~1 + grazed + Year + NestAge + Woody)
+  S.woody = list(formula =  ~1 + Year + NestAge + grazed + pDoD + Woody)
   
   # 9. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + grazed + Year + NestAge + LitterD)
+  S.litdep = list(formula =  ~1 + Year + NestAge + grazed + pDoD + LitterD)
   
   # 10. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + grazed + Year + NestAge + Veg.Height)
+  S.height = list(formula =  ~1 + Year + NestAge + grazed + pDoD + Veg.Height)
   
   # 11. DSR varies with VOR
-  S.vor = list(formula =  ~1 + grazed + Year + NestAge + VOR)
+  S.vor = list(formula =  ~1 + Year + NestAge + grazed + pDoD + VOR)
   
   GADW.model.list = create.model.list("Nest")
   GADW4.results = mark.wrapper(GADW.model.list,

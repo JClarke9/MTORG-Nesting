@@ -78,17 +78,20 @@ CCSP.pr <- process.data(CCSP.surv,
 
 
 
-# Grazing candidate model set
+# Temporal candidate model set
 CCSP1.run <- function()
 {
-  # 1. DSR varies with nest age
+  # 1. DSR varies with time
   S.null = list(formula = ~1)
   
-  # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + grazed)
+  # 2. DSR varies with time
+  S.time = list(formula = ~1 + Time)
   
-  # 3. DSR varies with the previous years grazing intensity
-  S.pDoD = list(formula = ~1 + pDoD)
+  # 3. DSR varies with quadratic effect of date
+  S.quad = list(formula = ~1 + Time + I(Time^2))
+  
+  # 4. DSR varies with year
+  S.year = list(formula = ~1 + Year)
   
   CCSP.model.list = create.model.list("Nest")
   CCSP1.results = mark.wrapper(CCSP.model.list,
@@ -101,25 +104,22 @@ CCSP1.run <- function()
 CCSP1.results <- CCSP1.run()
 CCSP1.results
 
-coef(CCSP1.results$S.grazed)
-confint(CCSP1.results$S.grazed, level = 0.85)
+coef(CCSP1.results$S.year)
+confint(CCSP1.results$S.year, level = 0.85)
 
 
 
-# Temporal candidate model set
+# Nest stage/age candidate model set
 CCSP2.run <- function()
 {
-  # 1. DSR varies with time
-  S.grazed = list(formula = ~1 + grazed)
+  # 1. DSR varies with year
+  S.year = list(formula = ~1 + Year)
   
-  # 2. DSR varies with time
-  S.time = list(formula = ~1 + grazed + Time)
+  # 2. DSR varies with nest stage
+  S.stage = list(formula = ~1 + Year + Nestling)
   
-  # 3. DSR varies with quadratic effect of date
-  S.quad = list(formula = ~1 + grazed + Time + I(Time^2))
-  
-  # 4. DSR varies with year
-  S.year = list(formula = ~1 + grazed + Year)
+  # 3. DSR varies with nest age
+  S.age = list(formula = ~1 + Year + NestAge)
   
   CCSP.model.list = create.model.list("Nest")
   CCSP2.results = mark.wrapper(CCSP.model.list,
@@ -132,28 +132,19 @@ CCSP2.run <- function()
 CCSP2.results <- CCSP2.run()
 CCSP2.results
 
-coef(CCSP2.results$S.year)
-confint(CCSP2.results$S.year, level = 0.85)
+coef(CCSP2.results$S.stage)
+confint(CCSP2.results$S.stage, level = 0.85)
 
 
 
 # Biological candidate model set
 CCSP3.run <- function()
 {
-  # 1. DSR varies with year
-  S.year = list(formula = ~1 + grazed + Year)
+  # 1. DSR varies with nest stage and age
+  S.stage = list(formula = ~1 + Year + Nestling)
   
   # 2. DSR varies with BHCO number
-  S.bhcon = list(formula = ~1 + grazed + Year + BHCONum)
-  
-  # 2. DSR varies with BHCO number
-  S.bhcop = list(formula = ~1 + grazed + Year + BHCOPres)
-  
-  # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + grazed + Year + NestAge)
-  
-  # 5. DSR varies with nest age
-  S.stage = list(formula = ~1 + grazed + Year + Nestling)
+  S.bhcon = list(formula = ~1 + Year + Nestling + BHCONum)
   
   CCSP.model.list = create.model.list("Nest")
   CCSP3.results = mark.wrapper(CCSP.model.list,
@@ -171,41 +162,17 @@ confint(CCSP3.results$S.stage, level = 0.85)
 
 
 
-# Vegetation candidate model set
+# Grazing candidate model set
 CCSP4.run <- function()
 {
-  # 5. DSR varies with nest age
-  S.stage = list(formula = ~1 + grazed + Year + Nestling)
+  # 1. DSR varies with nest stage and age
+  S.stage = list(formula = ~1 + Year + Nestling)
   
-  # 2. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + grazed + Year + Nestling + KBG)
+  # 2. DSR varies with the number of days a nest experienced grazing
+  S.grazed = list(formula = ~1 + Year + Nestling + grazed)
   
-  # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.brome = list(formula = ~1 + grazed + Year + Nestling + SmoothB)
-  
-  # 4. DSR varies with Litter (correlated with KBG)
-  S.lit = list(formula =  ~1 + grazed + Year + Nestling + Litter)
-  
-  # 5. DSR varies with Bare
-  S.bare = list(formula =  ~1 + grazed + Year + Nestling + Bare)
-  
-  # 6. DSR varies with Forb
-  S.forb = list(formula =  ~1 + grazed + Year + Nestling + Forb)
-  
-  # 7. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + grazed + Year + Nestling + Grasslike)
-  
-  # 8. DSR varies with Woody
-  S.woody = list(formula =  ~1 + grazed + Year + Nestling + Woody)
-  
-  # 9. DSR varies with Litter Depth (correlated with VOR)
-  S.litdep = list(formula =  ~1 + grazed + Year + Nestling + LitterD)
-  
-  # 10. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + grazed + Year + Nestling + Veg.Height)
-  
-  # 11. DSR varies with VOR
-  S.vor = list(formula =  ~1 + grazed + Year + Nestling + VOR)
+  # 3. DSR varies with the previous Year + Nestlings grazing intensity
+  S.pDoD = list(formula = ~1 + Year + Nestling + pDoD)
   
   CCSP.model.list = create.model.list("Nest")
   CCSP4.results = mark.wrapper(CCSP.model.list,
@@ -218,49 +185,77 @@ CCSP4.run <- function()
 CCSP4.results <- CCSP4.run()
 CCSP4.results
 
-
-coef(CCSP4.results$S.litdep)
-confint(CCSP4.results$S.litdep, level = 0.85)
-
-coef(CCSP4.results$S.bare)
-confint(CCSP4.results$S.bare, level = 0.85)
-
-coef(CCSP4.results$S.vor)
-confint(CCSP4.results$S.vor, level = 0.85)
+coef(CCSP4.results$S.stage)
+confint(CCSP4.results$S.stage, level = 0.85)
 
 
 
-CCSP4.results$S.bare$results$real |> 
+# Vegetation candidate model set
+CCSP5.run <- function()
+{
+  # 1. DSR varies with nest stage and age
+  S.stage = list(formula = ~1 + Year + Nestling)
+  
+  # 2. DSR varies with KBG
+  S.kbg = list(formula = ~1 + Year + Nestling + KBG)
+  
+  # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
+  S.brome = list(formula = ~1 + Year + Nestling + SmoothB)
+  
+  # 4. DSR varies with Litter (correlated with KBG)
+  S.lit = list(formula = ~1 + Year + Nestling + Litter)
+  
+  # 5. DSR varies with Bare
+  S.bare = list(formula = ~1 + Year + Nestling + Bare)
+  
+  # 6. DSR varies with Forb
+  S.forb = list(formula = ~1 + Year + Nestling + Forb)
+  
+  # 7. DSR varies with Grasslike  (correlated with KBG)
+  S.grass = list(formula = ~1 + Year + Nestling + Grasslike)
+  
+  # 8. DSR varies with Woody
+  S.woody = list(formula = ~1 + Year + Nestling + Woody)
+  
+  # 9. DSR varies with Litter Depth (correlated with VOR)
+  S.litdep = list(formula = ~1 + Year + Nestling + LitterD)
+  
+  # 10. DSR varies with Veg Height (correlated with VOR)
+  S.height = list(formula = ~1 + Year + Nestling + Veg.Height)
+  
+  # 11. DSR varies with VOR
+  S.vor = list(formula = ~1 + Year + Nestling + VOR)
+  
+  CCSP.model.list = create.model.list("Nest")
+  CCSP5.results = mark.wrapper(CCSP.model.list,
+                               data = CCSP.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
+}
+
+# Results of candidate model set
+CCSP5.results <- CCSP5.run()
+CCSP5.results
+
+coef(CCSP5.results$S.bare)
+confint(CCSP5.results$S.bare, level = 0.85)
+
+coef(CCSP5.results$S.litdep)
+confint(CCSP5.results$S.litdep, level = 0.85)
+
+CCSP5.results$S.bare$results$real |> 
   summarize(estimate = mean(estimate),
             se = mean(se),
             lcl = mean(lcl),
             ucl = mean(ucl))
 
-(CCSP.realBare <- as.data.frame(CCSP4.results$S.bare$results$real) |> 
-    rownames_to_column(var = "Group") |> 
-    mutate(Year = case_when(
-      grepl("2021", Group) ~ "2021",
-      grepl("2022", Group) ~ "2022",
-      grepl("2023", Group) ~ "2023",
-      grepl("2024", Group) ~ "2024"),
-      Stage = case_when(
-        grepl("20210", Group) ~ "Incubating",
-        grepl("20220", Group) ~ "Incubating",
-        grepl("20230", Group) ~ "Incubating",
-        grepl("20240", Group) ~ "Incubating",
-        grepl("20211", Group) ~ "Nestling",
-        grepl("20221", Group) ~ "Nestling",
-        grepl("20231", Group) ~ "Nestling",
-        grepl("20241", Group) ~ "Nestling")) |> 
-    select(Year, Stage, estimate, se, lcl, ucl))
-
-CCSP4.results$S.litdep$results$real |> 
+CCSP5.results$S.litdep$results$real |> 
   summarize(estimate = mean(estimate),
             se = mean(se),
             lcl = mean(lcl),
             ucl = mean(ucl))
 
-(CCSP.realBare <- as.data.frame(CCSP4.results$S.litdep$results$real) |> 
+(CCSP.realBARE <- as.data.frame(CCSP5.results$S.bare$results$real) |> 
     rownames_to_column(var = "Group") |> 
     mutate(Year = case_when(
       grepl("2021", Group) ~ "2021",
@@ -278,7 +273,7 @@ CCSP4.results$S.litdep$results$real |>
         grepl("20241", Group) ~ "Nestling")) |> 
     select(Year, Stage, estimate, se, lcl, ucl))
 
-(CCSP.realVOR <- as.data.frame(CCSP4.results$S.vor$results$real) |> 
+(CCSP.realLITDEP <- as.data.frame(CCSP5.results$S.litdep$results$real) |> 
     rownames_to_column(var = "Group") |> 
     mutate(Year = case_when(
       grepl("2021", Group) ~ "2021",
@@ -295,6 +290,23 @@ CCSP4.results$S.litdep$results$real |>
         grepl("20231", Group) ~ "Nestling",
         grepl("20241", Group) ~ "Nestling")) |> 
     select(Year, Stage, estimate, se, lcl, ucl))
+
+(CCSP.year <- CCSP.realBARE |> 
+    group_by(Year) |> 
+    summarize(mean = mean(estimate)))
+
+(CCSP.stage <- CCSP.realBARE |> 
+    group_by(Stage) |> 
+    summarize(mean = mean(estimate)))
+
+
+(CCSP.year <- CCSP.realLITDEP |> 
+    group_by(Year) |> 
+    summarize(mean = mean(estimate)))
+
+(CCSP.stage <- CCSP.realLITDEP |> 
+    group_by(Stage) |> 
+    summarize(mean = mean(estimate)))
 
 
 # Plotting beta coefficients ----------------------------------------------

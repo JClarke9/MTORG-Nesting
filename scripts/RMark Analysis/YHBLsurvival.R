@@ -77,17 +77,20 @@ YHBL.pr <- process.data(YHBL.surv,
 
 
 
-# Grazing candidate model set
+# Temporal candidate model set
 YHBL1.run <- function()
 {
-  # 5. DSR varies with nest age
+  # 1. DSR varies with time
   S.null = list(formula = ~1)
   
-  # 2. DSR varies with the number of days a nest experienced grazing
-  S.grazed = list(formula = ~1 + grazed)
+  # 2. DSR varies with time
+  S.time = list(formula = ~1 + Time)
   
-  # 4. DSR varies with the previous years grazing intensity
-  S.pDoD = list(formula = ~1 + pDoD)
+  # 3. DSR varies with quadratic effect of date
+  S.quad = list(formula = ~1 + Time + I(Time^2))
+  
+  # 4. DSR varies with year
+  S.year = list(formula = ~1 + Year)
   
   YHBL.model.list = create.model.list("Nest")
   YHBL1.results = mark.wrapper(YHBL.model.list,
@@ -100,29 +103,25 @@ YHBL1.run <- function()
 YHBL1.results <- YHBL1.run()
 YHBL1.results
 
-coef(YHBL1.results$S.pDoD)
-confint(YHBL1.results$S.pDoD, level = 0.85)
-
-coef(YHBL1.results$S.grazed)
-confint(YHBL1.results$S.grazed, level = 0.85)
+coef(YHBL1.results$S.year)
+confint(YHBL1.results$S.year, level = 0.85)
 
 
 
-# Temporal candidate model set
-# I didn't include year because most years we didn't have many nests
+# Nest stage/age candidate model set
 YHBL2.run <- function()
 {
-  # 1. DSR varies with time
-  S.null = list(formula = ~1)
+  # 1. DSR varies with year
+  S.year = list(formula = ~1 + Year)
   
-  # 2. DSR varies with time
-  S.time = list(formula = ~1 + Time)
+  # 2. DSR varies with nest stage
+  S.stage = list(formula = ~1 + Year + Nestling)
   
-  # 3. DSR varies with quadratic effect of date
-  S.quad = list(formula = ~1 + Time + I(Time^2))
+  # 3. DSR varies with nest age
+  S.age = list(formula = ~1 + Year + NestAge)
   
   YHBL.model.list = create.model.list("Nest")
-  YHBL1.results = mark.wrapper(YHBL.model.list,
+  YHBL2.results = mark.wrapper(YHBL.model.list,
                                data = YHBL.pr,
                                adjust = FALSE,
                                delete = TRUE)
@@ -132,31 +131,19 @@ YHBL2.run <- function()
 YHBL2.results <- YHBL2.run()
 YHBL2.results
 
-coef(YHBL2.results$S.time)
-confint(YHBL2.results$S.time, level = 0.85)
-
-coef(YHBL2.results$S.quad)
-confint(YHBL2.results$S.quad, level = 0.85)
+coef(YHBL2.results$S.stage)
+confint(YHBL2.results$S.stage, level = 0.85)
 
 
 
 # Biological candidate model set
 YHBL3.run <- function()
 {
-  # 3. DSR varies with quadratic effect of date
-  S.time = list(formula = ~1 + Time)
+  # 1. DSR varies with nest stage
+  S.stage = list(formula = ~1 + NestAge + Nestling)
   
   # 2. DSR varies with BHCO number
-  S.bhcon = list(formula = ~1 + Time + BHCONum)
-  
-  # 2. DSR varies with BHCO number
-  S.bhcop = list(formula = ~1 + Time + BHCOPres)
-  
-  # 4. DSR varies with nest age
-  S.age = list(formula = ~1 + Time + NestAge)
-  
-  # 5. DSR varies with nest age
-  S.stage = list(formula = ~1 + Time + Nestling)
+  S.bhcon = list(formula = ~1 + NestAge + Nestling + BHCONum)
   
   YHBL.model.list = create.model.list("Nest")
   YHBL3.results = mark.wrapper(YHBL.model.list,
@@ -174,41 +161,17 @@ confint(YHBL3.results$S.stage, level = 0.85)
 
 
 
-# Vegetation candidate model set
+# Grazing candidate model set
 YHBL4.run <- function()
 {
+  # 1. DSR varies with BHCO number
+  S.bhcon = list(formula = ~1 + NestAge + Nestling + BHCONum)
+  
   # 2. DSR varies with the number of days a nest experienced grazing
-  S.stage = list(formula = ~1 + Time + I(Time^2) + Nestling)
+  S.grazed = list(formula = ~1 + NestAge + Nestling + BHCONum + grazed)
   
-  # 2. DSR varies with KBG
-  S.kbg = list(formula =  ~1 + Time + I(Time^2) + Nestling + KBG)
-  
-  # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
-  S.brome = list(formula = ~1 + Time + I(Time^2) + Nestling + SmoothB)
-  
-  # 4. DSR varies with Litter (correlated with KBG)
-  # S.lit = list(formula =  ~1 + Time + I(Time^2) + Nestling + Litter)
-  
-  # 5. DSR varies with Bare
-  #S.bare = list(formula =  ~1 + Time + I(Time^2) + Nestling + Bare)
-  
-  # 6. DSR varies with Forb
-  S.forb = list(formula =  ~1 + Time + I(Time^2) + Nestling + Forb)
-  
-  # 7. DSR varies with Grasslike  (correlated with KBG)
-  S.grass = list(formula =  ~1 + Time + I(Time^2) + Nestling + Grasslike)
-  
-  # 8. DSR varies with Woody
-  S.woody = list(formula =  ~1 + Time + I(Time^2) + Nestling + Woody)
-  
-  # 9. DSR varies with Litter Depth (correlated with VOR)
-  #S.litdep = list(formula =  ~1 + Time + I(Time^2) + Nestling + LitterD)
-  
-  # 10. DSR varies with Veg Height (correlated with VOR)
-  S.height = list(formula =  ~1 + Time + I(Time^2) + Nestling + Veg.Height)
-  
-  # 11. DSR varies with VOR
-  S.vor = list(formula =  ~1 + Time + I(Time^2) + Nestling + VOR)
+  # 3. DSR varies with the previous Year + Nestlings grazing intensity
+  S.pDoD = list(formula = ~1 + NestAge + Nestling + BHCONum + pDoD)
   
   YHBL.model.list = create.model.list("Nest")
   YHBL4.results = mark.wrapper(YHBL.model.list,
@@ -221,31 +184,93 @@ YHBL4.run <- function()
 YHBL4.results <- YHBL4.run()
 YHBL4.results
 
-coef(YHBL4.results$S.stage)
-confint(YHBL4.results$S.stage, level = 0.85)
+coef(YHBL3.results$S.stage)
+confint(YHBL3.results$S.stage, level = 0.85)
 
-YHBL4.results$S.stage$results$real |> 
+
+
+# Vegetation candidate model set
+YHBL5.run <- function()
+{
+  # 1. DSR varies with the previous Year + Nestlings grazing intensity
+  S.grazing = list(formula = ~1 + NestAge + Nestling + BHCONum + pDoD + grazed)
+  
+  # 2. DSR varies with KBG
+  # S.kbg = list(formula = ~1 + NestAge + Nestling + BHCONum + pDoD + grazed + KBG)
+  
+  # 3. DSR varies with Smooth Brome (correlated with KBG and Litter Depth)
+  # S.brome = list(formula = ~1 + NestAge + Nestling + BHCONum + pDoD + grazed + SmoothB)
+  
+  # 4. DSR varies with Litter (correlated with KBG)
+  # S.lit = list(formula = ~1 + NestAge + Nestling + BHCONum + pDoD + grazed + Litter)
+  
+  # 5. DSR varies with Bare
+  # S.bare = list(formula = ~1 + NestAge + Nestling + BHCONum + pDoD + grazed + Bare)
+  
+  # 6. DSR varies with Forb
+  # S.forb = list(formula = ~1 + NestAge + Nestling + BHCONum + pDoD + grazed + Forb)
+  
+  # 7. DSR varies with Grasslike  (correlated with KBG)
+  S.grass = list(formula = ~1 + NestAge + Nestling + BHCONum + pDoD + grazed + Grasslike)
+  
+  # 8. DSR varies with Woody
+  # S.woody = list(formula = ~1 + NestAge + Nestling + BHCONum + pDoD + grazed + Woody)
+  
+  # 9. DSR varies with Litter Depth (correlated with VOR)
+  # S.litdep = list(formula = ~1 + NestAge + Nestling + BHCONum + pDoD + grazed + LitterD)
+  
+  # 10. DSR varies with Veg Height (correlated with VOR)
+  S.height = list(formula = ~1 + NestAge + Nestling + BHCONum + pDoD + grazed + Veg.Height)
+  
+  # 11. DSR varies with VOR
+  S.vor = list(formula = ~1 + NestAge + Nestling + BHCONum + pDoD + grazed + VOR)
+  
+  YHBL.model.list = create.model.list("Nest")
+  YHBL5.results = mark.wrapper(YHBL.model.list,
+                               data = YHBL.pr,
+                               adjust = FALSE,
+                               delete = TRUE)
+}
+
+# Results of candidate model set
+YHBL5.results <- YHBL5.run()
+YHBL5.results
+
+coef(YHBL5.results$S.lit)
+confint(YHBL5.results$S.lit, level = 0.85)
+
+
+
+YHBL5.results$S.lit$results$real |> 
   summarize(estimate = mean(estimate),
             se = mean(se),
             lcl = mean(lcl),
             ucl = mean(ucl))
 
-(YHBL.real <- as.data.frame(YHBL4.results$S.stage$results$real) |> 
+(YHBL.real <- as.data.frame(YHBL5.results$S.lit$results$real) |> 
     rownames_to_column(var = "Group") |> 
-    mutate(Stage = case_when(
-      grepl("20210", Group) ~ "Incubating",
-      grepl("20220", Group) ~ "Incubating",
-      grepl("20230", Group) ~ "Incubating",
-      grepl("20240", Group) ~ "Incubating",
-      grepl("20211", Group) ~ "Nestling",
-      grepl("20221", Group) ~ "Nestling",
-      grepl("20231", Group) ~ "Nestling",
-      grepl("20241", Group) ~ "Nestling")) |> 
+    mutate(Year = case_when(
+      grepl("2021", Group) ~ "2021",
+      grepl("2022", Group) ~ "2022",
+      grepl("2023", Group) ~ "2023",
+      grepl("2024", Group) ~ "2024"),
+      Stage = case_when(
+        grepl("20210", Group) ~ "Incubating",
+        grepl("20230", Group) ~ "Incubating",
+        grepl("20240", Group) ~ "Incubating",
+        grepl("20211", Group) ~ "Nestling",
+        grepl("20221", Group) ~ "Nestling",
+        grepl("20231", Group) ~ "Nestling",
+        grepl("20241", Group) ~ "Nestling")) |> 
+    select(Year, Stage, estimate, se, lcl, ucl))
+
+(YHBL.year <- YHBL.real |> 
+    group_by(Year) |> 
+    summarize(mean = mean(estimate)))
+
+(YHBL.stage <- YHBL.real |> 
     group_by(Stage) |> 
-    summarize(estimate = mean(estimate), 
-              se = mean(se), 
-              lcl = mean(lcl), 
-              ucl = mean(ucl)))
+    summarize(mean = mean(estimate)))
 
 
 # Plotting beta coefficients ----------------------------------------------
