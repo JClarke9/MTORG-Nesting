@@ -430,7 +430,7 @@ stage.pred$estimates$Stage[nst2024] <- "Nestling"
           legend.background = element_rect(fill = NA),
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
-    labs(title = "Clay-colored Sparrow",
+    labs(title = "Nest Survival",
          color = "Year",
          x = "Stage",
          y = "Daily Survival Rate"))
@@ -507,7 +507,7 @@ bare.pred$estimates$Stage[nst2024] <- "Nestling"
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
     facet_grid(~Stage) + 
-    labs(title = "Clay-colored Sparrow",
+    labs(title = "Nest Survival",
          color = "Year",
          x = "Bare Ground (Percent Cover)",
          y = "Daily Survival Rate"))
@@ -584,7 +584,7 @@ litd.pred$estimates$Stage[nst2024] <- "Nestling"
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
     facet_grid(~Stage) + 
-    labs(title = "Clay-colored Sparrow",
+    labs(title = "Nest Survival",
          color = "Year",
          x = "Litter Depth (mm)",
          y = "Daily Survival Rate"))

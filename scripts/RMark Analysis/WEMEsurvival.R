@@ -358,7 +358,7 @@ stage.pred$estimates$Day <- 1
                               colour = 'black'),                                    # change the color of the axis titles
           legend.background = element_rect(fill = NA),
           legend.position = 'none') +
-    labs(title = 'Western Meadowlark',
+    labs(title = 'Nest Survival',
          x = 'Stage',
          y = 'Daily Survival Rate'))
 

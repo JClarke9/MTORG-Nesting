@@ -367,7 +367,7 @@ AGE.pred$estimates$Day <- c(1:27)
           legend.background = element_rect(fill = NA),
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
-    labs(title = "Gadwall",
+    labs(title = "Nest Survival",
          color = "Year",
          x = "Nest Age",
          y = "Daily Survival Rate"))
@@ -460,7 +460,7 @@ Forb.pred$estimates$Day[D27Y2024] <- "Day27"
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
     facet_grid(~Day) +
-    labs(title = "Gadwall",
+    labs(title = "Nest Survival",
          color = "Year",
          x = "Forb (Percent Cover)",
          y = "Daily Survival Rate"))
@@ -552,7 +552,7 @@ grazed.pred$estimates$Day[D27Y2024] <- "Day27"
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
     facet_grid(~Day) +
-    labs(title = "Gadwall",
+    labs(title = "Nest Survival",
          color = "Year",
          x = "Days Grazed During Nesting",
          y = "Daily Survival Rate"))
@@ -644,7 +644,7 @@ pDoD.pred$estimates$Day[D27Y2024] <- "Day27"
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
     facet_grid(~Day) +
-    labs(title = "Gadwall",
+    labs(title = "Nest Survival",
          color = "Year",
          x = "Previous Year Degree of Disappearance",
          y = "Daily Survival Rate"))
@@ -694,3 +694,5 @@ rm(list = ls(all = TRUE))
 # Then, execute "cleanup(ask = FALSE)" to delete orphaned output
 #  files from MARK. Execute "?cleanup" to learn more
 cleanup(ask = FALSE)
+
+ 

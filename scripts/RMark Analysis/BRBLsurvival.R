@@ -409,7 +409,7 @@ lit.pred$estimates$Stage[nst2024] <- "Nestling"
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
     facet_grid(~Stage) + 
-    labs(title = "Brewer's Blackbird",
+    labs(title = "Nest Survival",
          color = "Year",
          x = "Litter Percent Cover",
          y = "Daily Survival Rate"))

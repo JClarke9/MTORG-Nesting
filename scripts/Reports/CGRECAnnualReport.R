@@ -20,7 +20,7 @@ nest$Nestling <- factor(nest$Nestling,
                         levels = c("0", "1"))
 
 nest$Year <- factor(nest$Year,
-                    levels = c("2021", "2022", "2023"))
+                    levels = c("2021", "2022", "2023", "2024"))
 
 nest$cTreat <- factor(nest$cTreat,
                       levels = c("0", "39", "49", "68"))

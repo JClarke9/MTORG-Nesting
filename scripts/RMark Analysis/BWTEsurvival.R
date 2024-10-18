@@ -357,7 +357,7 @@ AGE.pred$estimates$Day <- c(1:24)
           legend.background = element_rect(fill = NA),
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
-    labs(title = "Blue-winged Teal",
+    labs(title = "Nest Survival",
          color = "Year",
          x = "Nest Age",
          y = "Daily Survival Rate"))
@@ -447,7 +447,7 @@ VegH.pred$estimates$Day[D24Y2024] <- "Day24"
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
     facet_grid(~Day) +
-    labs(title = "Blue-winged Teal",
+    labs(title = "Nest Survival",
          color = "Year",
          x = "Vegetation Height (mm)",
          y = "Daily Survival Rate"))

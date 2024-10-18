@@ -219,9 +219,6 @@ NOPI5.results <- mark(NOPI.surv,
                       delete = TRUE,
                       model.parameters = list(S = list(formula = ~1 + Litter + VOR)))
 
-coef(NOPI.final)
-confint(NOPI.final, level = 0.85)
-
 
 
 # Plotting beta coefficients ----------------------------------------------
@@ -319,7 +316,7 @@ VOR.pred <- covariate.predictions(NOPI5.results,
                               colour = "black"),                                    # change the color of the axis titles
           legend.background = element_rect(fill = NA),
           legend.position = "none") +
-    labs(title = "Northern Pintail",
+    labs(title = "Nest Survival",
          color = "Year",
          x = "Visual Obstruction (dm)",
          y = "Daily Survival Rate"))
@@ -354,7 +351,7 @@ LIT.pred <- covariate.predictions(NOPI5.results,
                               colour = "black"),                                    # change the color of the axis titles
           legend.background = element_rect(fill = NA),
           legend.position = "none") +
-    labs(title = "Northern Pintail",
+    labs(title = "Nest Survival",
          color = "Year",
          x = "Litter (Percent Cover)",
          y = "Daily Survival Rate"))

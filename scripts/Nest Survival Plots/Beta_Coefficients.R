@@ -264,7 +264,7 @@ beta$Variable <- case_match(beta$Variable,
                             "S:Year2024" ~ "Year 2024",
                             "S:Litter" ~ "Litter Cover",
                             "S:LitterD" ~ "Litter Depth",
-                            "S:Bare" ~ "Bare Ground",
+                            "S:Bare" ~ "Bare Ground Cover",
                             "S:Time" ~ "Time",
                             "S:I(Time^2)" ~ "Time^2",
                             "S:KBG" ~ "KBG Cover",
@@ -274,7 +274,7 @@ beta$Variable <- case_match(beta$Variable,
                             "S:Forb" ~ "Forb Cover",
                             "S:VOR" ~ "VOR",
                             "S:Veg.Height" ~ "Veg Height",
-                            "S:SmoothB" ~ "Smooth Brome")
+                            "S:SmoothB" ~ "Smooth Brome Cover")
 
 beta$Variable <- factor(beta$Variable,
                         levels = c("Intercept", "Year 2022", "Year 2023", "Year 20224", "Time",
@@ -358,12 +358,16 @@ beta_f$Type <- ifelse(beta_f$Species == "GADW", "FAC",
 
 beta_f$Type <- factor(beta_f$Type,
                       levels = c("OBL", "FAC"))
-# 
-# beta_f$Variable <- factor(beta_f$Variable,
-#                           levels = c("Days Grazed", "KBG Cover", "Litter Cover", 
-#                                      "Forb Cover", "Veg Height", "VOR"))
 
-(beta.plot <- ggplot(beta_f, 
+beta_f$Group <- ifelse(beta_f$Variable %in% c("Litter Cover", "Litter Depth", "Bare Ground", "Veg Height", "VOR"),
+                       "Structure",
+                       ifelse(beta_f$Variable %in% c("Days Grazed", "Past DoD"),
+                              "Grazing",
+                              ifelse(beta_f$Variable %in% c("KBG Cover", "Forb Cover", "Smooth Brome Cover"),
+                                                            "Composition",
+                                                            NA)))
+
+(beta.plot <- ggplot(beta_f[beta_f$Group == "Composition",], 
                      aes(x = Variable,
                          y = Coefficient,
                          fill = Species)) +
@@ -416,23 +420,10 @@ beta_f$Type <- factor(beta_f$Type,
           legend.text = element_text(family = "my_font",
                                      size = 18),
           legend.key.width = unit(2, "cm")) +
-    labs(title = "Factors Influencing Nest Survival",
+    labs(title = "Vegetation Structure Impacts to Nest Survival",
          x = NULL,
          fill = "Species",
          y = expression("Beta " (beta))))
-
-# library(cowplot)
-
-# object <- get_legend(beta.plot)
-# 
-# object <- object + theme(plot.background = element_rect(fill = NULL))
-# 
-# ggsave(object,
-#        filename = "outputs/figs/beta_legend.png",
-#        dpi = "print",
-#        bg = NULL,
-#        height = 10,
-#        width = 5)
 
 ggsave(betaF.plot,
        filename = "outputs/figs/betaFull.png",
@@ -442,7 +433,7 @@ ggsave(betaF.plot,
        width = 13.31)
 
 ggsave(beta.plot,
-       filename = "outputs/figs/beta.png",
+       filename = "outputs/figs/betaComposition.png",
        dpi = 600,
        bg = "white",
        height = 5.56,

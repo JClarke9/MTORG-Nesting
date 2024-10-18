@@ -298,7 +298,7 @@ BROME.pred <- covariate.predictions(NSHO4.results$S.brome,
                               colour = "black"),                                    # change the color of the axis titles
           legend.background = element_rect(fill = NA),
           legend.position = "none") +
-    labs(title = "Northern Shoveler",
+    labs(title = "Nest Survival",
          color = "Year",
          x = "Smooth Brome (Percent Cover)",
          y = "Daily Survival Rate"))

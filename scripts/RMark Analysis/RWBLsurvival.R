@@ -377,7 +377,7 @@ time.pred$estimates$Day <- 1:75
           legend.background = element_rect(fill = NA),
           legend.position = "none") +
     facet_grid(~Stage) +
-    labs(title = "Red-winged Blackbird",
+    labs(title = "Nest Survival",
          x = "Julian Day",
          y = "Daily Survival Rate"))
 
@@ -435,7 +435,7 @@ stage.pred$estimates$Day <- c(1, 18, 36, 54, 75)
           legend.background = element_rect(fill = NA),
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
-    labs(title = "Red-winged Blackbird",
+    labs(title = "Nest Survival",
          x = "Stage",
          y = "Daily Survival Rate"))
 

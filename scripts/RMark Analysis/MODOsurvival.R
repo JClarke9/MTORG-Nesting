@@ -406,7 +406,7 @@ time.pred$estimates$Day <- c(1:74)
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
     facet_grid(~Stage) +
-    labs(title = "Mourning Dove",
+    labs(title = "Nest Survival",
          x = "time",
          y = "Daily Survival Rate"))
 
@@ -493,7 +493,7 @@ stage.pred$estimates$Day <- c(1, 18, 36, 54, 74)
           legend.position = c(.85, .1),
           legend.box = "horizontal") +
     facet_wrap(~Day) +
-    labs(title = "Mourning Dove",
+    labs(title = "Nest Survival",
          x = "Stage",
          y = "Daily Survival Rate"))
 
@@ -578,7 +578,7 @@ kbg.pred$estimates$Day <- c(1, 18, 36, 54, 74)
           legend.position = c(.95, .15),
           legend.box = "horizontal") +
     facet_grid(~Stage + Day) +
-    labs(title = "Mourning Dove",
+    labs(title = "Nest Survival",
          color = "Day",
          x = "Kentucky Bluegrass (Percent Cover)",
          y = "Daily Survival Rate"))

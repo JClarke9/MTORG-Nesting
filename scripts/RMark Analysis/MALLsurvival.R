@@ -298,7 +298,7 @@ lit.pred <- covariate.predictions(MALL4.results$S.lit,
                               colour = "black"),                                    # change the color of the axis titles
           legend.background = element_rect(fill = NA),
           legend.position = "none") +
-    labs(title = "Mallard",
+    labs(title = "Nest Survival",
          color = "Year",
          x = "Litter (Percent Cover)",
          y = "Daily Survival Rate"))
