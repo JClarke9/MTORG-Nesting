@@ -25,7 +25,7 @@ nest$Year <- factor(nest$Year,
                     levels = c("2021", "2022", "2023", "2024"))
 
 # This loop creates a new data frame for each species and removes any
-# dataframes from the environment that aren't over 30 observations.
+# dataframes from the environment that aren"t over 30 observations.
 
 
 for (i in unique(nest$Spec)) {
@@ -299,16 +299,16 @@ beta$Variable <- factor(beta$Variable,
              stat = "identity",
              colour = "black",
              width = 0.7) +
-    scale_fill_manual(values = c('#D4A634', 
-                                 '#D4A634', 
-                                 '#D4A634', 
-                                 '#D4A634', 
-                                 '#D4A634',
-                                 '#A2A4A2', 
-                                 '#A2A4A2', 
-                                 '#A2A4A2', 
-                                 '#A2A4A2', 
-                                 '#A2A4A2')) +
+    scale_fill_manual(values = c("#D4A634", 
+                                 "#D4A634", 
+                                 "#D4A634", 
+                                 "#D4A634", 
+                                 "#D4A634",
+                                 "#A2A4A2", 
+                                 "#A2A4A2", 
+                                 "#A2A4A2", 
+                                 "#A2A4A2", 
+                                 "#A2A4A2")) +
     geom_errorbar(aes(ymin = lcl,
                       ymax = ucl),
                   position = position_dodge(0.7),
@@ -384,14 +384,14 @@ beta_f$Group <- ifelse(beta_f$Variable %in% c("Litter Cover", "Litter Depth", "B
                   width = 0.5,
                   linewidth = 0.7,
                   colour = "black") +
-    scale_fill_manual(values = c('#D4A634', 
-                                 '#D4A634', 
-                                 '#D4A634',
-                                 '#A2A4A2', 
-                                 '#A2A4A2', 
-                                 '#A2A4A2',
-                                 '#A2A4A2', 
-                                 '#A2A4A2')) +
+    scale_fill_manual(values = c("#D4A634", 
+                                 "#D4A634", 
+                                 "#D4A634",
+                                 "#D4A634", 
+                                 "#D4A634", 
+                                 "#D4A634",
+                                 "#D4A634", 
+                                 "#D4A634")) +
     guides(fill = guide_legend(byrow = TRUE)) +
     theme(plot.title = element_text(family = "my_font",
                                     hjust = 0.5,
@@ -408,19 +408,13 @@ beta_f$Group <- ifelse(beta_f$Variable %in% c("Litter Cover", "Litter Depth", "B
           axis.text.y = element_text(size = 18, 
                                    colour = "black"),
           axis.text.x = element_text(size = 18, 
-                                     colour = "black",
-                                     angle = -45),
+                                     colour = "black"),
           axis.ticks = element_line(colour = "black"),
           text = element_text(size = 18,
                               colour = "black",
                               family = "my_font"),
-          legend.background = element_blank(),
-          legend.title = element_text(family = "my_font",
-                                      size = 20),
-          legend.text = element_text(family = "my_font",
-                                     size = 18),
-          legend.key.width = unit(2, "cm")) +
-    labs(title = "Vegetation Structure Impacts to Nest Survival",
+          legend.position = "none") +
+    labs(title = "Vegetation Composition Impacts to Nest Survival",
          x = NULL,
          fill = "Species",
          y = expression("Beta " (beta))))
@@ -442,9 +436,9 @@ ggsave(beta.plot,
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,
-#  execute 'rm(list = ls(all = TRUE))' - see 2 lines below.
+#  execute "rm(list = ls(all = TRUE))" - see 2 lines below.
 # NOTE: this will delete all objects in the R session.
 rm(list = ls(all = TRUE))
-# Then, execute 'cleanup(ask = FALSE)' to delete orphaned output
-#  files from MARK. Execute '?cleanup' to learn more
+# Then, execute "cleanup(ask = FALSE)" to delete orphaned output
+#  files from MARK. Execute "?cleanup" to learn more
 cleanup(ask = FALSE)
