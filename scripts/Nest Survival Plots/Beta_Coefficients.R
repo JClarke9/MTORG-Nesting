@@ -367,7 +367,7 @@ beta_f$Group <- ifelse(beta_f$Variable %in% c("Litter Cover", "Litter Depth", "B
                                                             "Composition",
                                                             NA)))
 
-(beta.plot <- ggplot(beta_f[beta_f$Group == "Composition",], 
+(beta.plot <- ggplot(beta_f[beta_f$Group == "Grazing",], 
                      aes(x = Variable,
                          y = Coefficient,
                          fill = Species)) +
@@ -420,7 +420,7 @@ beta_f$Group <- ifelse(beta_f$Variable %in% c("Litter Cover", "Litter Depth", "B
                                      color = "black"),
           legend.background = element_blank(),
           legend.position = "none") +
-    labs(title = "Vegetation Composition to Nest Survival",
+    labs(title = "Grazing Impacts to Nest Survival",
          x = NULL,
          fill = "Type",
          y = expression("Beta " (beta))))
@@ -433,7 +433,7 @@ ggsave(betaF.plot,
        width = 13.31)
 
 ggsave(beta.plot,
-       filename = "outputs/figs/betaComposition.png",
+       filename = "outputs/figs/betaGrazing.png",
        bg = "transparent",
        dpi = 600,
        height = 5.56,
