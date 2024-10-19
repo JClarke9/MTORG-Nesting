@@ -267,20 +267,20 @@ beta$Variable <- case_match(beta$Variable,
                             "S:Bare" ~ "Bare Ground Cover",
                             "S:Time" ~ "Time",
                             "S:I(Time^2)" ~ "Time^2",
-                            "S:KBG" ~ "KBG Cover",
+                            "S:KBG" ~ "Kentucky Bluegrass Cover",
                             "S:NestAge" ~ "Nest Age",
                             "S:grazed" ~ "Days Grazed",
-                            "S:pDoD" ~ "Past DoD",
+                            "S:pDoD" ~ "Prior Grazing Intensity",
                             "S:Forb" ~ "Forb Cover",
-                            "S:VOR" ~ "VOR",
+                            "S:VOR" ~ "Veg Density",
                             "S:Veg.Height" ~ "Veg Height",
                             "S:SmoothB" ~ "Smooth Brome Cover")
 
 beta$Variable <- factor(beta$Variable,
                         levels = c("Intercept", "Year 2022", "Year 2023", "Year 20224", "Time",
-                                   "Time^2", "Nest Age", "Nestling", "Past DoD", "Days Grazed",
-                                   "KBG Cover", "Forb Cover", "Smooth Brome", "Litter Cover",
-                                   "Bare Ground", "Litter Depth", "Veg Height", "VOR"))
+                                   "Time^2", "Nest Age", "Nestling", "Prior Grazing Intensity", "Days Grazed",
+                                   "Kentucky Bluegrass Cover", "Forb Cover", "Smooth Brome Cover", "Litter Cover",
+                                   "Bare Ground Cover", "Litter Depth", "Veg Height", "Veg Density"))
 
 
 # Plot the data -----------------------------------------------------------
@@ -357,13 +357,13 @@ beta_f$Type <- ifelse(beta_f$Species == "GADW", "FAC",
                                                                                      NA))))))))))
 
 beta_f$Type <- factor(beta_f$Type,
-                      levels = c("OBL", "FAC"))
+                      levels = c("FAC", "OBL"))
 
-beta_f$Group <- ifelse(beta_f$Variable %in% c("Litter Cover", "Litter Depth", "Bare Ground", "Veg Height", "VOR"),
+beta_f$Group <- ifelse(beta_f$Variable %in% c("Litter Cover", "Litter Depth", "Bare Ground Cover", "Veg Height", "Veg Density"),
                        "Structure",
-                       ifelse(beta_f$Variable %in% c("Days Grazed", "Past DoD"),
+                       ifelse(beta_f$Variable %in% c("Days Grazed", "Prior Grazing Intensity"),
                               "Grazing",
-                              ifelse(beta_f$Variable %in% c("KBG Cover", "Forb Cover", "Smooth Brome Cover"),
+                              ifelse(beta_f$Variable %in% c("Kentucky Bluegrass Cover", "Forb Cover", "Smooth Brome Cover"),
                                                             "Composition",
                                                             NA)))
 
@@ -372,8 +372,8 @@ beta_f$Group <- ifelse(beta_f$Variable %in% c("Litter Cover", "Litter Depth", "B
                          y = Coefficient,
                          fill = Species)) +
     geom_hline(yintercept = 0,
-               colour = gray(1/2), 
-               lty = 2) +
+               colour = "black", 
+               lty = 1,) +
     geom_bar(position = "dodge",
              stat = "identity",
              colour = "black",
@@ -384,39 +384,45 @@ beta_f$Group <- ifelse(beta_f$Variable %in% c("Litter Cover", "Litter Depth", "B
                   width = 0.5,
                   linewidth = 0.7,
                   colour = "black") +
-    scale_fill_manual(values = c("#D4A634", 
-                                 "#D4A634", 
-                                 "#D4A634",
-                                 "#D4A634", 
-                                 "#D4A634", 
-                                 "#D4A634",
-                                 "#D4A634", 
-                                 "#D4A634")) +
+    scale_fill_manual(values = c("#A2A4A2", 
+                                 "#A2A4A2",
+                                 "#A2A4A2",
+                                 "#A2A4A2",
+                                 "#A2A4A2")) +
     guides(fill = guide_legend(byrow = TRUE)) +
-    theme(plot.title = element_text(family = "my_font",
-                                    hjust = 0.5,
-                                    size = 30,
-                                    vjust = 1,
-                                    colour = "black"),
-          panel.grid.major = element_blank(),
+    theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
-          panel.background = element_rect(fill = NA,
-                                          colour = NA),
-          plot.background = element_rect(fill = NA,
-                                         colour = NA),
-          axis.line = element_line(colour = "black"),
-          axis.text.y = element_text(size = 18, 
-                                   colour = "black"),
-          axis.text.x = element_text(size = 18, 
-                                     colour = "black"),
-          axis.ticks = element_line(colour = "black"),
-          text = element_text(size = 18,
-                              colour = "black",
-                              family = "my_font"),
+          panel.background = element_rect(fill = "transparent",
+                                          color = NA), 
+          plot.background = element_rect(fill = "transparent",
+                                         color = NA),
+          axis.line = element_line(color = "black"),
+          axis.ticks = element_line(color = "black"),
+          plot.title = element_text(family = "my_font",
+                                    hjust = .5,
+                                    vjust = 1,
+                                    size = 30,
+                                    color = "black"),
+          axis.title.x = element_text(family = "my_font",
+                                      size = 18,
+                                      color = "black",
+                                      vjust = 1),
+          axis.title.y = element_text(family = "my_font",
+                                      size = 18,
+                                      color = "black",
+                                      angle = 90,
+                                      vjust = 1),
+          axis.text.x = element_text(family = "my_font",
+                                     size = 18,
+                                     color = "black"),
+          axis.text.y = element_text(family = "my_font",
+                                     size = 18,
+                                     color = "black"),
+          legend.background = element_blank(),
           legend.position = "none") +
-    labs(title = "Vegetation Composition Impacts to Nest Survival",
+    labs(title = "Vegetation Composition to Nest Survival",
          x = NULL,
-         fill = "Species",
+         fill = "Type",
          y = expression("Beta " (beta))))
 
 ggsave(betaF.plot,
@@ -428,8 +434,8 @@ ggsave(betaF.plot,
 
 ggsave(beta.plot,
        filename = "outputs/figs/betaComposition.png",
+       bg = "transparent",
        dpi = 600,
-       bg = "white",
        height = 5.56,
        width = 13.31)
 

@@ -8,16 +8,13 @@ library(tidyverse)
 
 
 raw <- read.csv("working/MTORG_str.csv") |> 
-  filter(Transect.ID %in% c(97:144)) |> 
-  mutate(Transect.ID = factor(Transect.ID, levels = c(97:144)),
-         Pasture = factor(Pasture, levels = c("NE", "SE",
-                                              "SW", "NW")),
-         SubPatch = factor(SubPatch, levels = c("Rest", "Moderate", 
-                                                "Full", "Heavy")),
+  mutate(Replicate = factor(Replicate, levels = c("NE", "SE",
+                                                  "SW", "NW")),
+         Intensity = factor(Intensity, levels = c("Rest", "Moderate", 
+                                                  "Full", "Heavy")),
          Year = factor(Year, levels = c("2021", "2022", 
                                         "2023", "2024")),
-         Patch = factor(Patch, levels = c(1:16)),
-         Date = as.Date(Date, "%m/%d/%y"))
+         Patch = factor(Patch, levels = c(1:16)))
 
 density <- read.csv("working/Birds_Treatment_Density.csv") |> 
   mutate(Replicate = factor(Replicate, levels = c("NE", "SE",
@@ -37,8 +34,8 @@ for (Spec in unique(density$Species)) {
   temp <- filter(density, Species == Spec)
   temp <- complete(temp,
                    Year, Replicate, cTreat)
-  temp <- full_join(temp, MTORG.str,
-                    by = c("Replicate", "Year", "cTreat"))
+  temp <- full_join(temp, raw,
+                    by = c("Replicate", "Year", "cTreat" = "Intensity"))
   MTORG.density <- bind_rows(temp, MTORG.density)
   rm(list = "temp")
 }
@@ -64,10 +61,9 @@ library(emmeans)
 library(DHARMa)
 
 
-BRBL.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Replicate),
+BRBL.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Patch),
                     data = filter(MTORG.density, Species == "BRBL"),
-                    ziformula = ~Litter.Depth,
-                    family = ziGamma(link = "log"))
+                    family = t_family(link = "identity"))
 
 BRBLoutput <- simulateResiduals(BRBL.lit,
                                 n = 999,
@@ -81,10 +77,9 @@ testQuantiles(BRBLoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 summary(BRBL.lit)
 
 
-WEME.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Replicate),
+WEME.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Patch),
                     data = filter(MTORG.density, Species == "WEME"),
-                    ziformula = ~Litter.Depth,
-                    family = ziGamma(link = "log"))
+                    family = t_family(link = "identity"))
 
 WEMEoutput <- simulateResiduals(WEME.lit,
                                 n = 999,
@@ -98,10 +93,9 @@ testQuantiles(WEMEoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 summary(WEME.lit)
 
 
-CCSP.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Replicate),
+CCSP.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Patch),
                     data = filter(MTORG.density, Species == "CCSP"),
-                    ziformula = ~Litter.Depth,
-                    family = ziGamma(link = "log"))
+                    family = t_family(link = "identity"))
 
 CCSPoutput <- simulateResiduals(CCSP.lit,
                                 n = 999,
@@ -116,7 +110,7 @@ summary(CCSP.lit)
 
 # The conditional model was significant for CCSP
 
-MODO.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Replicate),
+MODO.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Patch),
                     data = filter(MTORG.density, Species == "MODO"),
                     ziformula = ~Litter.Depth,
                     family = ziGamma(link = "log"))
@@ -133,10 +127,9 @@ testQuantiles(MODOoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 summary(MODO.lit)
 
 
-RWBL.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Replicate),
+RWBL.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Patch),
                     data = filter(MTORG.density, Species == "RWBL"),
-                    ziformula = ~Litter.Depth,
-                    family = ziGamma(link = "log"))
+                    family = t_family(link = "identity"))
 
 RWBLoutput <- simulateResiduals(RWBL.lit,
                                 n = 999,
@@ -150,10 +143,9 @@ testQuantiles(RWBLoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 summary(RWBL.lit)
 
 
-NOPI.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Replicate),
+NOPI.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Patch),
                     data = filter(MTORG.density, Species == "NOPI"),
-                    ziformula = ~Litter.Depth,
-                    family = ziGamma(link = "log"))
+                    family = t_family(link = "identity"))
 
 NOPIoutput <- simulateResiduals(NOPI.lit,
                                 n = 999,
@@ -167,10 +159,9 @@ testQuantiles(NOPIoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 summary(NOPI.lit)
 
 
-GADW.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Replicate),
+GADW.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Patch),
                     data = filter(MTORG.density, Species == "GADW"),
-                    ziformula = ~Litter.Depth,
-                    family = ziGamma(link = "log"))
+                    family = t_family(link = "identity"))
 
 GADWoutput <- simulateResiduals(GADW.lit,
                                 n = 999,
@@ -185,10 +176,10 @@ summary(GADW.lit)
 
 # the zero-inflated model was significant for GADW
 
-BWTE.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Replicate),
-                    data = filter(MTORG.density, Species == "BWTE"),
-                    ziformula = ~Litter.Depth,
-                    family = ziGamma(link = "log"))
+# BWTE.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Patch),
+#                     data = filter(MTORG.density, Species == "BWTE"),
+#                     ziformula = ~Litter.Depth,
+#                     family = ziGamma(link = "log"))
 
 BWTEoutput <- simulateResiduals(BWTE.lit,
                                 n = 999,
@@ -205,10 +196,9 @@ summary(BWTE.lit)
 # Testing VOR impacts on density -----------------------------------------------------------------------------
 
 
-BRBL.vor <- glmmTMB(estimate~a.Robel + (1|Year/Replicate),
+BRBL.vor <- glmmTMB(estimate~a.Robel + (1|Year/Patch),
                     data = filter(MTORG.density, Species == "BRBL"),
-                    ziformula = ~.,
-                    family = ziGamma(link = "log"))
+                    family = t_family(link = "identity"))
 
 BRBLoutput <- simulateResiduals(BRBL.vor,
                                 n = 999,
@@ -222,7 +212,7 @@ testQuantiles(BRBLoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 summary(BRBL.vor)
 
 
-WEME.vor <- glmmTMB(estimate~a.Robel + (1|Year/Replicate),
+WEME.vor <- glmmTMB(estimate~a.Robel + (1|Year/Patch),
                     data = filter(MTORG.density, Species == "WEME"),
                     ziformula = ~.,
                     family = ziGamma(link = "log"))
@@ -239,11 +229,9 @@ testQuantiles(WEMEoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 summary(WEME.vor)
 
 # This model does not seem to work
-CCSP.vor <- glmmTMB(estimate~a.Robel + (1|Year/Replicate),
+CCSP.vor <- glmmTMB(estimate~a.Robel + (1|Year/Patch),
                     data = filter(MTORG.density, Species == "CCSP"),
-                    ziformula = ~a.Robel,
-                    family = ziGamma(link = "log"),
-                    control = glmmTMBControl())
+                    family = t_family(link = "identity"))
 
 CCSPoutput <- simulateResiduals(CCSP.vor,
                                 n = 999,
@@ -258,10 +246,10 @@ summary(CCSP.vor)
 
 # The conditional model was significant for CCSP
 
-MODO.vor <- glmmTMB(estimate~a.Robel + (1|Year/Replicate),
-                    data = filter(MTORG.density, Species == "MODO"),
-                    ziformula = ~.,
-                    family = ziGamma(link = "log"))
+# MODO.vor <- glmmTMB(estimate~a.Robel + (1|Year/Patch),
+#                     data = filter(MTORG.density, Species == "MODO"),
+#                     ziformula = ~.,
+#                     family = ziGamma(link = "identity"))
 
 MODOoutput <- simulateResiduals(MODO.vor,
                                 n = 999,
@@ -275,10 +263,9 @@ testQuantiles(MODOoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 summary(MODO.vor)
 
 
-RWBL.vor <- glmmTMB(estimate~a.Robel + (1|Year/Replicate),
+RWBL.vor <- glmmTMB(estimate~a.Robel + (1|Year/Patch),
                     data = filter(MTORG.density, Species == "RWBL"),
-                    ziformula = ~a.Robel,
-                    family = ziGamma(link = "log"))
+                    family = t_family(link = "identity"))
 
 RWBLoutput <- simulateResiduals(RWBL.vor,
                                 n = 999,
@@ -292,7 +279,7 @@ testQuantiles(RWBLoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 summary(RWBL.vor)
 
 
-NOPI.vor <- glmmTMB(estimate~a.Robel + (1|Year/Replicate),
+NOPI.vor <- glmmTMB(estimate~a.Robel + (1|Year/Patch),
                     data = filter(MTORG.density, Species == "NOPI"),
                     ziformula = ~a.Robel,
                     family = ziGamma(link = "log"))
@@ -309,9 +296,9 @@ testQuantiles(NOPIoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 summary(NOPI.vor)
 
 
-GADW.vor <- glmmTMB(estimate~a.Robel + (1|Year/Replicate),
+GADW.vor <- glmmTMB(estimate~a.Robel + (1|Year/Patch),
                     data = filter(MTORG.density, Species == "GADW"),
-                    ziformula = ~a.Robel,
+                    ziformula = ~.,
                     family = ziGamma(link = "log"))
 
 GADWoutput <- simulateResiduals(GADW.vor,

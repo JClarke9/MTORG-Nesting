@@ -333,3 +333,6 @@ rm(list = ls()[!ls() %in%  c("spec.nest", "nest")])
 
 write_csv(spec.nest, "working/RMarknesting.csv")
 
+spec.nest$id <- as.character(spec.nest$id)
+
+length(unique(spec.nest$Spec))
