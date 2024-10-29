@@ -479,7 +479,7 @@ ggsave(beta.plotG,
                                      color = "black"),
           legend.background = element_blank(),
           legend.position = "none") +
-    labs(title = "Grazing Impacts",
+    labs(title = "Vegetation Composition Impacts",
          x = NULL,
          fill = "Type",
          y = NULL))
