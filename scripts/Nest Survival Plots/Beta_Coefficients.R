@@ -367,7 +367,7 @@ beta_f$Group <- ifelse(beta_f$Variable %in% c("Litter Cover", "Litter Depth", "B
                                                             "Composition",
                                                             NA)))
 
-(beta.plot <- ggplot(beta_f[beta_f$Group == "Grazing",], 
+(beta.plotG <- ggplot(beta_f[beta_f$Group == "Grazing",], 
                      aes(x = Variable,
                          y = Coefficient,
                          fill = Species)) +
@@ -384,11 +384,7 @@ beta_f$Group <- ifelse(beta_f$Variable %in% c("Litter Cover", "Litter Depth", "B
                   width = 0.5,
                   linewidth = 0.7,
                   colour = "black") +
-    scale_fill_manual(values = c("#A2A4A2", 
-                                 "#A2A4A2",
-                                 "#A2A4A2",
-                                 "#A2A4A2",
-                                 "#A2A4A2")) +
+    scale_fill_manual(values = c("GADW" = "#613323")) +
     guides(fill = guide_legend(byrow = TRUE)) +
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
@@ -401,44 +397,164 @@ beta_f$Group <- ifelse(beta_f$Variable %in% c("Litter Cover", "Litter Depth", "B
           plot.title = element_text(family = "my_font",
                                     hjust = .5,
                                     vjust = 1,
-                                    size = 30,
+                                    size = 40,
                                     color = "black"),
           axis.title.x = element_text(family = "my_font",
-                                      size = 18,
+                                      size = 28,
                                       color = "black",
                                       vjust = 1),
           axis.title.y = element_text(family = "my_font",
-                                      size = 18,
+                                      size = 28,
                                       color = "black",
                                       angle = 90,
                                       vjust = 1),
           axis.text.x = element_text(family = "my_font",
-                                     size = 18,
+                                     size = 28,
+                                     color = "black"),
+          axis.text.y = element_text(family = "my_font",
+                                     size = 28,
+                                     color = "black"),
+          legend.background = element_blank(),
+          legend.position = "none") +
+    labs(title = "Grazing Impacts",
+         x = NULL,
+         fill = "Type",
+         y = expression("Beta " (beta))))
+
+ggsave(beta.plotG,
+       filename = "outputs/figs/betaGrazing.png",
+       bg = "transparent",
+       dpi = 600,
+       height = 6.34,
+       width = 8.78)
+
+(beta.plotC <- ggplot(beta_f[beta_f$Group == "Composition",], 
+                     aes(x = Variable,
+                         y = Coefficient,
+                         fill = Species)) +
+    geom_hline(yintercept = 0,
+               colour = "black", 
+               lty = 1,) +
+    geom_bar(position = "dodge",
+             stat = "identity",
+             colour = "black",
+             width = 0.7) +
+    geom_errorbar(aes(ymin = lcl,
+                      ymax = ucl),
+                  position = position_dodge(0.7),
+                  width = 0.5,
+                  linewidth = 0.7,
+                  colour = "black") +
+    scale_fill_manual(values = c("MODO" = "#C8A696", 
+                                 "GADW" = "#613323",
+                                 "NSHO" = "#7F3504")) +
+    guides(fill = guide_legend(byrow = TRUE)) +
+    theme(panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill = "transparent",
+                                          color = NA), 
+          plot.background = element_rect(fill = "transparent",
+                                         color = NA),
+          axis.line = element_line(color = "black"),
+          axis.ticks = element_line(color = "black"),
+          plot.title = element_text(family = "my_font",
+                                    hjust = .5,
+                                    vjust = 1,
+                                    size = 40,
+                                    color = "black"),
+          axis.title.x = element_text(family = "my_font",
+                                      size = 28,
+                                      color = "black",
+                                      vjust = 1),
+          axis.title.y = element_text(family = "my_font",
+                                      size = 28,
+                                      color = "black",
+                                      angle = 90,
+                                      vjust = 1),
+          axis.text.x = element_text(family = "my_font",
+                                     size = 28,
                                      color = "black"),
           axis.text.y = element_text(family = "my_font",
                                      size = 18,
                                      color = "black"),
           legend.background = element_blank(),
           legend.position = "none") +
-    labs(title = "Grazing Impacts to Nest Survival",
+    labs(title = "Grazing Impacts",
+         x = NULL,
+         fill = "Type",
+         y = NULL))
+
+  ggsave(beta.plotC,
+       filename = "outputs/figs/betaComposition.png",
+       bg = "transparent",
+       dpi = 600,
+       height = 6.34,
+       width = 13.13)
+
+(beta.plotS <- ggplot(beta_f[beta_f$Group == "Structure",], 
+                     aes(x = Variable,
+                         y = Coefficient,
+                         fill = Species)) +
+    geom_hline(yintercept = 0,
+               colour = "black", 
+               lty = 1,) +
+    geom_bar(position = "dodge",
+             stat = "identity",
+             colour = "black",
+             width = 0.7) +
+    geom_errorbar(aes(ymin = lcl,
+                      ymax = ucl),
+                  position = position_dodge(0.7),
+                  width = 0.5,
+                  linewidth = 0.7,
+                  colour = "black") +
+    scale_fill_manual(values = c("BRBL" = "#364C59", 
+                                 "NOPI" = "#494B39",
+                                 "MALL" = "#0E7B54",
+                                 "CCSP" = "#ADA6B2",
+                                 "BWTE" = "#9BAFD0")) +
+    guides(fill = guide_legend(byrow = TRUE)) +
+    theme(panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill = "transparent",
+                                          color = NA), 
+          plot.background = element_rect(fill = "transparent",
+                                         color = NA),
+          axis.line = element_line(color = "black"),
+          axis.ticks = element_line(color = "black"),
+          plot.title = element_text(family = "my_font",
+                                    hjust = .5,
+                                    vjust = 1,
+                                    size = 40,
+                                    color = "black"),
+          axis.title.x = element_text(family = "my_font",
+                                      size = 28,
+                                      color = "black",
+                                      vjust = 1),
+          axis.title.y = element_text(family = "my_font",
+                                      size = 28,
+                                      color = "black",
+                                      angle = 90,
+                                      vjust = 1),
+          axis.text.x = element_text(family = "my_font",
+                                     size = 28,
+                                     color = "black"),
+          axis.text.y = element_text(family = "my_font",
+                                     size = 28,
+                                     color = "black"),
+          legend.background = element_blank(),
+          legend.position = "none") +
+    labs(title = "Vegetation Structure Impacts",
          x = NULL,
          fill = "Type",
          y = expression("Beta " (beta))))
 
-ggsave(betaF.plot,
-       filename = "outputs/figs/betaFull.png",
-       dpi = "print",
-       bg = "white",
-       height = 5.56,
-       width = 13.31)
-
-ggsave(beta.plot,
-       filename = "outputs/figs/betaGrazing.png",
+ggsave(beta.plotS,
+       filename = "outputs/figs/betaStructure.png",
        bg = "transparent",
        dpi = 600,
-       height = 5.56,
-       width = 13.31)
-
+       height = 9.14,
+       width = 21.88)
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,
