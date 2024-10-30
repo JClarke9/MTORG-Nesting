@@ -416,6 +416,7 @@ beta_f$Group <- ifelse(beta_f$Variable %in% c("Litter Cover", "Litter Depth", "B
                                      color = "black"),
           legend.background = element_blank(),
           legend.position = "none") +
+    coord_cartesian(ylim = c(-0.025, 0.10)) +
     labs(title = "Grazing Impacts",
          x = NULL,
          fill = "Type",
@@ -479,6 +480,7 @@ ggsave(beta.plotG,
                                      color = "black"),
           legend.background = element_blank(),
           legend.position = "none") +
+    coord_cartesian(ylim = c(-0.025, 0.10)) +
     labs(title = "Vegetation Composition Impacts",
          x = NULL,
          fill = "Type",
