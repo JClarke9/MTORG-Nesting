@@ -12,8 +12,6 @@ library(ggpattern)
 
 nest <- read.csv("working/RMarknesting.csv")
 
-windowsFonts(my_font = windowsFont("Gandi Sans"))                          # downloading a font to be used for my ordination
-
 
 # Data Wrangling ----------------------------------------------------------
 
@@ -367,6 +365,11 @@ beta_f$Group <- ifelse(beta_f$Variable %in% c("Litter Cover", "Litter Depth", "B
                                                             "Composition",
                                                             NA)))
 
+library(extrafont)
+loadfonts(device = "win")
+
+windowsFonts(my_font = windowsFont("Gandhi Sans"))                          # downloading a font to be used for my ordination
+
 (beta.plotG <- ggplot(beta_f[beta_f$Group == "Grazing",], 
                      aes(x = Variable,
                          y = Coefficient,
@@ -422,12 +425,13 @@ beta_f$Group <- ifelse(beta_f$Variable %in% c("Litter Cover", "Litter Depth", "B
          fill = "Type",
          y = expression("Beta " (beta))))
 
-ggsave(beta.plotG,
+ggsave(plot = beta.plotG,
        filename = "outputs/figs/betaGrazing.png",
        bg = "transparent",
        dpi = 600,
        height = 6.34,
-       width = 8.78)
+       width = 8.78,
+       limitsize = F)
 
 (beta.plotC <- ggplot(beta_f[beta_f$Group == "Composition",], 
                      aes(x = Variable,
