@@ -447,7 +447,7 @@ ggsave(beta.plotG,
                   colour = "black") +
     scale_fill_manual(values = c("MODO" = "#C8A696", 
                                  "GADW" = "#613323",
-                                 "NSHO" = "#7F3504")) +
+                                 "NSHO" = "#AF4A05")) +
     guides(fill = guide_legend(byrow = TRUE)) +
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
@@ -475,7 +475,7 @@ ggsave(beta.plotG,
                                      size = 28,
                                      color = "black"),
           axis.text.y = element_text(family = "my_font",
-                                     size = 18,
+                                     size = 28,
                                      color = "black"),
           legend.background = element_blank(),
           legend.position = "none") +
@@ -509,7 +509,7 @@ ggsave(beta.plotG,
                   linewidth = 0.7,
                   colour = "black") +
     scale_fill_manual(values = c("BRBL" = "#364C59", 
-                                 "NOPI" = "#494B39",
+                                 "NOPI" = "#736357",
                                  "MALL" = "#0E7B54",
                                  "CCSP" = "#ADA6B2",
                                  "BWTE" = "#9BAFD0")) +
