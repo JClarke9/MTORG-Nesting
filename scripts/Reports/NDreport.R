@@ -48,7 +48,7 @@ SpeciesGrouping <- function(x) {
 raw <- read_csv("raw/Nesting.csv")
 
 y23 <- filter(raw,
-              Year == 2023 & 
+              Year == 2024 & 
                 Treatment == "MTORG" &
                 Spec != "UNK" &
                 Spec != "UNKN" &
@@ -68,7 +68,7 @@ NDreport23 <- select(NDreport23, -id)
 
 NDreport23$Fate <- ifelse(NDreport23$Fate != "Survive", "Failed", "Survive")
 
-write.csv(NDreport23, "doc/NestDragging23.csv",
+write.csv(NDreport23, "doc/NestDragging24.csv",
           row.names = F)
 
 Fate_survive <- filter(NDreport23,
