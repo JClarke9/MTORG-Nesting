@@ -15,5 +15,5 @@ run_scripts_in_directory <- function(directory_path) {
 }
 
 # Replace 'your_directory_path' with the actual path to your subdirectory
-directory_path <- 'your_directory_path'
+directory_path <- 'scripts/RMark Analysis'
 run_scripts_in_directory(directory_path)

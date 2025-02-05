@@ -48,7 +48,7 @@ SpeciesGrouping <- function(x) {
 raw <- read_csv("raw/Nesting.csv")
 
 y23 <- filter(raw,
-              Year == 2023 & 
+              Year == 2024 & 
                 Treatment == "MTORG" &
                 Spec != "UNK" &
                 Spec != "UNKN" &
@@ -60,22 +60,22 @@ NDreport23 <- y23 |>
   group_by(id) |> 
   mutate(Exposure = sum(Expos)) |> 
   filter(Visit.Interval == max(Visit.Interval)) |> 
-  select(Year, Spec, X, Y, FirstFound, AgeFound, Exposure, Fate, InitBHCO, 
+  select(Year, Spec, X, Y, FirstFound, AgeFound, Exposure, Fate2, InitBHCO, 
          Clutch, InitClutch) |> 
   ungroup()
 
 NDreport23 <- select(NDreport23, -id)
 
-NDreport23$Fate <- ifelse(NDreport23$Fate != "Survive", "Failed", "Survive")
+NDreport23$Fate <- ifelse(NDreport23$Fate2 != "Survive", "Failed", "Survive")
 
-write.csv(NDreport23, "doc/NestDragging23.csv",
+write.csv(NDreport23, "doc/NestDragging24.csv",
           row.names = F)
 
 Fate_survive <- filter(NDreport23,
-                       Fate == "Survive")
+                       Fate2 == "Survive")
 
 Fate_failed <- filter(NDreport23,
-                      Fate != "Survive")
+                      Fate2 != "Survive")
 
 length(unique(Fate_survive$id))
 length(unique(Fate_failed$id))

@@ -89,7 +89,8 @@ robel_theme <- theme(panel.grid.major = element_blank(),
                                                 color = "black"),
                      strip.text.x = element_text(family = 'my_font',
                                                  size = 36,
-                                                 vjust = 3),
+                                                 color = "black",
+                                                 vjust = 1),
                      strip.background = element_rect(fill = "transparent",
                                                      color = NA),
                      legend.position = "none")
@@ -172,7 +173,7 @@ litter_theme <- theme(panel.grid.major = element_blank(),
 
 ggsave(veg_violin,
        filename = "outputs/figs/VegStr_violin.png",
-       bg = "transparent",
+       bg = "white",
        dpi = 600,
        height = 10.78,
        width = 22.11)

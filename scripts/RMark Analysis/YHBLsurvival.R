@@ -236,42 +236,6 @@ YHBL5.run <- function()
 YHBL5.results <- YHBL5.run()
 YHBL5.results
 
-coef(YHBL5.results$S.lit)
-confint(YHBL5.results$S.lit, level = 0.85)
-
-
-
-YHBL5.results$S.lit$results$real |> 
-  summarize(estimate = mean(estimate),
-            se = mean(se),
-            lcl = mean(lcl),
-            ucl = mean(ucl))
-
-(YHBL.real <- as.data.frame(YHBL5.results$S.lit$results$real) |> 
-    rownames_to_column(var = "Group") |> 
-    mutate(Year = case_when(
-      grepl("2021", Group) ~ "2021",
-      grepl("2022", Group) ~ "2022",
-      grepl("2023", Group) ~ "2023",
-      grepl("2024", Group) ~ "2024"),
-      Stage = case_when(
-        grepl("20210", Group) ~ "Incubating",
-        grepl("20230", Group) ~ "Incubating",
-        grepl("20240", Group) ~ "Incubating",
-        grepl("20211", Group) ~ "Nestling",
-        grepl("20221", Group) ~ "Nestling",
-        grepl("20231", Group) ~ "Nestling",
-        grepl("20241", Group) ~ "Nestling")) |> 
-    select(Year, Stage, estimate, se, lcl, ucl))
-
-(YHBL.year <- YHBL.real |> 
-    group_by(Year) |> 
-    summarize(mean = mean(estimate)))
-
-(YHBL.stage <- YHBL.real |> 
-    group_by(Stage) |> 
-    summarize(mean = mean(estimate)))
-
 
 # Plotting beta coefficients ----------------------------------------------
 
