@@ -768,10 +768,14 @@ birdT.density <- birds.trtT |>
                                     size = 18, 
                                     colour = "black",
                                     margin = margin(0, 10, 0, 10, unit = "pt")),
-         text = element_text(size = 18,
-                             colour = "black"),
+         axis.text.y = element_text(size = 18,
+                                    colour = "black"),
+         legend.title = element_text(size = 18,
+                                     colour = "black"),
+         legend.text = element_text(size = 18,
+                                    colour = "black"),
          panel.spacing = unit(20, "lines"),
-         legend.position = "none") +
+         legend.position = "bottom") +
    labs(title = "Nesting Densities by Species",
         x = NULL, 
         y = "Nests Per Ha",
