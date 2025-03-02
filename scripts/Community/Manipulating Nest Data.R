@@ -105,6 +105,8 @@ totals.mat <- SpeciesGrouping(totals.mat)
 
 totals.mat <- column_to_rownames(totals.mat, var = "Spec")
 
+write.csv(totals.mat, "outputs/species_totals.csv")
+
 
 # Creating site by species matrices ---------------------------------------
 

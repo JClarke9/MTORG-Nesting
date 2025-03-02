@@ -191,6 +191,30 @@ RWBL.stage <- mark(RWBL.surv,
                    model.parameters = list(S = list(formula =  ~1 + Nestling)))
 
 
+YHBL.constant <- mark(YHBL.surv, 
+                      nocc = max(YHBL.surv$LastChecked), 
+                      model = "Nest",
+                      adjust = FALSE,
+                      delete = TRUE,
+                      model.parameters = list(S = list(formula =  ~1)))
+
+YHBL.year <- mark(YHBL.surv, 
+                  nocc = max(YHBL.surv$LastChecked), 
+                  model = "Nest",
+                  groups = "Year",
+                  adjust = FALSE,
+                  delete = TRUE,
+                  model.parameters = list(S = list(formula =  ~1 + Year)))
+
+YHBL.stage <- mark(YHBL.surv, 
+                   nocc = max(YHBL.surv$LastChecked), 
+                   model = "Nest",
+                   groups = "Nestling",
+                   adjust = FALSE,
+                   delete = TRUE,
+                   model.parameters = list(S = list(formula =  ~1 + Nestling)))
+
+
 GADW.constant <- mark(GADW.surv, 
                       nocc = max(GADW.surv$LastChecked), 
                       model = "Nest",
@@ -232,6 +256,38 @@ NOPI.constant <- mark(NOPI.surv,
 
 NOPI.year <- mark(NOPI.surv, 
                   nocc = max(NOPI.surv$LastChecked), 
+                  model = "Nest",
+                  groups = "Year",
+                  adjust = FALSE,
+                  delete = TRUE,
+                  model.parameters = list(S = list(formula =  ~1 + Year)))
+
+
+MALL.constant <- mark(MALL.surv, 
+                      nocc = max(MALL.surv$LastChecked), 
+                      model = "Nest",
+                      adjust = FALSE,
+                      delete = TRUE,
+                      model.parameters = list(S = list(formula =  ~1)))
+
+MALL.year <- mark(MALL.surv, 
+                  nocc = max(MALL.surv$LastChecked), 
+                  model = "Nest",
+                  groups = "Year",
+                  adjust = FALSE,
+                  delete = TRUE,
+                  model.parameters = list(S = list(formula =  ~1 + Year)))
+
+
+NSHO.constant <- mark(NSHO.surv, 
+                      nocc = max(NSHO.surv$LastChecked), 
+                      model = "Nest",
+                      adjust = FALSE,
+                      delete = TRUE,
+                      model.parameters = list(S = list(formula =  ~1)))
+
+NSHO.year <- mark(NSHO.surv, 
+                  nocc = max(NSHO.surv$LastChecked), 
                   model = "Nest",
                   groups = "Year",
                   adjust = FALSE,

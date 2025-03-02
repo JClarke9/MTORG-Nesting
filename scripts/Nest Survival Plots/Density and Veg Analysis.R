@@ -57,6 +57,7 @@ MTORG.density <- MTORG.density |>
 
 
 library(glmmTMB)
+library(car)
 library(emmeans)
 library(DHARMa)
 
@@ -74,7 +75,7 @@ testResiduals(BRBLoutput)
 testZeroInflation(BRBLoutput)
 testQuantiles(BRBLoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(BRBL.lit)
+Anova(BRBL.lit, type = 2)
 
 
 WEME.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Patch),
@@ -90,7 +91,7 @@ testResiduals(WEMEoutput)
 testZeroInflation(WEMEoutput)
 testQuantiles(WEMEoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(WEME.lit)
+Anova(WEME.lit, type = 2)
 
 
 CCSP.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Patch),
@@ -106,7 +107,7 @@ testResiduals(CCSPoutput)
 testZeroInflation(CCSPoutput)
 testQuantiles(CCSPoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(CCSP.lit)
+Anova(CCSP.lit, type = 2)
 
 # The conditional model was significant for CCSP
 
@@ -124,7 +125,7 @@ testResiduals(MODOoutput)
 testZeroInflation(MODOoutput)
 testQuantiles(MODOoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(MODO.lit)
+Anova(MODO.lit, type = 2)
 
 
 RWBL.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Patch),
@@ -140,7 +141,7 @@ testResiduals(RWBLoutput)
 testZeroInflation(RWBLoutput)
 testQuantiles(RWBLoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(RWBL.lit)
+Anova(RWBL.lit, type = 2)
 
 
 NOPI.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Patch),
@@ -156,7 +157,7 @@ testResiduals(NOPIoutput)
 testZeroInflation(NOPIoutput)
 testQuantiles(NOPIoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(NOPI.lit)
+Anova(NOPI.lit, type = 2)
 
 
 GADW.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Patch),
@@ -172,10 +173,10 @@ testResiduals(GADWoutput)
 testZeroInflation(GADWoutput)
 testQuantiles(GADWoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(GADW.lit)
+Anova(GADW.lit, type = 2)
 
 # the zero-inflated model was significant for GADW
-
+# 
 # BWTE.lit <- glmmTMB(estimate~Litter.Depth + (1|Year/Patch),
 #                     data = filter(MTORG.density, Species == "BWTE"),
 #                     ziformula = ~Litter.Depth,
@@ -209,7 +210,7 @@ testResiduals(BRBLoutput)
 testZeroInflation(BRBLoutput)
 testQuantiles(BRBLoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(BRBL.vor)
+Anova(BRBL.vor, type = 2)
 
 
 WEME.vor <- glmmTMB(estimate~a.Robel + (1|Year/Patch),
@@ -226,7 +227,7 @@ testResiduals(WEMEoutput)
 testZeroInflation(WEMEoutput)
 testQuantiles(WEMEoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(WEME.vor)
+Anova(WEME.vor, type = 2)
 
 # This model does not seem to work
 CCSP.vor <- glmmTMB(estimate~a.Robel + (1|Year/Patch),
@@ -242,7 +243,7 @@ testResiduals(CCSPoutput)
 testZeroInflation(CCSPoutput)
 testQuantiles(CCSPoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(CCSP.vor)
+Anova(CCSP.vor, type = 2)
 
 # The conditional model was significant for CCSP
 
@@ -260,7 +261,7 @@ testResiduals(MODOoutput)
 testZeroInflation(MODOoutput)
 testQuantiles(MODOoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(MODO.vor)
+Anova(MODO.vor, type = 2)
 
 
 RWBL.vor <- glmmTMB(estimate~a.Robel + (1|Year/Patch),
@@ -276,7 +277,7 @@ testResiduals(RWBLoutput)
 testZeroInflation(RWBLoutput)
 testQuantiles(RWBLoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(RWBL.vor)
+Anova(RWBL.vor, type = 2)
 
 
 NOPI.vor <- glmmTMB(estimate~a.Robel + (1|Year/Patch),
@@ -293,7 +294,7 @@ testResiduals(NOPIoutput)
 testZeroInflation(NOPIoutput)
 testQuantiles(NOPIoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(NOPI.vor)
+Anova(NOPI.vor, type = 2)
 
 
 GADW.vor <- glmmTMB(estimate~a.Robel + (1|Year/Patch),
@@ -310,7 +311,7 @@ testResiduals(GADWoutput)
 testZeroInflation(GADWoutput)
 testQuantiles(GADWoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(GADW.vor)
+Anova(GADW.vor, type = 2)
 
 # the zero-inflated model was significant for GADW
 
@@ -328,4 +329,4 @@ testResiduals(BWTEoutput)
 testZeroInflation(BWTEoutput)
 testQuantiles(BWTEoutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(BWTE.vor)
+Anova(BWTE.vor, type = 2)

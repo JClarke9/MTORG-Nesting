@@ -13,6 +13,9 @@ library(ggpattern)
 nest <- read.csv("working/RMarknesting.csv")
 
 
+windowsFonts(my_font = windowsFont("Gandhi Sans"))
+
+
 # Data Wrangling ----------------------------------------------------------
 
 
@@ -365,10 +368,6 @@ beta_f$Group <- ifelse(beta_f$Variable %in% c("Litter Cover", "Litter Depth", "B
                                                             "Composition",
                                                             NA)))
 
-library(extrafont)
-loadfonts(device = "win")
-
-windowsFonts(my_font = windowsFont("Gandhi Sans"))                          # downloading a font to be used for my ordination
 
 (beta.plotG <- ggplot(beta_f[beta_f$Group == "Grazing",], 
                      aes(x = Variable,
@@ -562,6 +561,82 @@ ggsave(beta.plotS,
        height = 9.14,
        width = 21.88)
 
+
+# Creating Point Plot -----------------------------------------------------
+
+
+(beta_point <- ggplot(beta_f, 
+                      aes(x = Variable,
+                          y = Coefficient)) +
+   geom_hline(yintercept = 0,
+              colour = gray(1/2), 
+              lty = 2) +
+   geom_point(aes(x = Variable,
+                  y = Coefficient),
+              size = 2) +
+   geom_errorbar(aes(x = Variable,
+                     ymin = lcl,
+                     ymax = ucl),
+                 width = .5,
+                 linewidth = .5) +
+   scale_x_discrete(labels = c("Litter Cover" = "Litter",
+                               "Kentucky Bluegrass Cover" = "Kentucky \n Bluegrass",
+                               "Bare Ground Cover" = "Bare \n Ground",
+                               "Litter Depth" = "Litter \n Depth",
+                               "Prior Grazing Intensity" = "Prior Grazing \n Intensity",
+                               "Days Grazed" = "Days \n Grazed",
+                               "Forb Cover" = "Forb",
+                               "Veg Height" = "Vegetation \n Height",
+                               "Veg Density" = "Vegetation \n Density",
+                               "Smooth Brome Cover" = "Smooth \n Brome")) +
+   theme(panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         plot.background = element_blank(),
+         axis.line = element_line(color = "black"),
+         axis.ticks = element_line(colour = "black"),
+         plot.title = element_text(family = "my_font",
+                                   hjust = .5,
+                                   vjust = 1,
+                                   size = 16,
+                                   color = "black"),
+         axis.title.x = element_blank(),
+         axis.title.y = element_text(family = "my_font",
+                                     size = 14,
+                                     color = "black"),
+         axis.text.x = element_text(family = "my_font",
+                                    size = 10, 
+                                    colour = "black"),
+         axis.text.y = element_text(family = "my_font",
+                                    size = 10,
+                                    colour = "black"),
+         strip.text = element_text(family = "my_font", 
+                                   size = 12, 
+                                   face = "bold", 
+                                   colour = "black"),  # Customize facet strip text
+         strip.background = element_blank()) +
+   facet_wrap(~Species, scales = "free",
+              ncol = 2,
+              labeller = labeller(Species = c("BRBL" = "Brewer's Blackbird",
+                                              "MODO" = "Mourning Dove",
+                                              "CCSP" = "Clay-colored Sparrow", 
+                                              "GADW" = "Gadwall",
+                                              "BWTE" = "Blue-winged Teal",
+                                              "NOPI" = "Northern Pintail", 
+                                              "MALL" = "Mallard",
+                                              "NSHO" = "Northern Shoveler"))) +
+   labs(title = NULL,
+        x = NULL,
+        y = expression("Beta " (beta))) +
+   coord_flip())
+
+ggsave(beta_point,
+       filename = "outputs/figs/betaPoint.png",
+       bg = "white",
+       dpi = 600,
+       height = 6.0,
+       width = 6.35)
+
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,
 #  execute "rm(list = ls(all = TRUE))" - see 2 lines below.
@@ -570,3 +645,4 @@ rm(list = ls(all = TRUE))
 # Then, execute "cleanup(ask = FALSE)" to delete orphaned output
 #  files from MARK. Execute "?cleanup" to learn more
 cleanup(ask = FALSE)
+
