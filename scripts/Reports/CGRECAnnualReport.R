@@ -28,6 +28,30 @@ nest$cTreat <- factor(nest$cTreat,
 nest$Replicate <- factor(nest$Replicate,
                          levels = c("NE", "SE", "SW", "NW"))
 
+all_nests <- nest |> 
+  summarize(count = n(),
+            .by = c(Spec, cTreat)) |> 
+  pivot_wider(names_from = cTreat,
+              values_from = count,
+              values_fill = 0) |> 
+  select(Spec, `0`, `39`, `49`, `68`) |> 
+  rename("Rest" = "0",
+         "Moderate" = "39",
+         "Full" = "49",
+         "Heavy" = "68") |> 
+  mutate(`Nest Totals` = rowSums(across(Rest:Heavy)))
+
+# Create a totals row
+totals_row <- all_nests |> 
+  summarize(across(Rest:`Nest Totals`, sum)) |> 
+  mutate(Spec = "Grazing Intensity Totals") |> 
+  select(Spec, Rest:`Nest Totals`)
+
+# Bind the totals row to the original data frame
+all_nests <- bind_rows(all_nests, totals_row)
+
+write.csv(all_nests, "outputs/nesting_totals_by_treatment.csv")
+
 # This loop creates a new data frame for each species and removes any
 # dataframes from the environment that aren't over 30 observations.
 
