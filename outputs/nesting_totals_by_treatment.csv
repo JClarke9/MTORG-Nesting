@@ -1,35 +1,35 @@
-"","Spec","Rest","Moderate","Full","Heavy","Nest Totals"
-"1","AMWI",0,3,2,1,6
-"2","BOBO",3,7,3,0,13
-"3","BRBL",16,24,12,5,57
-"4","BWTE",32,38,39,25,134
-"5","CCLO",8,5,1,4,18
-"6","CCSP",101,180,185,122,588
-"7","DICK",4,4,3,0,11
-"8","EAKI",6,3,4,1,14
-"9","GADW",28,42,27,13,110
-"10","GRSP",2,2,2,6,12
-"11","KILL",2,0,0,2,4
-"12","MALL",4,20,9,5,38
-"13","MODO",12,20,14,13,59
-"14","NOPI",14,34,20,8,76
-"15","NSHO",7,18,11,1,37
-"16","RWBL",56,43,39,26,164
-"17","SAVS",2,1,2,1,6
-"18","STGR",3,4,4,1,12
-"19","UPSA",3,3,0,1,7
-"20","WEME",34,32,27,20,113
-"21","WILL",4,2,0,0,6
-"22","WIPH",2,1,3,1,7
-"23","WISN",1,0,2,1,4
-"24","YHBL",39,5,0,11,55
-"25","AMCO",4,2,4,9,19
-"26","COGR",0,1,0,0,1
-"27","GWTE",1,3,1,2,7
-"28","PBGR",2,0,1,1,4
-"29","AMBI",0,4,0,0,4
-"30","LESC",0,0,1,0,1
-"31","MAWR",4,0,0,1,5
-"32","SORA",3,2,2,2,9
-"33","RNDU",1,0,0,0,1
-"34","Grazing Intensity Totals",398,503,418,283,1602
+Spec,Group,Rest,Moderate,Full,Heavy,Species Totals
+Pied-billed Grebe,WET,2,0,1,1,4
+American Bittern,FAC,0,4,0,0,4
+Mallard,FAC,4,20,9,5,38
+Gadwall,FAC,28,42,27,13,110
+Northern Pintail,FAC,14,34,20,8,76
+American Wigeon,FAC,0,3,2,1,6
+Northern Shoveler,FAC,7,18,11,1,37
+Blue-winged Teal,FAC,32,38,39,25,134
+Green-winged Teal,FAC,1,3,1,2,7
+Ring-necked Duck,WET,1,0,0,0,1
+Lesser Scaup,FAC,0,0,1,0,1
+Sharp-tailed Grouse,OBL,3,4,4,1,12
+American Coot,WET,4,2,4,9,19
+Sora,WET,3,2,2,2,9
+Killdeer,FAC,2,0,0,2,4
+Willet,FAC,4,2,0,0,6
+Upland Sandpiper,OBL,3,3,0,1,7
+Wilson's Snipe,WET,1,0,2,1,4
+Wilson's Phalarope,WET,2,1,3,1,7
+Mourning Dove,FAC,12,20,14,13,59
+Eastern Kingbird,FAC,6,3,4,1,14
+Marsh Wren,WET,4,0,0,1,5
+Dickcissel,OBL,4,4,3,0,11
+Clay-colored Sparrow,FAC,101,180,185,122,588
+Grasshopper Sparrow,OBL,2,2,2,6,12
+Savannah Sparrow,OBL,2,1,2,1,6
+Chestnut-collared Longspur,OBL,8,5,1,4,18
+Western Meadowlark,OBL,34,32,27,20,113
+Bobolink,OBL,3,7,3,0,13
+Yellow-headed Blackbird,WET,39,5,0,11,55
+Red-winged Blackbird,FAC,56,43,39,26,164
+Brewer's Blackbird,FAC,16,24,12,5,57
+Common Grackle,FAC,0,1,0,0,1
+Intensity Totals,,398,503,418,283,1602
