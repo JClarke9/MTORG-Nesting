@@ -1,41 +1,60 @@
 # Species Grouping Function
 
 # create a column for each data frame with the associated group information
-
 SpeciesGrouping <- function(x) {
-  x <- x |>                                                                     # select the data frame
-    mutate(Group = case_when(                                                   # group together each species and
-      endsWith(Spec, "STGR") ~ "OBL",                                           # list each species as FAC or OBL based on Vickery et al. 1999
-      endsWith(Spec, "UPSA") ~ "OBL",
-      endsWith(Spec, "SAVS") ~ "OBL",
-      endsWith(Spec, "GRSP") ~ "OBL",
-      endsWith(Spec, "CCLO") ~ "OBL",
-      endsWith(Spec, "DICK") ~ "OBL",
-      endsWith(Spec, "BOBO") ~ "OBL",
-      endsWith(Spec, "WEME") ~ "OBL",
-      endsWith(Spec, "GADW") ~ "FAC",
-      endsWith(Spec, "AMWI") ~ "FAC",
-      endsWith(Spec, "MALL") ~ "FAC",
-      endsWith(Spec, "BWTE") ~ "FAC",
-      endsWith(Spec, "NSHO") ~ "FAC",
-      endsWith(Spec, "NOPI") ~ "FAC",
-      endsWith(Spec, "GWTE") ~ "FAC",
-      endsWith(Spec, "WILL") ~ "FAC",
-      endsWith(Spec, "MODO") ~ "FAC",
-      endsWith(Spec, "EAKI") ~ "FAC",
-      endsWith(Spec, "CCSP") ~ "FAC",
-      endsWith(Spec, "RWBL") ~ "FAC",
-      endsWith(Spec, "BRBL") ~ "FAC",
-      endsWith(Spec, "KILL") ~ "FAC",
-      endsWith(Spec, "COGR") ~ "FAC",
-      endsWith(Spec, "WIPH") ~ "WET", 
-      endsWith(Spec, "WISN") ~ "WET", 
-      endsWith(Spec, "YHBL") ~ "WET",
-      endsWith(Spec, "PBGR") ~ "WET",
-      endsWith(Spec, "SORA") ~ "WET",
-      endsWith(Spec, "AMCO") ~ "WET",
-      endsWith(Spec, "MAWR") ~ "WET",
-      endsWith(Spec, "AMBI") ~ "FAC",
-      endsWith(Spec, "LESC") ~ "FAC"
+  x <- x |>                                                                     
+    mutate(Group = case_when(                                                   
+      # Grebes
+      endsWith(Spec, "PBGR") ~ "WET",  # Pied-billed Grebe
+      
+      # Herons & Bitterns
+      endsWith(Spec, "AMBI") ~ "FAC",  # American Bittern
+      
+      # Waterfowl
+      endsWith(Spec, "MALL") ~ "FAC",  # Mallard
+      endsWith(Spec, "GADW") ~ "FAC",  # Gadwall
+      endsWith(Spec, "NOPI") ~ "FAC",  # Northern Pintail
+      endsWith(Spec, "AMWI") ~ "FAC",  # American Wigeon
+      endsWith(Spec, "NSHO") ~ "FAC",  # Northern Shoveler
+      endsWith(Spec, "BWTE") ~ "FAC",  # Blue-winged Teal
+      endsWith(Spec, "GWTE") ~ "FAC",  # Green-winged Teal
+      endsWith(Spec, "RNDU") ~ "WET",  # Ring-necked Duck
+      endsWith(Spec, "LESC") ~ "FAC",  # Lesser Scaup
+      
+      # Grouse
+      endsWith(Spec, "STGR") ~ "OBL",  # Sharp-tailed Grouse
+      
+      # Rails & Coots
+      endsWith(Spec, "AMCO") ~ "WET",  # American Coot
+      endsWith(Spec, "SORA") ~ "WET",  # Sora
+      
+      # Shorebirds
+      endsWith(Spec, "KILL") ~ "FAC",  # Killdeer
+      endsWith(Spec, "WILL") ~ "FAC",  # Willet
+      endsWith(Spec, "UPSA") ~ "OBL",  # Upland Sandpiper
+      endsWith(Spec, "WISN") ~ "WET",  # Wilson's Snipe
+      endsWith(Spec, "WIPH") ~ "WET",  # Wilson's Phalarope
+      
+      # Doves
+      endsWith(Spec, "MODO") ~ "FAC",  # Mourning Dove
+      
+      # Kingbirds & Wrens
+      endsWith(Spec, "EAKI") ~ "FAC",  # Eastern Kingbird
+      endsWith(Spec, "MAWR") ~ "WET",  # Marsh Wren
+      
+      # Sparrows & Longspurs
+      endsWith(Spec, "DICK") ~ "OBL",  # Dickcissel
+      endsWith(Spec, "CCSP") ~ "FAC",  # Clay-colored Sparrow
+      endsWith(Spec, "GRSP") ~ "OBL",  # Grasshopper Sparrow
+      endsWith(Spec, "SAVS") ~ "OBL",  # Savannah Sparrow
+      endsWith(Spec, "CCLO") ~ "OBL",  # Chestnut-collared Longspur
+      
+      # Blackbirds
+      endsWith(Spec, "WEME") ~ "OBL",  # Western Meadowlark
+      endsWith(Spec, "BOBO") ~ "OBL",  # Bobolink
+      endsWith(Spec, "YHBL") ~ "WET",  # Yellow-headed Blackbird
+      endsWith(Spec, "RWBL") ~ "FAC",  # Red-winged Blackbird
+      endsWith(Spec, "BRBL") ~ "FAC",  # Brewer's Blackbird
+      endsWith(Spec, "COGR") ~ "FAC"   # Common Grackle
     ))
 }

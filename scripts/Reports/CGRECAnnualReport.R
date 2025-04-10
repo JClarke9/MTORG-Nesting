@@ -3,6 +3,7 @@
 
 library(tidyverse)
 library(RMark)
+source("scripts/Functions/Species_Grouping_Code.R")
 
 
 # Read in Data ------------------------------------------------------------
@@ -39,18 +40,66 @@ all_nests <- nest |>
          "Moderate" = "39",
          "Full" = "49",
          "Heavy" = "68") |> 
-  mutate(`Nest Totals` = rowSums(across(Rest:Heavy)))
+  SpeciesGrouping() |> 
+  mutate(`Species Totals` = rowSums(across(Rest:Heavy)),
+         Spec = case_when( Spec == "PBGR" ~ "Pied-billed Grebe",
+                           Spec == "AMBI" ~ "American Bittern",
+                           Spec == "MALL" ~ "Mallard",
+                           Spec == "GADW" ~ "Gadwall",
+                           Spec == "NOPI" ~ "Northern Pintail",
+                           Spec == "AMWI" ~ "American Wigeon",
+                           Spec == "NSHO" ~ "Northern Shoveler",
+                           Spec == "BWTE" ~ "Blue-winged Teal",
+                           Spec == "GWTE" ~ "Green-winged Teal",
+                           Spec == "LESC" ~ "Lesser Scaup",
+                           Spec == "STGR" ~ "Sharp-tailed Grouse",
+                           Spec == "AMCO" ~ "American Coot",
+                           Spec == "SORA" ~ "Sora",
+                           Spec == "KILL" ~ "Killdeer",
+                           Spec == "WILL" ~ "Willet",
+                           Spec == "UPSA" ~ "Upland Sandpiper",
+                           Spec == "WISN" ~ "Wilson's Snipe",
+                           Spec == "WIPH" ~ "Wilson's Phalarope",
+                           Spec == "MODO" ~ "Mourning Dove",
+                           Spec == "EAKI" ~ "Eastern Kingbird",
+                           Spec == "MAWR" ~ "Marsh Wren",
+                           Spec == "DICK" ~ "Dickcissel",
+                           Spec == "CCSP" ~ "Clay-colored Sparrow",
+                           Spec == "GRSP" ~ "Grasshopper Sparrow",
+                           Spec == "SAVS" ~ "Savannah Sparrow",
+                           Spec == "CCLO" ~ "Chestnut-collared Longspur",
+                           Spec == "WEME" ~ "Western Meadowlark",
+                           Spec == "BOBO" ~ "Bobolink",
+                           Spec == "YHBL" ~ "Yellow-headed Blackbird",
+                           Spec == "RWBL" ~ "Red-winged Blackbird",
+                           Spec == "BRBL" ~ "Brewer's Blackbird",
+                           Spec == "COGR" ~ "Common Grackle",
+                           Spec == "RNDU" ~ "Ring-necked Duck",
+                           TRUE ~ Spec),
+         Spec = factor(Spec, levels = c("Pied-billed Grebe", "American Bittern", "Mallard", "Gadwall", 
+                                        "Northern Pintail", "American Wigeon", "Northern Shoveler", 
+                                        "Blue-winged Teal", "Green-winged Teal", "Ring-necked Duck", "Lesser Scaup", 
+                                        "Sharp-tailed Grouse", "American Coot", "Sora", "Killdeer", 
+                                        "Willet", "Upland Sandpiper", "Wilson's Snipe", "Wilson's Phalarope", 
+                                        "Mourning Dove", "Eastern Kingbird", "Marsh Wren", "Dickcissel", 
+                                        "Clay-colored Sparrow", "Grasshopper Sparrow", "Savannah Sparrow", 
+                                        "Chestnut-collared Longspur", "Western Meadowlark", "Bobolink", 
+                                        "Yellow-headed Blackbird", "Red-winged Blackbird", "Brewer's Blackbird", 
+                                        "Common Grackle"))) |> 
+  arrange(Spec) |> 
+  select(Spec, Group, Rest:`Species Totals`)
 
 # Create a totals row
 totals_row <- all_nests |> 
-  summarize(across(Rest:`Nest Totals`, sum)) |> 
-  mutate(Spec = "Grazing Intensity Totals") |> 
-  select(Spec, Rest:`Nest Totals`)
+  summarize(across(Rest:`Species Totals`, sum)) |> 
+  mutate(Spec = "Intensity Totals",
+         Group = "") |> 
+  select(Spec:Group, Rest:`Species Totals`)
 
 # Bind the totals row to the original data frame
 all_nests <- bind_rows(all_nests, totals_row)
 
-write.csv(all_nests, "outputs/nesting_totals_by_treatment.csv")
+write_csv(all_nests, "outputs/nesting_totals_by_treatment.csv")
 
 # This loop creates a new data frame for each species and removes any
 # dataframes from the environment that aren't over 30 observations.
