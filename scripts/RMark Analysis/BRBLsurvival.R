@@ -4,6 +4,7 @@
 library(ggplot2)
 library(vegan)
 library(tidyverse)
+library(ggcorrplot)
 library(RMark)
 library(MuMIn)
 library(cowplot)
@@ -65,6 +66,25 @@ x <- create.stage.var(BRBL.surv,
 BRBL.surv <- bind_cols(BRBL.surv, x)
 
 rm(list = ls()[!ls() %in% c("BRBL.surv")])
+
+
+# Checking Correlations --------------------------------------------------------------------------------------
+
+
+# testing for correlations
+(corr_matrix <- BRBL.surv |> 
+   dplyr::select(KBG:VOR) |> 
+   cor(use = "pairwise.complete.obs",
+       method = "pearson"))
+
+# Plot the correlation matrix
+ggcorrplot(corr_matrix, 
+           type = "lower",       # Show only lower triangle
+           lab = TRUE,           # Display correlation values
+           lab_size = 3,         # Adjust label size
+           method = "circle",    # Circle representation
+           title = "Correlation Matrix of Site Covariates",
+           colors = c("blue", "white", "red"))
 
 
 # Daily survival rate models ----------------------------------------------
