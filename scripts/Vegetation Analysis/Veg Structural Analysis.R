@@ -58,6 +58,13 @@ MTORG.str <- MTORG.veg |>
 
 write_csv(MTORG.str, "working/MTORG_str.csv")
 
+summarize(MTORG.str, 
+          avg.Litter.Depth = mean(Litter.Depth),
+          se.litdep = sd(Litter.Depth) / sqrt(n()),
+          avg.Robel = mean(a.Robel), 
+          se.robel = sd(a.Robel) / sqrt(n()),
+          .by = Year)
+
 
 # Setting theme -----------------------------------------------------------
 
