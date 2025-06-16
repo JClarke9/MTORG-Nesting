@@ -13,9 +13,6 @@ library(ggpattern)
 nest <- read.csv("working/RMarknesting.csv")
 
 
-windowsFonts(my_font = windowsFont("Gandhi Sans"))
-
-
 # Data Wrangling ----------------------------------------------------------
 
 
@@ -156,7 +153,7 @@ NSHO.trt <- mark(NSHO.surv,
 
 WEME.beta <- coef(WEME.trt) |>
   cbind(confint(WEME.trt, level = 0.85)) |> 
-  select(estimate, `7.5 %`, `92.5 %`) |> 
+  dplyr::select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
            "lcl" = "7.5 %",
@@ -165,7 +162,7 @@ WEME.beta <- coef(WEME.trt) |>
 
 BRBL.beta <- coef(BRBL.trt) |>
   cbind(confint(BRBL.trt, level = 0.85)) |> 
-  select(estimate, `7.5 %`, `92.5 %`) |> 
+  dplyr::select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
            "lcl" = "7.5 %",
@@ -174,7 +171,7 @@ BRBL.beta <- coef(BRBL.trt) |>
 
 CCSP.beta <- coef(CCSP.trt) |>
   cbind(confint(CCSP.trt, level = 0.85)) |> 
-  select(estimate, `7.5 %`, `92.5 %`) |> 
+  dplyr::select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
            "lcl" = "7.5 %",
@@ -183,7 +180,7 @@ CCSP.beta <- coef(CCSP.trt) |>
 
 MODO.beta <- coef(MODO.trt) |>
   cbind(confint(MODO.trt, level = 0.85)) |> 
-  select(estimate, `7.5 %`, `92.5 %`) |> 
+  dplyr::select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
            "lcl" = "7.5 %",
@@ -192,7 +189,7 @@ MODO.beta <- coef(MODO.trt) |>
 
 RWBL.beta <- coef(RWBL.trt) |>
   cbind(confint(RWBL.trt, level = 0.85)) |> 
-  select(estimate, `7.5 %`, `92.5 %`) |> 
+  dplyr::select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
            "lcl" = "7.5 %",
@@ -201,7 +198,7 @@ RWBL.beta <- coef(RWBL.trt) |>
 
 GADW.beta <- coef(GADW.trt) |>
   cbind(confint(GADW.trt, level = 0.85)) |> 
-  select(estimate, `7.5 %`, `92.5 %`) |> 
+  dplyr::select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
            "lcl" = "7.5 %",
@@ -210,7 +207,7 @@ GADW.beta <- coef(GADW.trt) |>
 
 NOPI.beta <- coef(NOPI.trt) |>
   cbind(confint(NOPI.trt, level = 0.85)) |> 
-  select(estimate, `7.5 %`, `92.5 %`) |> 
+  dplyr::select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
            "lcl" = "7.5 %",
@@ -219,7 +216,7 @@ NOPI.beta <- coef(NOPI.trt) |>
 
 BWTE.beta <- coef(BWTE.trt) |>
   cbind(confint(BWTE.trt, level = 0.85)) |> 
-  select(estimate, `7.5 %`, `92.5 %`) |> 
+  dplyr::select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
            "lcl" = "7.5 %",
@@ -228,7 +225,7 @@ BWTE.beta <- coef(BWTE.trt) |>
 
 MALL.beta <- coef(MALL.trt) |>
   cbind(confint(MALL.trt, level = 0.85)) |> 
-  select(estimate, `7.5 %`, `92.5 %`) |> 
+  dplyr::select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
            "lcl" = "7.5 %",
@@ -237,7 +234,7 @@ MALL.beta <- coef(MALL.trt) |>
 
 NSHO.beta <- coef(NSHO.trt) |>
   cbind(confint(NSHO.trt, level = 0.85)) |> 
-  select(estimate, `7.5 %`, `92.5 %`) |> 
+  dplyr::select(estimate, `7.5 %`, `92.5 %`) |> 
   rownames_to_column(var = "Variable") |> 
   rename(c("Coefficient" = "estimate",
            "lcl" = "7.5 %",
@@ -284,58 +281,82 @@ beta$Variable <- factor(beta$Variable,
                                    "Bare Ground Cover", "Litter Depth", "Veg Height", "Veg Density"))
 
 
-# Plot the data -----------------------------------------------------------
+
+
+# Defining Theme1 -----------------------------------------------------------------------------
+
+
+windowsFonts(my_font = windowsFont("Gandhi Sans"))
+
+my_theme1 <- theme(panel.grid.major = element_blank(),
+                   panel.grid.minor = element_blank(),
+                   panel.background = element_blank(), 
+                   plot.background = element_blank(),
+                   axis.line = element_line(color = "black"),
+                   axis.ticks = element_line(color = "black"),
+                   plot.title = element_text(family = "my_font",
+                                             hjust = .5,
+                                             vjust = 1,
+                                             size = 30,
+                                             color = "black"),
+                   axis.title.x = element_text(family = "my_font",
+                                               size = 20,
+                                               color = "black",
+                                               vjust = 1),
+                   axis.title.y = element_text(family = "my_font",
+                                               size = 20,
+                                               color = "black",
+                                               angle = 90,
+                                               vjust = 1),
+                   axis.text.x = element_text(family = "my_font",
+                                              size = 20,
+                                              color = "black"),
+                   axis.text.y = element_text(family = "my_font",
+                                              size = 20,
+                                              color = "black"),
+                   legend.background = element_blank(),
+                   legend.position = "none")
+
+
+# Plot All Data -------------------------------------------------------------------------------
 
 
 (betaF.plot <- ggplot(beta, 
-                     aes(x = Variable,
-                         y = Coefficient,
-                         fill = factor(Species,
-                                       levels = c("WEME", "BRBL", "MODO", "CCSP", "RWBL",
-                                                  "GADW", "BWTE", "NOPI", "MALL", "NSHO")))) +
-    geom_hline(yintercept = 0,
-               colour = gray(1/2), 
-               lty = 2) +
-    geom_bar(position = "dodge",
-             stat = "identity",
-             colour = "black",
-             width = 0.7) +
-    scale_fill_manual(values = c("#D4A634", 
-                                 "#D4A634", 
-                                 "#D4A634", 
-                                 "#D4A634", 
-                                 "#D4A634",
-                                 "#A2A4A2", 
-                                 "#A2A4A2", 
-                                 "#A2A4A2", 
-                                 "#A2A4A2", 
-                                 "#A2A4A2")) +
-    geom_errorbar(aes(ymin = lcl,
-                      ymax = ucl),
-                  position = position_dodge(0.7),
-                  width = 0.25,
-                  colour = "black") +
-    theme(plot.title = element_text(family = "my_font",
-                                    hjust = 0.5,
-                                    size = 40,
-                                    vjust = 1,
-                                    colour = "black"),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          panel.background = element_rect(fill = NA,
-                                          colour = NA),
-          plot.background = element_rect(fill = NA,
-                                         colour = NA),
-          axis.line = element_line(colour = "black"),
-          axis.text = element_text(size = 30, 
-                                   colour = "black"),
-          axis.ticks = element_line(colour = "black"),
-          text = element_text(size = 30,
-                              colour = "black")) +
-    labs(title = "Top Model Effect Sizes",
-         x = NULL,
-         fill = "Species",
-         y = expression("Beta " (beta))))
+                      aes(x = Variable,
+                          y = Coefficient,
+                          fill = factor(Species,
+                                        levels = c("WEME", "BRBL", "MODO", "CCSP", "RWBL",
+                                                   "GADW", "BWTE", "NOPI", "MALL", "NSHO")))) +
+   geom_hline(yintercept = 0,
+              color = gray(1/2), 
+              lty = 2) +
+   geom_bar(position = "dodge",
+            stat = "identity",
+            color = "black",
+            width = 0.7) +
+   scale_fill_manual(values = c("#D4A634", 
+                                "#D4A634", 
+                                "#D4A634", 
+                                "#D4A634", 
+                                "#D4A634",
+                                "#A2A4A2", 
+                                "#A2A4A2", 
+                                "#A2A4A2", 
+                                "#A2A4A2", 
+                                "#A2A4A2")) +
+   geom_errorbar(aes(ymin = lcl,
+                     ymax = ucl),
+                 position = position_dodge(0.7),
+                 width = 0.25,
+                 color = "black") +
+   my_theme1 +
+   labs(title = "Top Model Effect Sizes",
+        x = NULL,
+        fill = "Species",
+        y = expression("Beta " (beta))))
+
+
+# Plot Data Separately ------------------------------------------------------------------------
 
 
 beta_f <- filter(beta, Variable != "Intercept" & Variable != "Year 2022" & Variable != "Year 2023" &
@@ -365,59 +386,30 @@ beta_f$Group <- ifelse(beta_f$Variable %in% c("Litter Cover", "Litter Depth", "B
                        ifelse(beta_f$Variable %in% c("Days Grazed", "Prior Grazing Intensity"),
                               "Grazing",
                               ifelse(beta_f$Variable %in% c("Kentucky Bluegrass Cover", "Forb Cover", "Smooth Brome Cover"),
-                                                            "Composition",
-                                                            NA)))
+                                     "Composition",
+                                     NA)))
 
 
 (beta.plotG <- ggplot(beta_f[beta_f$Group == "Grazing",], 
-                     aes(x = Variable,
-                         y = Coefficient,
-                         fill = Species)) +
+                      aes(x = Variable,
+                          y = Coefficient,
+                          fill = Species)) +
     geom_hline(yintercept = 0,
-               colour = "black", 
+               color = "black", 
                lty = 1,) +
     geom_bar(position = "dodge",
              stat = "identity",
-             colour = "black",
+             color = "black",
              width = 0.7) +
     geom_errorbar(aes(ymin = lcl,
                       ymax = ucl),
                   position = position_dodge(0.7),
                   width = 0.5,
                   linewidth = 0.7,
-                  colour = "black") +
+                  color = "black") +
     scale_fill_manual(values = c("GADW" = "#613323")) +
     guides(fill = guide_legend(byrow = TRUE)) +
-    theme(panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          panel.background = element_rect(fill = "transparent",
-                                          color = NA), 
-          plot.background = element_rect(fill = "transparent",
-                                         color = NA),
-          axis.line = element_line(color = "black"),
-          axis.ticks = element_line(color = "black"),
-          plot.title = element_text(family = "my_font",
-                                    hjust = .5,
-                                    vjust = 1,
-                                    size = 40,
-                                    color = "black"),
-          axis.title.x = element_text(family = "my_font",
-                                      size = 28,
-                                      color = "black",
-                                      vjust = 1),
-          axis.title.y = element_text(family = "my_font",
-                                      size = 28,
-                                      color = "black",
-                                      angle = 90,
-                                      vjust = 1),
-          axis.text.x = element_text(family = "my_font",
-                                     size = 28,
-                                     color = "black"),
-          axis.text.y = element_text(family = "my_font",
-                                     size = 28,
-                                     color = "black"),
-          legend.background = element_blank(),
-          legend.position = "none") +
+    my_theme1 +
     coord_cartesian(ylim = c(-0.025, 0.10)) +
     labs(title = "Grazing Impacts",
          x = NULL,
@@ -433,63 +425,34 @@ ggsave(plot = beta.plotG,
        limitsize = F)
 
 (beta.plotC <- ggplot(beta_f[beta_f$Group == "Composition",], 
-                     aes(x = Variable,
-                         y = Coefficient,
-                         fill = Species)) +
+                      aes(x = Variable,
+                          y = Coefficient,
+                          fill = Species)) +
     geom_hline(yintercept = 0,
-               colour = "black", 
+               color = "black", 
                lty = 1,) +
     geom_bar(position = "dodge",
              stat = "identity",
-             colour = "black",
+             color = "black",
              width = 0.7) +
     geom_errorbar(aes(ymin = lcl,
                       ymax = ucl),
                   position = position_dodge(0.7),
                   width = 0.5,
                   linewidth = 0.7,
-                  colour = "black") +
+                  color = "black") +
     scale_fill_manual(values = c("MODO" = "#C8A696", 
                                  "GADW" = "#613323",
                                  "NSHO" = "#AF4A05")) +
     guides(fill = guide_legend(byrow = TRUE)) +
-    theme(panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          panel.background = element_rect(fill = "transparent",
-                                          color = NA), 
-          plot.background = element_rect(fill = "transparent",
-                                         color = NA),
-          axis.line = element_line(color = "black"),
-          axis.ticks = element_line(color = "black"),
-          plot.title = element_text(family = "my_font",
-                                    hjust = .5,
-                                    vjust = 1,
-                                    size = 40,
-                                    color = "black"),
-          axis.title.x = element_text(family = "my_font",
-                                      size = 28,
-                                      color = "black",
-                                      vjust = 1),
-          axis.title.y = element_text(family = "my_font",
-                                      size = 28,
-                                      color = "black",
-                                      angle = 90,
-                                      vjust = 1),
-          axis.text.x = element_text(family = "my_font",
-                                     size = 28,
-                                     color = "black"),
-          axis.text.y = element_text(family = "my_font",
-                                     size = 28,
-                                     color = "black"),
-          legend.background = element_blank(),
-          legend.position = "none") +
+    my_theme1 +
     coord_cartesian(ylim = c(-0.025, 0.10)) +
     labs(title = "Vegetation Composition Impacts",
          x = NULL,
          fill = "Type",
          y = NULL))
 
-  ggsave(beta.plotC,
+ggsave(beta.plotC,
        filename = "outputs/figs/betaComposition.png",
        bg = "transparent",
        dpi = 600,
@@ -497,58 +460,29 @@ ggsave(plot = beta.plotG,
        width = 13.13)
 
 (beta.plotS <- ggplot(beta_f[beta_f$Group == "Structure",], 
-                     aes(x = Variable,
-                         y = Coefficient,
-                         fill = Species)) +
+                      aes(x = Variable,
+                          y = Coefficient,
+                          fill = Species)) +
     geom_hline(yintercept = 0,
-               colour = "black", 
+               color = "black", 
                lty = 1,) +
     geom_bar(position = "dodge",
              stat = "identity",
-             colour = "black",
+             color = "black",
              width = 0.7) +
     geom_errorbar(aes(ymin = lcl,
                       ymax = ucl),
                   position = position_dodge(0.7),
                   width = 0.5,
                   linewidth = 0.7,
-                  colour = "black") +
+                  color = "black") +
     scale_fill_manual(values = c("BRBL" = "#364C59", 
                                  "NOPI" = "#736357",
                                  "MALL" = "#0E7B54",
                                  "CCSP" = "#ADA6B2",
                                  "BWTE" = "#9BAFD0")) +
     guides(fill = guide_legend(byrow = TRUE)) +
-    theme(panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          panel.background = element_rect(fill = "transparent",
-                                          color = NA), 
-          plot.background = element_rect(fill = "transparent",
-                                         color = NA),
-          axis.line = element_line(color = "black"),
-          axis.ticks = element_line(color = "black"),
-          plot.title = element_text(family = "my_font",
-                                    hjust = .5,
-                                    vjust = 1,
-                                    size = 40,
-                                    color = "black"),
-          axis.title.x = element_text(family = "my_font",
-                                      size = 28,
-                                      color = "black",
-                                      vjust = 1),
-          axis.title.y = element_text(family = "my_font",
-                                      size = 28,
-                                      color = "black",
-                                      angle = 90,
-                                      vjust = 1),
-          axis.text.x = element_text(family = "my_font",
-                                     size = 28,
-                                     color = "black"),
-          axis.text.y = element_text(family = "my_font",
-                                     size = 28,
-                                     color = "black"),
-          legend.background = element_blank(),
-          legend.position = "none") +
+    my_theme1 +
     labs(title = "Vegetation Structure Impacts",
          x = NULL,
          fill = "Type",
@@ -564,66 +498,70 @@ ggsave(beta.plotS,
 
 # Creating Point Plot -----------------------------------------------------
 
-
-(beta_point <- ggplot(beta_f, 
+# I removed MODO and NSHO because they didn't respond to structure
+(beta_point <- ggplot(beta_f[!beta_f$Species %in% c("MODO", "NSHO"),] |> 
+                        mutate(Species = factor(Species, levels = c("GADW", "CCSP", "BRBL", "MALL", "NOPI",
+                                                                    "BWTE"))), 
                       aes(x = Variable,
                           y = Coefficient)) +
    geom_hline(yintercept = 0,
-              colour = gray(1/2), 
-              lty = 2) +
+              lty = 2,
+              color = "white") +
    geom_point(aes(x = Variable,
                   y = Coefficient),
-              size = 2) +
+              size = 2,
+              color = "white") +
    geom_errorbar(aes(x = Variable,
                      ymin = lcl,
                      ymax = ucl),
                  width = .5,
-                 linewidth = .5) +
+                 linewidth = .5,
+                 color = "white") +
    scale_x_discrete(labels = c("Litter Cover" = "Litter",
-                               "Kentucky Bluegrass Cover" = "Kentucky \n Bluegrass",
                                "Bare Ground Cover" = "Bare \n Ground",
                                "Litter Depth" = "Litter \n Depth",
                                "Prior Grazing Intensity" = "Prior Grazing \n Intensity",
-                               "Days Grazed" = "Days \n Grazed",
+                               "Days Grazed" = "Days Grazed",
                                "Forb Cover" = "Forb",
                                "Veg Height" = "Vegetation \n Height",
-                               "Veg Density" = "Vegetation \n Density",
-                               "Smooth Brome Cover" = "Smooth \n Brome")) +
+                               "Veg Density" = "Vegetation \n Density")) +
    theme(panel.grid.major = element_blank(),
          panel.grid.minor = element_blank(),
          panel.background = element_blank(), 
          plot.background = element_blank(),
-         axis.line = element_line(color = "black"),
-         axis.ticks = element_line(colour = "black"),
+         axis.line = element_line(color = "white"),
+         axis.ticks = element_line(color = "white"),
          plot.title = element_text(family = "my_font",
                                    hjust = .5,
                                    vjust = 1,
-                                   size = 16,
-                                   color = "black"),
+                                   size = 20,
+                                   color = "white"),
          axis.title.x = element_blank(),
          axis.title.y = element_text(family = "my_font",
-                                     size = 14,
-                                     color = "black"),
+                                     size = 16,
+                                     color = "white"),
          axis.text.x = element_text(family = "my_font",
-                                    size = 10, 
-                                    colour = "black"),
+                                    size = 16, 
+                                    color = "white"),
          axis.text.y = element_text(family = "my_font",
-                                    size = 10,
-                                    colour = "black"),
-         strip.text = element_text(family = "my_font", 
-                                   size = 12, 
-                                   face = "bold", 
-                                   colour = "black"),  # Customize facet strip text
-         strip.background = element_blank()) +
-   facet_wrap(~Species, scales = "free",
+                                    size = 14,
+                                    color = "white"),
+         strip.text.x = element_text(family = "my_font", 
+                                     size = 14, 
+                                     face = "bold", 
+                                     color = "white"),
+         strip.background = element_blank(),
+         legend.background = element_blank()) +
+   facet_wrap(~Species, 
+              scales = "free",
               ncol = 2,
-              labeller = labeller(Species = c("BRBL" = "Brewer's Blackbird",
-                                              "MODO" = "Mourning Dove",
-                                              "CCSP" = "Clay-colored Sparrow", 
-                                              "GADW" = "Gadwall",
-                                              "BWTE" = "Blue-winged Teal",
-                                              "NOPI" = "Northern Pintail", 
+              labeller = labeller(Species = c("GADW" = "Gadwall",
+                                              "CCSP" = "Clay-colored Sparrow",
+                                              "BRBL" = "Brewer's Blackbird",
                                               "MALL" = "Mallard",
+                                              "NOPI" = "Northern Pintail", 
+                                              "BWTE" = "Blue-winged Teal",
+                                              "MODO" = "Mourning Dove",
                                               "NSHO" = "Northern Shoveler"))) +
    labs(title = NULL,
         x = NULL,
@@ -632,10 +570,10 @@ ggsave(beta.plotS,
 
 ggsave(beta_point,
        filename = "outputs/figs/betaPoint.png",
-       bg = "white",
+       bg = "transparent",
        dpi = 600,
-       height = 6.0,
-       width = 6.35)
+       height = 5.7,
+       width = 8.33)
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,

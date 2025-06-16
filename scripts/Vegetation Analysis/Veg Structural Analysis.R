@@ -6,7 +6,9 @@ library(ggplot2)
 library(cowplot)
 library(glmmTMB)
 library(DHARMa)
+library(car)
 library(emmeans)
+library(multcomp)
 
 
 # Data import -------------------------------------------------------------
@@ -15,8 +17,6 @@ library(emmeans)
 raw <- read.csv("working/VegAdj.csv") |> 
   filter(Transect.ID %in% c(97:144)) |> 
   mutate(Transect.ID = factor(Transect.ID, levels = c(97:144)),
-         Year = factor(Year, levels = c("2021", "2022", 
-                                        "2023", "2024")),
          Replicate = factor(Replicate, levels = c("NE", "SE",
                                                   "SW", "NW")),
          Patch = factor(Patch, levels = c(1:16)),
@@ -34,14 +34,14 @@ MTORG.veg <- raw |>
            sep = "-",
            remove = F) |> 
   filter(Month == "07" | Month == "08") |> 
-  select(-c(Day, Month, Year2))
+  dplyr::select(-c(Day, Month, Year2))
 
 MTORG.veg$a.Robel <- MTORG.veg |> 
-  select(R1:R4) |> 
+  dplyr::select(R1:R4) |> 
   rowMeans()
 
 MTORG.veg$TotalVegCover <- MTORG.veg |> 
-  select(KBG:Woody) |> 
+  dplyr::select(KBG:Woody) |> 
   rowSums(na.rm = TRUE)
 
 MTORG.veg <- MTORG.veg |> 
@@ -66,126 +66,6 @@ summarize(MTORG.str,
           .by = Year)
 
 
-# Setting theme -----------------------------------------------------------
-
-
-windowsFonts(my_font = windowsFont("Gandhi Sans"))
-
-robel_theme <- theme(panel.grid.major = element_blank(),
-                     panel.grid.minor = element_blank(),
-                     panel.background = element_rect(fill = "transparent",
-                                                     color = NA), 
-                     plot.background = element_rect(fill = "transparent",
-                                                    color = NA),
-                     axis.line = element_line(color = "black"),
-                     axis.ticks = element_line(color = "black"),
-                     plot.title = element_text(family = "my_font",
-                                               hjust = .5,
-                                               vjust = 1,
-                                               size = 40,
-                                               color = "black"),
-                     axis.title.x = element_blank(),
-                     axis.title.y = element_text(family = "my_font",
-                                                 size = 28,
-                                                 color = "black",
-                                                 angle = 90,
-                                                 vjust = 1),
-                     axis.text.x = element_blank(),
-                     axis.text.y = element_text(family = "my_font",
-                                                size = 28,
-                                                color = "black"),
-                     strip.text.x = element_text(family = 'my_font',
-                                                 size = 36,
-                                                 color = "black",
-                                                 vjust = 1),
-                     strip.background = element_rect(fill = "transparent",
-                                                     color = NA),
-                     legend.position = "none")
-
-litter_theme <- theme(panel.grid.major = element_blank(),
-                      panel.grid.minor = element_blank(),
-                      panel.background = element_rect(fill = "transparent",
-                                                      color = NA), 
-                      plot.background = element_rect(fill = "transparent",
-                                                     color = NA),
-                      axis.line = element_line(color = "black"),
-                      axis.ticks = element_line(color = "black"),
-                      plot.title = element_text(family = "my_font",
-                                                hjust = .5,
-                                                vjust = 1,
-                                                size = 40,
-                                                color = "black"),
-                      axis.title.x = element_text(family = "my_font",
-                                                  size = 28,
-                                                  color = "black",
-                                                  vjust = 1),
-                      axis.title.y = element_text(family = "my_font",
-                                                  size = 28,
-                                                  color = "black",
-                                                  angle = 90,
-                                                  vjust = 1),
-                      axis.text.x = element_text(family = "my_font",
-                                                 size = 28,
-                                                 vjust = 1,
-                                                 hjust = 1,
-                                                 angle = 45,
-                                                 color = "black"),
-                      axis.text.y = element_text(family = "my_font",
-                                                 size = 28,
-                                                 color = "black"),
-                      strip.text.x = element_blank(),
-                      legend.position = "none")
-
-
-# Creating Plots ----------------------------------------------------------
-
-
-(robel <- ggplot(MTORG.str,
-                 aes(fill = Intensity,
-                     x = Intensity,
-                     y = a.Robel)) +
-   geom_violin(trim = FALSE,
-               draw_quantiles = c(.25, .75),
-               color = "black",
-               size = 0.5) +
-   scale_fill_manual(values = c("#A2A4A2", "lightgoldenrod2", 
-                                "#D4A634", "#717F5B")) +
-   robel_theme +
-   labs(title = NULL, 
-        x = "Grazing Intensity", 
-        y = "Vegetation Density (dm)") +
-   facet_wrap(~Year, nrow = 1, ncol = 4, axes = "all", axis.labels = "margins"))
-
-(litter <- ggplot(MTORG.str,
-                  aes(fill = Intensity,
-                      x = Intensity,
-                      y = Litter.Depth)) +
-    geom_violin(trim = FALSE,
-                draw_quantiles = c(.25, .75),
-                color = "black",
-                size = 0.5) +
-    scale_fill_manual(values = c("#A2A4A2", "lightgoldenrod2", 
-                                 "#D4A634", "#717F5B")) +
-    litter_theme +
-    labs(title = NULL, 
-         x = NULL, 
-         y = "Litter Depth (mm)") +
-    facet_wrap(~Year, nrow = 1, ncol = 4, axes = "all", axis.labels = "margins"))
-
-(veg_violin <- plot_grid(robel,
-                         litter,
-                         align = "v",
-                         nrow = 2,
-                         ncol = 1))
-
-ggsave(veg_violin,
-       filename = "outputs/figs/VegStr_violin.png",
-       bg = "white",
-       dpi = 600,
-       height = 10.78,
-       width = 22.11)
-
-
 # Robel Models ------------------------------------------------------------
 
 
@@ -208,10 +88,15 @@ testResiduals(simulationOutput)
 testZeroInflation(simulationOutput)
 testQuantiles(simulationOutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(aov.robel21)
-emmeans(aov.robel21, 
+Anova(aov.robel21, type = 2)
+(em.robel21 <- emmeans(aov.robel21, 
         pairwise ~ Intensity,
-        adjust = "tukey")
+        adjust = "tukey"))
+
+cld.robel21 <- cld(em.robel21, Letters = LETTERS, alpha = 0.05)
+cld.robel21 <- cld.robel21 |> 
+  mutate(Year = 2021,
+         .group = gsub(" ", "", .group))
 
 hist(MTORG.veg$a.Robel)
 hist(MTORG.veg$a.Robel[MTORG.veg$Year == 2022 & MTORG.veg$Intensity == "Rest"])
@@ -233,10 +118,15 @@ testResiduals(simulationOutput)
 testZeroInflation(simulationOutput)
 testQuantiles(simulationOutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(aov.robel22)
-emmeans(aov.robel22, 
-        pairwise ~ Intensity,
-        adjust = "tukey")
+Anova(aov.robel22, type = 2)
+(em.robel22 <- emmeans(aov.robel22, 
+                       pairwise ~ Intensity,
+                       adjust = "tukey"))
+
+cld.robel22 <- cld(em.robel22, Letters = LETTERS, alpha = 0.05)
+cld.robel22 <- cld.robel22 |> 
+  mutate(Year = 2022,
+         .group = gsub(" ", "", .group))
 
 
 hist(MTORG.veg$a.Robel)
@@ -259,10 +149,15 @@ testResiduals(simulationOutput)
 testZeroInflation(simulationOutput)
 testQuantiles(simulationOutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(aov.robel23)
-emmeans(aov.robel23, 
-        pairwise ~ Intensity,
-        adjust = "tukey")
+Anova(aov.robel23, type = 2)
+(em.robel23 <- emmeans(aov.robel23, 
+                       pairwise ~ Intensity,
+                       adjust = "tukey"))
+
+cld.robel23 <- cld(em.robel23, Letters = LETTERS, alpha = 0.05)
+cld.robel23 <- cld.robel23 |> 
+  mutate(Year = 2023,
+         .group = gsub(" ", "", .group))
 
 
 hist(MTORG.veg$a.Robel)
@@ -284,10 +179,15 @@ testResiduals(simulationOutput)
 testZeroInflation(simulationOutput)
 testQuantiles(simulationOutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(aov.robel24)
-emmeans(aov.robel24, 
-        pairwise ~ Intensity,
-        adjust = "tukey")
+Anova(aov.robel24, type = 2)
+(em.robel24 <- emmeans(aov.robel24, 
+                       pairwise ~ Intensity,
+                       adjust = "tukey"))
+
+cld.robel24 <- cld(em.robel24, Letters = LETTERS, alpha = 0.05)
+cld.robel24 <- cld.robel24 |> 
+  mutate(Year = 2024,
+         .group = gsub(" ", "", .group))
 
 
 # Litter Depth Models -----------------------------------------------------
@@ -312,10 +212,15 @@ testResiduals(simulationOutput)
 testZeroInflation(simulationOutput)
 testQuantiles(simulationOutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(aov.litdep21)
-emmeans(aov.litdep21, 
-        pairwise ~ Intensity,
-        adjust = "tukey")
+Anova(aov.litdep21, type = 2)
+(em.litdep21 <- emmeans(aov.litdep21, 
+                       pairwise ~ Intensity,
+                       adjust = "tukey"))
+
+cld.litdep21 <- cld(em.litdep21, Letters = LETTERS, alpha = 0.05)
+cld.litdep21 <- cld.litdep21 |> 
+  mutate(Year = 2021,
+         .group = gsub(" ", "", .group))
 
 hist(MTORG.veg$Litter.Depth)
 hist(MTORG.veg$Litter.Depth[MTORG.veg$Year == 2022 & MTORG.veg$Intensity == "Rest"])
@@ -337,10 +242,15 @@ testResiduals(simulationOutput)
 testZeroInflation(simulationOutput)
 testQuantiles(simulationOutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(aov.litdep22)
-emmeans(aov.litdep22, 
-        pairwise ~ Intensity,
-        adjust = "tukey")
+Anova(aov.litdep22, type = 2)
+(em.litdep22 <- emmeans(aov.litdep22, 
+                        pairwise ~ Intensity,
+                        adjust = "tukey"))
+
+cld.litdep22 <- cld(em.litdep22, Letters = LETTERS, alpha = 0.05)
+cld.litdep22 <- cld.litdep22 |> 
+  mutate(Year = 2022,
+         .group = gsub(" ", "", .group))
 
 
 hist(MTORG.veg$Litter.Depth)
@@ -362,10 +272,15 @@ testResiduals(simulationOutput)
 testZeroInflation(simulationOutput)
 testQuantiles(simulationOutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(aov.litdep23)
-emmeans(aov.litdep23, 
-        pairwise ~ Intensity,
-        adjust = "tukey")
+Anova(aov.litdep23, type = 2)
+(em.litdep23 <- emmeans(aov.litdep23, 
+                        pairwise ~ Intensity,
+                        adjust = "tukey"))
+
+cld.litdep23 <- cld(em.litdep23, Letters = LETTERS, alpha = 0.05)
+cld.litdep23 <- cld.litdep23 |> 
+  mutate(Year = 2023,
+         .group = gsub(" ", "", .group))
 
 
 hist(MTORG.veg$Litter.Depth)
@@ -387,7 +302,161 @@ testResiduals(simulationOutput)
 testZeroInflation(simulationOutput)
 testQuantiles(simulationOutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
-summary(aov.litdep24)
-emmeans(aov.litdep24, 
-        pairwise ~ Intensity,
-        adjust = "tukey")
+Anova(aov.litdep24, type = 2)
+(em.litdep24 <- emmeans(aov.litdep24, 
+                        pairwise ~ Intensity,
+                        adjust = "tukey"))
+
+cld.litdep24 <- cld(em.litdep24, Letters = LETTERS, alpha = 0.05)
+cld.litdep24 <- cld.litdep24 |> 
+  mutate(Year = 2024,
+         .group = gsub(" ", "", .group))
+
+
+# Merging CLD ---------------------------------------------------------------------------------
+
+
+cld.robel <- bind_rows(cld.robel21,
+                       cld.robel22,
+                       cld.robel23,
+                       cld.robel24)
+
+cld.litdep <- bind_rows(cld.litdep21,
+                        cld.litdep22,
+                        cld.litdep23,
+                        cld.litdep24)
+
+
+
+# Setting theme -----------------------------------------------------------
+
+
+windowsFonts(my_font = windowsFont("Gandhi Sans"))
+
+robel_theme <- theme(panel.grid.major = element_blank(),
+                     panel.grid.minor = element_blank(),
+                     panel.background = element_blank(), 
+                     plot.background = element_blank(),
+                     axis.line = element_line(colour = "white"),
+                     axis.ticks = element_line(colour = "white"),
+                     plot.title = element_text(family = "my_font",
+                                               hjust = .5,
+                                               vjust = 1,
+                                               size = 30,
+                                               color = "white"),
+                     axis.title.x = element_blank(),
+                     axis.title.y = element_text(family = "my_font",
+                                                 size = 20,
+                                                 color = "white",
+                                                 angle = 90,
+                                                 vjust = 1),
+                     axis.text.x = element_blank(),
+                     axis.text.y = element_text(family = "my_font",
+                                                size = 20,
+                                                color = "white"),
+                     strip.text.x = element_text(family = "my_font", 
+                                                 size = 24, 
+                                                 face = "bold", 
+                                                 colour = "white"),
+                     strip.background = element_blank(),
+                     legend.background = element_blank(),
+                     legend.position = "none")
+
+litter_theme <- theme(panel.grid.major = element_blank(),
+                      panel.grid.minor = element_blank(),
+                      panel.background = element_blank(), 
+                      plot.background = element_blank(),
+                      axis.line = element_line(colour = "white"),
+                      axis.ticks = element_line(colour = "white"),
+                      plot.title = element_text(family = "my_font",
+                                                hjust = .5,
+                                                vjust = 1,
+                                                size = 30,
+                                                color = "white"),
+                      axis.title.x = element_text(family = "my_font",
+                                                  size = 20,
+                                                  color = "white",
+                                                  vjust = 1),
+                      axis.title.y = element_text(family = "my_font",
+                                                  size = 20,
+                                                  color = "white",
+                                                  angle = 90,
+                                                  vjust = 1),
+                      axis.text.x = element_text(family = "my_font",
+                                                 size = 20,
+                                                 vjust = 1,
+                                                 hjust = 1,
+                                                 angle = 45,
+                                                 color = "white"),
+                      axis.text.y = element_text(family = "my_font",
+                                                 size = 28,
+                                                 color = "white"),
+                      strip.text.x = element_blank(),
+                      strip.background = element_blank(),
+                      legend.background = element_blank(),
+                      legend.position = "none")
+
+
+# Creating Plots ----------------------------------------------------------
+
+
+(robel <- ggplot(MTORG.str,
+                 aes(fill = Intensity,
+                     x = Intensity,
+                     y = a.Robel)) +
+   geom_violin(trim = FALSE,
+               draw_quantiles = c(.25, .75),
+               color = "white",
+               size = 0.5) +
+   geom_text(data = cld.robel, 
+             aes(x = Intensity, 
+                 y = 13, 
+                 label = .group),
+             family = "my_font",
+             size.unit = "pt",
+             size = 20,
+             colour = "white") +
+   scale_fill_manual(values = c("#A2A4A2", "lightgoldenrod2", 
+                                "#D4A634", "#717F5B")) +
+   robel_theme +
+   labs(title = NULL, 
+        x = "Grazing Intensity", 
+        y = "Vegetation Density (dm)") +
+   facet_wrap(~Year, nrow = 1, ncol = 4, axes = "all", axis.labels = "margins"))
+
+(litter <- ggplot(MTORG.str,
+                  aes(fill = Intensity,
+                      x = Intensity,
+                      y = Litter.Depth)) +
+    geom_violin(trim = FALSE,
+                draw_quantiles = c(.25, .75),
+                color = "white",
+                size = 0.5) +
+    geom_text(data = cld.litdep, 
+              aes(x = Intensity, 
+                  y = 110, 
+                  label = .group),
+              family = "my_font",
+              size.unit = "pt",
+              size = 20,
+              colour = "white") +
+    scale_fill_manual(values = c("#A2A4A2", "lightgoldenrod2", 
+                                 "#D4A634", "#717F5B")) +
+    litter_theme +
+    labs(title = NULL, 
+         x = NULL, 
+         y = "Litter Depth (mm)") +
+    facet_wrap(~Year, nrow = 1, ncol = 4, axes = "all", axis.labels = "margins"))
+
+(veg_violin <- plot_grid(robel,
+                         litter,
+                         align = "v",
+                         nrow = 2,
+                         ncol = 1))
+
+ggsave(veg_violin,
+       filename = "outputs/figs/VegStr_violin.png",
+       bg = "transparent",
+       dpi = 600,
+       height = 7,
+       width = 13.33)

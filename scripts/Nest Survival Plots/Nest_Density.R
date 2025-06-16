@@ -721,79 +721,10 @@ birdT.density <- birds.trtT |>
             ucl = mean(ucl))
 
 
-# Plot densities ----------------------------------------------------------
-
-
-(density.plotT <- ggplot(birds.trtT[birds.trtT$Species %in% c("CCSP", "RWBL", "NOPI", "GADW"),], 
-                         aes(x = factor(Species,
-                                        levels = c("CCSP", "RWBL", "NOPI", "GADW")), 
-                             y = estimate,
-                             color = factor(cTreat,
-                                            levels = c("Rest", "Moderate",
-                                                       "Full", "Heavy")))) +
-   stat_summary(geom = "point",
-                fun = "mean",
-                size = 1,
-                position = position_dodge(.5)) +
-   stat_summary(geom = "errorbar",
-                fun.data = mean_cl_boot,
-                linewidth = 0.5,
-                position = position_dodge(.5)) +
-   scale_color_manual(values=c("#A2A4A2", "lightgoldenrod2", "#D4A634", "#717F5B")) +
-   scale_x_discrete(labels = c("CCSP" = "Clay-colored \n Sparrow", 
-                               "RWBL" = "Red-winged \n Blackbird", 
-                               "NOPI" = "Northern \n Pintail", 
-                               "GADW" = "Gadwall")) +
-   theme(panel.grid.major = element_blank(),
-         panel.grid.minor = element_blank(),
-         panel.background = element_blank(), 
-         plot.background = element_blank(),
-         axis.line = element_line(color = "black"),
-         axis.ticks = element_line(colour = "black"),
-         plot.title = element_text(family = "my_font",
-                                   hjust = .5,
-                                   vjust = 1,
-                                   size = 16,
-                                   color = "black"),
-         axis.title.x = element_blank(),
-         axis.title.y = element_text(family = "my_font",
-                                     size = 12,
-                                     color = "black"),
-         axis.text.x = element_text(family = "my_font",
-                                    size = 10, 
-                                    colour = "black"),
-         axis.text.y = element_text(family = "my_font",
-                                    size = 10,
-                                    colour = "black"),
-         legend.text = element_text(family = "my_font",
-                                    size = 10,
-                                    colour = "black"),
-         legend.title = element_text(family = "my_font",
-                                     size = 10,
-                                     colour = "black"),
-         legend.position = "bottom",
-         plot.margin = margin(t = 5, r = 5, b = 5, l = 5),  # smaller margins all around
-         legend.margin = margin(t = -8, unit = "pt")) +       # pulls the legend closer to the plot) +
-   labs(title = "Nesting Densities by Species",
-        x = NULL, 
-        y = "Nests Per Ha",
-        color = "Grazing Intensity"))
-
-ggsave(density.plotT,
-       filename = "outputs/figs/AvianDensity_Treat.png",
-       bg = "transparent",
-       dpi = "print",
-       height = 3,
-       width = 5.58)
-
-write_csv(birds.trtT, "working/Birds_Treatment_Density.csv")
-
-
 # Running Kruskal-Wallace Tests ------------------------------------------------------------------------------
 
 
 library(dunn.test)
-
 
 kruskal.test(birds.trtT[birds.trtT$Species == "BRBL", ]$estimate, 
              birds.trtT[birds.trtT$Species == "BRBL", ]$cTreat,
@@ -812,6 +743,12 @@ dunn.test(birds.trtT[birds.trtT$Species == "CCSP", ]$estimate,
                      birds.trtT[birds.trtT$Species == "CCSP", ]$cTreat,
                      method = "bonferroni")
 
+sigdif_ccsp <- data.frame(Species = "CCSP",
+                          cTreat = c("Rest", "Moderate", "Full", "Heavy"),
+                          diff = c("A", "AB", "B", "AB"),
+                          y = max(quantile(birds.trtT[birds.trtT$Species == "CCSP", ]$estimate, 0.95)))
+
+
 kruskal.test(birds.trtT[birds.trtT$Species == "MODO", ]$estimate, 
              birds.trtT[birds.trtT$Species == "MODO", ]$cTreat,
              method = "bonferroni")
@@ -824,6 +761,12 @@ kruskal.test(birds.trtT[birds.trtT$Species == "RWBL", ]$estimate,
 dunn.test(birds.trtT[birds.trtT$Species == "RWBL", ]$estimate, 
           birds.trtT[birds.trtT$Species == "RWBL", ]$cTreat,
           method = "bonferroni")
+
+sigdif_rwbl <- data.frame(Species = "RWBL",
+                          cTreat = c("Rest", "Moderate", "Full", "Heavy"),
+                          diff = c("B", "AB", "B", "A"),
+                          y = max(quantile(birds.trtT[birds.trtT$Species == "RWBL", ]$estimate, 0.95)))
+
 
 kruskal.test(birds.trtT[birds.trtT$Species == "YHBL", ]$estimate, 
              birds.trtT[birds.trtT$Species == "YHBL", ]$cTreat,
@@ -838,6 +781,12 @@ dunn.test(birds.trtT[birds.trtT$Species == "NOPI", ]$estimate,
           birds.trtT[birds.trtT$Species == "NOPI", ]$cTreat,
           method = "bonferroni")
 
+sigdif_nopi <- data.frame(Species = "NOPI",
+                          cTreat = c("Rest", "Moderate", "Full", "Heavy"),
+                          diff = c("A", "B", "AB", "A"),
+                          y = max(quantile(birds.trtT[birds.trtT$Species == "NOPI", ]$estimate, 0.95)))
+
+
 # significant difference between moderate and heavy
 kruskal.test(birds.trtT[birds.trtT$Species == "GADW", ]$estimate, 
              birds.trtT[birds.trtT$Species == "GADW", ]$cTreat,
@@ -846,6 +795,12 @@ kruskal.test(birds.trtT[birds.trtT$Species == "GADW", ]$estimate,
 dunn.test(birds.trtT[birds.trtT$Species == "GADW", ]$estimate, 
           birds.trtT[birds.trtT$Species == "GADW", ]$cTreat,
           method = "bonferroni")
+
+sigdif_gadw <- data.frame(Species = "GADW",
+                          cTreat = c("Rest", "Moderate", "Full", "Heavy"),
+                          diff = c("AB", "B", "AB", "A"),
+                          y = max(quantile(birds.trtT[birds.trtT$Species == "GADW", ]$estimate, 0.95)))
+
 
 kruskal.test(birds.trtT[birds.trtT$Species == "BWTE", ]$estimate, 
              birds.trtT[birds.trtT$Species == "BWTE", ]$cTreat,
@@ -858,6 +813,98 @@ kruskal.test(birds.trtT[birds.trtT$Species == "MALL", ]$estimate,
 kruskal.test(birds.trtT[birds.trtT$Species == "NSHO", ]$estimate, 
              birds.trtT[birds.trtT$Species == "NSHO", ]$cTreat,
              method = "bonferroni")
+
+sigdif <- bind_rows(sigdif_ccsp,
+                    sigdif_rwbl,
+                    sigdif_gadw,
+                    sigdif_nopi)
+
+
+# Plot densities ----------------------------------------------------------
+
+
+(density.plotT <- ggplot(birds.trtT[birds.trtT$Species %in% c("CCSP", "RWBL", "NOPI", "GADW"),] |> 
+                           mutate(cTreat = factor(cTreat, levels = c("Rest", "Moderate", "Full", "Heavy"))), 
+                         aes(x = cTreat, 
+                             y = estimate,
+                             color = cTreat)) +
+   stat_summary(geom = "point",
+                fun = "mean",
+                size = 3,
+                position = position_dodge(.5)) +
+   stat_summary(geom = "errorbar",
+                fun.data = mean_cl_boot,
+                linewidth = 0.75,
+                position = position_dodge(.5)) +
+   geom_text(data = sigdif, 
+             aes(x = cTreat, 
+                 y = y, 
+                 label = diff),
+             family = "my_font",
+             size.unit = "pt",
+             size = 16,
+             colour = "white") +
+   scale_color_manual(values=c("#A2A4A2", "lightgoldenrod2", "#D4A634", "#717F5B")) +
+   scale_x_discrete(labels = c("CCSP" = "Clay-colored \n Sparrow", 
+                               "RWBL" = "Red-winged \n Blackbird", 
+                               "NOPI" = "Northern \n Pintail", 
+                               "GADW" = "Gadwall")) +
+   theme(panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank(),
+         panel.background = element_blank(), 
+         plot.background = element_blank(),
+         axis.line = element_line(color = "white"),
+         axis.ticks = element_line(color = "white"),
+         plot.title = element_text(family = "my_font",
+                                   hjust = .5,
+                                   vjust = 1,
+                                   size = 20,
+                                   color = "white"),
+         axis.title.x = element_blank(),
+         axis.title.y = element_text(family = "my_font",
+                                     size = 16,
+                                     color = "white"),
+         axis.text.x = element_text(family = "my_font",
+                                    size = 14, 
+                                    color = "white"),
+         axis.text.y = element_text(family = "my_font",
+                                    size = 14,
+                                    color = "white"),
+         legend.text = element_text(family = "my_font",
+                                    size = 14,
+                                    color = "white"),
+         legend.title = element_text(family = "my_font",
+                                     size = 14,
+                                     color = "white"),
+         strip.text.x = element_text(family = "my_font", 
+                                     size = 18, 
+                                     face = "bold", 
+                                     color = "white"),
+         strip.background = element_blank(),
+         legend.background = element_blank(),
+         legend.position = "none",
+         plot.margin = margin(t = 5, r = 5, b = 5, l = 5),  # smaller margins all around
+         legend.margin = margin(t = -8, unit = "pt")) +       # pulls the legend closer to the plot) +
+   facet_wrap(~Species, 
+              scales = "free",
+              ncol = 4,
+              labeller = labeller(Species = c("CCSP" = "Clay-colored Sparrow",
+                                              "RWBL" = "Red-winged Blackbird", 
+                                              "GADW" = "Gadwall",
+                                              "NOPI" = "Northern Pintail"))) +
+   labs(title = NULL,
+        x = NULL, 
+        y = "Nests Per Ha",
+        color = "Grazing Intensity"))
+
+ggsave(density.plotT,
+       filename = "outputs/figs/AvianDensity_Treat.png",
+       bg = "transparent",
+       dpi = "print",
+       height = 5,
+       width = 13.33)
+
+write_csv(birds.trtT, "working/Birds_Treatment_Density.csv")
 
 
 # Modeling differences in densities --------------------------------------------------------------------------

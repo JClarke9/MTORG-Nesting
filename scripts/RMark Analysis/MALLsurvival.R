@@ -266,8 +266,8 @@ MALL.ddl <- make.design.data(MALL.pr) |>
   as.data.frame()
 
 Litter.values <- seq(from = min(MALL.surv$Litter),
-                 to = max(MALL.surv$Litter),
-                 length = 100)
+                     to = max(MALL.surv$Litter),
+                     length = 100)
 
 
 lit.pred <- covariate.predictions(MALL4.results$S.lit,
