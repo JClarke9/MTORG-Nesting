@@ -572,8 +572,8 @@ ggsave(beta_point,
        filename = "outputs/figs/betaPoint.png",
        bg = "transparent",
        dpi = 600,
-       height = 5.7,
-       width = 8.33)
+       height = 5.2,
+       width = 12.83)
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,
