@@ -499,57 +499,59 @@ ggsave(beta.plotS,
 # Creating Point Plot -----------------------------------------------------
 
 # I removed MODO and NSHO because they didn't respond to structure
-(beta_point <- ggplot(beta_f[!beta_f$Species %in% c("MODO", "NSHO"),] |> 
+(beta_point <- ggplot(beta_f |> 
                         mutate(Species = factor(Species, levels = c("GADW", "CCSP", "BRBL", "MALL", "NOPI",
-                                                                    "BWTE"))), 
+                                                                    "BWTE", "NSHO", "MODO"))), 
                       aes(x = Variable,
                           y = Coefficient)) +
    geom_hline(yintercept = 0,
               lty = 2,
-              color = "white") +
+              color = "black") +
    geom_point(aes(x = Variable,
                   y = Coefficient),
               size = 2,
-              color = "white") +
+              color = "black") +
    geom_errorbar(aes(x = Variable,
                      ymin = lcl,
                      ymax = ucl),
                  width = .5,
                  linewidth = .5,
-                 color = "white") +
+                 color = "black") +
    scale_x_discrete(labels = c("Litter Cover" = "Litter",
-                               "Bare Ground Cover" = "Bare \n Ground",
-                               "Litter Depth" = "Litter \n Depth",
-                               "Prior Grazing Intensity" = "Prior Grazing \n Intensity",
-                               "Days Grazed" = "Days Grazed",
+                               "Bare Ground Cover" = "Bare\nGround",
+                               "Litter Depth" = "Litter\nDepth",
+                               "Prior Grazing Intensity" = "Prior Grazing\nIntensity",
+                               "Days Grazed" = "Days\nGrazed",
                                "Forb Cover" = "Forb",
-                               "Veg Height" = "Vegetation \n Height",
-                               "Veg Density" = "Vegetation \n Density")) +
+                               "Veg Height" = "Vegetation\nHeight",
+                               "Veg Density" = "Vegetation\nDensity",
+                               "Smooth Brome Cover" = "Smooth\nBrome",
+                               "Kentucky Bluegrass Cover" = "Kentucky\nBluegrass")) +
    theme(panel.grid.major = element_blank(),
          panel.grid.minor = element_blank(),
          panel.background = element_blank(), 
          plot.background = element_blank(),
-         axis.line = element_line(color = "white"),
-         axis.ticks = element_line(color = "white"),
+         axis.line = element_line(color = "black"),
+         axis.ticks = element_line(color = "black"),
          plot.title = element_text(family = "my_font",
                                    hjust = .5,
                                    vjust = 1,
                                    size = 20,
-                                   color = "white"),
+                                   color = "black"),
          axis.title.x = element_blank(),
          axis.title.y = element_text(family = "my_font",
                                      size = 16,
-                                     color = "white"),
+                                     color = "black"),
          axis.text.x = element_text(family = "my_font",
-                                    size = 16, 
-                                    color = "white"),
+                                    size = 12, 
+                                    color = "black"),
          axis.text.y = element_text(family = "my_font",
-                                    size = 14,
-                                    color = "white"),
+                                    size = 12,
+                                    color = "black"),
          strip.text.x = element_text(family = "my_font", 
                                      size = 14, 
                                      face = "bold", 
-                                     color = "white"),
+                                     color = "black"),
          strip.background = element_blank(),
          legend.background = element_blank()) +
    facet_wrap(~Species, 
@@ -572,8 +574,8 @@ ggsave(beta_point,
        filename = "outputs/figs/betaPoint.png",
        bg = "transparent",
        dpi = 600,
-       height = 5.2,
-       width = 12.83)
+       height = 7.2,
+       width = 6.35)
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,
