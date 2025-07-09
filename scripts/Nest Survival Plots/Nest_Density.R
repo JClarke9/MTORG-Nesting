@@ -745,7 +745,7 @@ dunn.test(birds.trtT[birds.trtT$Species == "CCSP", ]$estimate,
 
 sigdif_ccsp <- data.frame(Species = "CCSP",
                           cTreat = c("Rest", "Moderate", "Full", "Heavy"),
-                          diff = c("A", "AB", "B", "AB"),
+                          diff = c("B", "AB", "A", "AB"),
                           y = max(quantile(birds.trtT[birds.trtT$Species == "CCSP", ]$estimate, 0.95)))
 
 
@@ -764,7 +764,7 @@ dunn.test(birds.trtT[birds.trtT$Species == "RWBL", ]$estimate,
 
 sigdif_rwbl <- data.frame(Species = "RWBL",
                           cTreat = c("Rest", "Moderate", "Full", "Heavy"),
-                          diff = c("B", "AB", "B", "A"),
+                          diff = c("A", "AB", "AB", "B"),
                           y = max(quantile(birds.trtT[birds.trtT$Species == "RWBL", ]$estimate, 0.95)))
 
 
@@ -783,7 +783,7 @@ dunn.test(birds.trtT[birds.trtT$Species == "NOPI", ]$estimate,
 
 sigdif_nopi <- data.frame(Species = "NOPI",
                           cTreat = c("Rest", "Moderate", "Full", "Heavy"),
-                          diff = c("A", "B", "AB", "A"),
+                          diff = c("B", "A", "AB", "B"),
                           y = max(quantile(birds.trtT[birds.trtT$Species == "NOPI", ]$estimate, 0.95)))
 
 
@@ -798,7 +798,7 @@ dunn.test(birds.trtT[birds.trtT$Species == "GADW", ]$estimate,
 
 sigdif_gadw <- data.frame(Species = "GADW",
                           cTreat = c("Rest", "Moderate", "Full", "Heavy"),
-                          diff = c("AB", "B", "AB", "A"),
+                          diff = c("AB", "A", "AB", "B"),
                           y = max(quantile(birds.trtT[birds.trtT$Species == "GADW", ]$estimate, 0.95)))
 
 
