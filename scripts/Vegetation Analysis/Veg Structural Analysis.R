@@ -326,6 +326,51 @@ cld.litdep <- bind_rows(cld.litdep21,
                         cld.litdep23,
                         cld.litdep24)
 
+cld.robel <- cld.robel |>
+  mutate(.group = case_when(Year == 2021 & Intensity == "Rest" ~ "A",
+                            Year == 2021 & Intensity == "Moderate" ~ "AB",
+                            Year == 2021 & Intensity == "Full" ~ "AB",
+                            Year == 2021 & Intensity == "Heavy" ~ "B",
+
+                            Year == 2022 & Intensity == "Rest" ~ "A",
+                            Year == 2022 & Intensity == "Moderate" ~ "A",
+                            Year == 2022 & Intensity == "Full" ~ "B",
+                            Year == 2022 & Intensity == "Heavy" ~ "B",
+
+                            Year == 2023 & Intensity == "Rest" ~ "A",
+                            Year == 2023 & Intensity == "Moderate" ~ "A",
+                            Year == 2023 & Intensity == "Full" ~ "A",
+                            Year == 2023 & Intensity == "Heavy" ~ "A",
+
+                            Year == 2024 & Intensity == "Rest" ~ "A",
+                            Year == 2024 & Intensity == "Moderate" ~ "B",
+                            Year == 2024 & Intensity == "Full" ~ "B",
+                            Year == 2024 & Intensity == "Heavy" ~ "B",
+
+                            .default = NA))
+
+cld.litdep <- cld.litdep |>
+  mutate(.group = case_when(Year == 2021 & Intensity == "Rest" ~ "BC",
+                            Year == 2021 & Intensity == "Moderate" ~ "A",
+                            Year == 2021 & Intensity == "Full" ~ "AB",
+                            Year == 2021 & Intensity == "Heavy" ~ "C",
+
+                            Year == 2022 & Intensity == "Rest" ~ "B",
+                            Year == 2022 & Intensity == "Moderate" ~ "A",
+                            Year == 2022 & Intensity == "Full" ~ "AB",
+                            Year == 2022 & Intensity == "Heavy" ~ "B",
+
+                            Year == 2023 & Intensity == "Rest" ~ "AB",
+                            Year == 2023 & Intensity == "Moderate" ~ "A",
+                            Year == 2023 & Intensity == "Full" ~ "AB",
+                            Year == 2023 & Intensity == "Heavy" ~ "B",
+
+                            Year == 2024 & Intensity == "Rest" ~ "AB",
+                            Year == 2024 & Intensity == "Moderate" ~ "A",
+                            Year == 2024 & Intensity == "Full" ~ "BC",
+                            Year == 2024 & Intensity == "Heavy" ~ "C",
+
+                            .default = NA))
 
 
 # Setting theme -----------------------------------------------------------
@@ -333,69 +378,42 @@ cld.litdep <- bind_rows(cld.litdep21,
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
 
-robel_theme <- theme(panel.grid.major = element_blank(),
-                     panel.grid.minor = element_blank(),
-                     panel.background = element_blank(), 
-                     plot.background = element_blank(),
-                     axis.line = element_line(colour = "white"),
-                     axis.ticks = element_line(colour = "white"),
-                     plot.title = element_text(family = "my_font",
-                                               hjust = .5,
-                                               vjust = 1,
-                                               size = 30,
-                                               color = "white"),
-                     axis.title.x = element_blank(),
-                     axis.title.y = element_text(family = "my_font",
-                                                 size = 20,
-                                                 color = "white",
-                                                 angle = 90,
-                                                 vjust = 1),
-                     axis.text.x = element_blank(),
-                     axis.text.y = element_text(family = "my_font",
-                                                size = 20,
-                                                color = "white"),
-                     strip.text.x = element_text(family = "my_font", 
-                                                 size = 24, 
-                                                 face = "bold", 
-                                                 colour = "white"),
-                     strip.background = element_blank(),
-                     legend.background = element_blank(),
-                     legend.position = "none")
-
-litter_theme <- theme(panel.grid.major = element_blank(),
-                      panel.grid.minor = element_blank(),
-                      panel.background = element_blank(), 
-                      plot.background = element_blank(),
-                      axis.line = element_line(colour = "white"),
-                      axis.ticks = element_line(colour = "white"),
-                      plot.title = element_text(family = "my_font",
-                                                hjust = .5,
-                                                vjust = 1,
-                                                size = 30,
-                                                color = "white"),
-                      axis.title.x = element_text(family = "my_font",
-                                                  size = 20,
-                                                  color = "white",
-                                                  vjust = 1),
-                      axis.title.y = element_text(family = "my_font",
-                                                  size = 20,
-                                                  color = "white",
-                                                  angle = 90,
-                                                  vjust = 1,
-                                                  margin = margin(r = 15, unit = "pt")),
-                      axis.text.x = element_text(family = "my_font",
-                                                 size = 20,
-                                                 vjust = 1,
-                                                 hjust = 1,
-                                                 angle = 45,
-                                                 color = "white"),
-                      axis.text.y = element_text(family = "my_font",
-                                                 size = 20,
-                                                 color = "white"),
-                      strip.text.x = element_blank(),
-                      strip.background = element_blank(),
-                      legend.background = element_blank(),
-                      legend.position = "none")
+my_theme <- theme(panel.grid.major = element_blank(),
+                  panel.grid.minor = element_blank(),
+                  panel.background = element_blank(), 
+                  plot.background = element_blank(),
+                  axis.line = element_line(colour = "black"),
+                  axis.ticks = element_line(colour = "black"),
+                  plot.title = element_text(family = "my_font",
+                                            hjust = .5,
+                                            vjust = 1,
+                                            size = 20,
+                                            color = "black"),
+                  axis.title.x = element_text(family = "my_font",
+                                              size = 12,
+                                              color = "black",
+                                              vjust = 1),
+                  axis.title.y = element_text(family = "my_font",
+                                              size = 12,
+                                              color = "black",
+                                              angle = 90,
+                                              vjust = 1,
+                                              margin = margin(r = 8, unit = "pt")),
+                  axis.text.x = element_text(family = "my_font",
+                                             size = 12,
+                                             vjust = 1,
+                                             hjust = 1,
+                                             angle = 45,
+                                             color = "black"),
+                  axis.text.y = element_text(family = "my_font",
+                                             size = 14,
+                                             color = "black"),
+                  strip.text.x = element_text(family = "my_font", 
+                                              size = 14, 
+                                              colour = "black"),
+                  strip.background = element_blank(),
+                  legend.background = element_blank(),
+                  legend.position = "none")
 
 
 # Creating Plots ----------------------------------------------------------
@@ -407,21 +425,21 @@ litter_theme <- theme(panel.grid.major = element_blank(),
                      y = a.Robel)) +
    geom_violin(trim = FALSE,
                draw_quantiles = c(.25, .75),
-               color = "white",
-               size = 0.5) +
+               color = "black",
+               size = 0.3) +
    geom_text(data = cld.robel, 
              aes(x = Intensity, 
                  y = 13, 
                  label = .group),
              family = "my_font",
+             size = 12,
              size.unit = "pt",
-             size = 20,
-             colour = "white") +
+             colour = "black") +
    scale_fill_manual(values = c("#A2A4A2", "lightgoldenrod2", 
                                 "#D4A634", "#717F5B")) +
-   robel_theme +
+   my_theme +
    labs(title = NULL, 
-        x = "Grazing Intensity", 
+        x = NULL, 
         y = "Vegetation Density (dm)") +
    facet_wrap(~Year, nrow = 1, ncol = 4, axes = "all", axis.labels = "margins"))
 
@@ -431,34 +449,34 @@ litter_theme <- theme(panel.grid.major = element_blank(),
                       y = Litter.Depth)) +
     geom_violin(trim = FALSE,
                 draw_quantiles = c(.25, .75),
-                color = "white",
-                size = 0.5) +
+                color = "black",
+                size = 0.3) +
     geom_text(data = cld.litdep, 
               aes(x = Intensity, 
                   y = 110, 
                   label = .group),
               family = "my_font",
+              size = 12,
               size.unit = "pt",
-              size = 20,
-              colour = "white") +
+              colour = "black") +
     scale_fill_manual(values = c("#A2A4A2", "lightgoldenrod2", 
                                  "#D4A634", "#717F5B")) +
-    litter_theme +
+    my_theme +
     labs(title = NULL, 
          x = NULL, 
          y = "Litter Depth (mm)") +
     facet_wrap(~Year, nrow = 1, ncol = 4, axes = "all", axis.labels = "margins"))
 
-(veg_violin <- plot_grid(robel,
-                         litter,
+(veg_violin <- plot_grid(robel + theme(axis.text.x = element_blank()),
+                         litter + theme(strip.text.x = element_blank()),
                          align = "v",
                          nrow = 2,
                          ncol = 1))
 
 ggsave(veg_violin,
        filename = "outputs/figs/VegStr_violin.png",
-       bg = "transparent",
+       bg = "white",
        dpi = 600,
-       height = 7,
-       width = 13.33)
+       height = 5,
+       width = 6.5)
 
