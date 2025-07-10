@@ -475,7 +475,7 @@ my_theme <- theme(panel.grid.major = element_blank(),
 
 ggsave(veg_violin,
        filename = "outputs/figs/VegStr_violin.png",
-       bg = "white",
+       bg = "transparent",
        dpi = 600,
        height = 4.5,
        width = 6)
