@@ -418,7 +418,7 @@ beta_f$Group <- ifelse(beta_f$Variable %in% c("Litter Cover", "Litter Depth", "B
 
 ggsave(plot = beta.plotG,
        filename = "outputs/figs/betaGrazing.png",
-       bg = "transparent",
+       bg = "white",
        dpi = 600,
        height = 6.34,
        width = 8.78,
@@ -454,7 +454,7 @@ ggsave(plot = beta.plotG,
 
 ggsave(beta.plotC,
        filename = "outputs/figs/betaComposition.png",
-       bg = "transparent",
+       bg = "white",
        dpi = 600,
        height = 6.34,
        width = 13.13)
@@ -490,7 +490,7 @@ ggsave(beta.plotC,
 
 ggsave(beta.plotS,
        filename = "outputs/figs/betaStructure.png",
-       bg = "transparent",
+       bg = "white",
        dpi = 600,
        height = 9.14,
        width = 21.88)
@@ -572,7 +572,7 @@ ggsave(beta.plotS,
 
 ggsave(beta_point,
        filename = "outputs/figs/betaPoint.png",
-       bg = "transparent",
+       bg = "white",
        dpi = 600,
        height = 6.76,
        width = 6.0)

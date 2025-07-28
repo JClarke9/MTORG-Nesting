@@ -900,7 +900,7 @@ sigdif <- bind_rows(sigdif_ccsp,
 
 ggsave(density.plotT,
        filename = "outputs/figs/AvianDensity_Treat.png",
-       bg = "transparent",
+       bg = "white",
        dpi = 600,
        height = 4.92,
        width = 4.92)
