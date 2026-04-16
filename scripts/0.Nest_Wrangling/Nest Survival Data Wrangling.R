@@ -331,3 +331,4 @@ write_csv(spec.nest, "working/RMarknesting.csv")
 spec.nest$id <- as.character(spec.nest$id)
 
 length(unique(spec.nest$Spec))
+length(unique(spec.nest$id))
