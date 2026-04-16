@@ -15,14 +15,14 @@ library(multcomp)
 
 
 raw <- read.csv("working/VegAdj.csv") |> 
-  filter(Transect.ID %in% c(97:144)) |> 
-  mutate(Transect.ID = factor(Transect.ID, levels = c(97:144)),
+  filter(Transect %in% c(97:144)) |> 
+  mutate(Transect = factor(Transect, levels = c(97:144)),
          Replicate = factor(Replicate, levels = c("NE", "SE",
                                                   "SW", "NW")),
          Patch = factor(Patch, levels = c(1:16)),
          Intensity = factor(Intensity, levels = c("Rest", "Moderate", 
                                                   "Full", "Heavy")),
-         Date = as.Date(Date, "%m/%d/%y"))
+         Date = as.Date(Date, "%m/%d/%Y"))
 
 
 # Data wrangling ----------------------------------------------------------
@@ -30,11 +30,11 @@ raw <- read.csv("working/VegAdj.csv") |>
 
 MTORG.veg <- raw |> 
   separate(col = Date,
-           into = c("Day", "Month", "Year2"),
+           into = c("Year2", "Month", "Day"),
            sep = "-",
            remove = F) |> 
-  filter(Month == "07" | Month == "08") |> 
-  dplyr::select(-c(Day, Month, Year2))
+  filter(case_when(Year2 == "2024" ~ Month == "08",
+                   .default = Month %in% c("07", "08")))
 
 MTORG.veg$a.Robel <- MTORG.veg |> 
   dplyr::select(R1:R4) |> 
@@ -65,6 +65,13 @@ summarize(MTORG.str,
           se.robel = sd(a.Robel) / sqrt(n()),
           .by = Year)
 
+summarize(MTORG.str, 
+          avg.Litter.Depth = round(mean(Litter.Depth), digits = 2),
+          sd.litdep = round(sd(Litter.Depth), digits = 2),
+          avg.Robel = round(mean(a.Robel), digits = 2), 
+          sd.robel = round(sd(a.Robel), digits = 2),
+          .by = Intensity)
+
 
 # Robel Models ------------------------------------------------------------
 
@@ -75,7 +82,7 @@ hist(MTORG.veg$a.Robel[MTORG.veg$Year == 2021 & MTORG.veg$Intensity == "Moderate
 hist(MTORG.veg$a.Robel[MTORG.veg$Year == 2021 & MTORG.veg$Intensity == "Full"])
 hist(MTORG.veg$a.Robel[MTORG.veg$Year == 2021 & MTORG.veg$Intensity == "Heavy"])
 
-aov.robel21 <- glmmTMB(a.Robel ~ Intensity + (1|Replicate/Transect.ID),
+aov.robel21 <- glmmTMB(a.Robel ~ Intensity + (1|Replicate/Transect),
                        data = MTORG.veg[MTORG.veg$Year == 2021,],
                        family = Gamma(link = "identity"))
 
@@ -90,8 +97,8 @@ testQuantiles(simulationOutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
 Anova(aov.robel21, type = 2)
 (em.robel21 <- emmeans(aov.robel21, 
-        pairwise ~ Intensity,
-        adjust = "tukey"))
+                       pairwise ~ Intensity,
+                       adjust = "tukey"))
 
 cld.robel21 <- cld(em.robel21, Letters = LETTERS, alpha = 0.05)
 cld.robel21 <- cld.robel21 |> 
@@ -105,7 +112,7 @@ hist(MTORG.veg$a.Robel[MTORG.veg$Year == 2022 & MTORG.veg$Intensity == "Full"])
 hist(MTORG.veg$a.Robel[MTORG.veg$Year == 2022 & MTORG.veg$Intensity == "Heavy"])
 
 
-aov.robel22 <- glmmTMB(a.Robel ~ Intensity + (1|Replicate/Transect.ID),
+aov.robel22 <- glmmTMB(a.Robel ~ Intensity + (1|Replicate/Transect),
                        data = MTORG.veg[MTORG.veg$Year == 2022,],
                        family = gaussian(link = "log"))
 
@@ -135,7 +142,7 @@ hist(MTORG.veg$a.Robel[MTORG.veg$Year == 2023 & MTORG.veg$Intensity == "Moderate
 hist(MTORG.veg$a.Robel[MTORG.veg$Year == 2023 & MTORG.veg$Intensity == "Full"])
 hist(MTORG.veg$a.Robel[MTORG.veg$Year == 2023 & MTORG.veg$Intensity == "Heavy"])
 
-aov.robel23 <- glmmTMB(a.Robel ~ Intensity + (1|Replicate/Transect.ID),
+aov.robel23 <- glmmTMB(a.Robel ~ Intensity + (1|Replicate/Transect),
                        data = MTORG.veg[MTORG.veg$Year == 2023,],
                        dispformula = ~Intensity,
                        family = gaussian(link = "identity"))
@@ -166,7 +173,7 @@ hist(MTORG.veg$a.Robel[MTORG.veg$Year == 2024 & MTORG.veg$Intensity == "Moderate
 hist(MTORG.veg$a.Robel[MTORG.veg$Year == 2024 & MTORG.veg$Intensity == "Full"])
 hist(MTORG.veg$a.Robel[MTORG.veg$Year == 2024 & MTORG.veg$Intensity == "Heavy"])
 
-aov.robel24 <- glmmTMB(a.Robel ~ Intensity + (1|Replicate/Transect.ID),
+aov.robel24 <- glmmTMB(a.Robel ~ Intensity + (1|Replicate/Transect),
                        data = MTORG.veg[MTORG.veg$Year == 2024,],
                        family = gaussian(link = "log"))
 
@@ -199,9 +206,9 @@ hist(MTORG.veg$Litter.Depth[MTORG.veg$Year == 2021 & MTORG.veg$Intensity == "Mod
 hist(MTORG.veg$Litter.Depth[MTORG.veg$Year == 2021 & MTORG.veg$Intensity == "Full"])
 hist(MTORG.veg$Litter.Depth[MTORG.veg$Year == 2021 & MTORG.veg$Intensity == "Heavy"])
 
-aov.litdep21 <- glmmTMB(Litter.Depth ~ Intensity + (1|Replicate/Transect.ID),
+aov.litdep21 <- glmmTMB(Litter.Depth ~ Intensity + (1|Replicate/Transect),
                         data = MTORG.veg[MTORG.veg$Year == 2021,],
-                        family = Gamma(link = "log"))
+                        family = t_family(link = "identity"))
 
 simulationOutput <- simulateResiduals(aov.litdep21,
                                       n = 999,
@@ -214,8 +221,8 @@ testQuantiles(simulationOutput, quantiles = c(0.25, 0.5, 0.75), plot = T)
 
 Anova(aov.litdep21, type = 2)
 (em.litdep21 <- emmeans(aov.litdep21, 
-                       pairwise ~ Intensity,
-                       adjust = "tukey"))
+                        pairwise ~ Intensity,
+                        adjust = "tukey"))
 
 cld.litdep21 <- cld(em.litdep21, Letters = LETTERS, alpha = 0.05)
 cld.litdep21 <- cld.litdep21 |> 
@@ -229,7 +236,7 @@ hist(MTORG.veg$Litter.Depth[MTORG.veg$Year == 2022 & MTORG.veg$Intensity == "Ful
 hist(MTORG.veg$Litter.Depth[MTORG.veg$Year == 2022 & MTORG.veg$Intensity == "Heavy"])
 
 
-aov.litdep22 <- glmmTMB(Litter.Depth ~ Intensity + (1|Replicate/Transect.ID),
+aov.litdep22 <- glmmTMB(Litter.Depth ~ Intensity + (1|Replicate/Transect),
                         data = MTORG.veg[MTORG.veg$Year == 2022,],
                         family = gaussian(link = "identity"))
 
@@ -259,7 +266,7 @@ hist(MTORG.veg$Litter.Depth[MTORG.veg$Year == 2023 & MTORG.veg$Intensity == "Mod
 hist(MTORG.veg$Litter.Depth[MTORG.veg$Year == 2023 & MTORG.veg$Intensity == "Full"])
 hist(MTORG.veg$Litter.Depth[MTORG.veg$Year == 2023 & MTORG.veg$Intensity == "Heavy"])
 
-aov.litdep23 <- glmmTMB(Litter.Depth ~ Intensity + (1|Replicate/Transect.ID),
+aov.litdep23 <- glmmTMB(Litter.Depth ~ Intensity + (1|Replicate/Transect),
                         data = MTORG.veg[MTORG.veg$Year == 2023,],
                         family = gaussian(link = "identity"))
 
@@ -289,9 +296,9 @@ hist(MTORG.veg$Litter.Depth[MTORG.veg$Year == 2024 & MTORG.veg$Intensity == "Mod
 hist(MTORG.veg$Litter.Depth[MTORG.veg$Year == 2024 & MTORG.veg$Intensity == "Full"])
 hist(MTORG.veg$Litter.Depth[MTORG.veg$Year == 2024 & MTORG.veg$Intensity == "Heavy"])
 
-aov.litdep24 <- glmmTMB(Litter.Depth ~ Intensity + (1|Replicate/Transect.ID),
+aov.litdep24 <- glmmTMB(Litter.Depth ~ Intensity + (1|Replicate/Transect),
                         data = MTORG.veg[MTORG.veg$Year == 2024,],
-                        family = gaussian(link = "identity"))
+                        family = t_family(link = "identity"))
 
 simulationOutput <- simulateResiduals(aov.litdep24,
                                       n = 999,
@@ -350,10 +357,10 @@ cld.robel <- cld.robel |>
                             .default = NA))
 
 cld.litdep <- cld.litdep |>
-  mutate(.group = case_when(Year == 2021 & Intensity == "Rest" ~ "BC",
+  mutate(.group = case_when(Year == 2021 & Intensity == "Rest" ~ "B",
                             Year == 2021 & Intensity == "Moderate" ~ "A",
-                            Year == 2021 & Intensity == "Full" ~ "AB",
-                            Year == 2021 & Intensity == "Heavy" ~ "C",
+                            Year == 2021 & Intensity == "Full" ~ "A",
+                            Year == 2021 & Intensity == "Heavy" ~ "B",
 
                             Year == 2022 & Intensity == "Rest" ~ "B",
                             Year == 2022 & Intensity == "Moderate" ~ "A",

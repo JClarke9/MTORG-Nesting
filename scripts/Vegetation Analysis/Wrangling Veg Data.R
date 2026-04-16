@@ -104,3 +104,4 @@ raw$Intensity <- ifelse(raw$Treatment == "MTORG" & raw$Year == 2021 & raw$Patch 
                                                                                                                                  ""))))))))))))))))
 
 write_csv(raw, "working/VegAdj.csv")
+
