@@ -6,6 +6,8 @@ library(RMark)
 library(MuMIn)
 library(ggpattern)
 
+windowsFonts(my_font = windowsFont("Tahoma"))
+
 
 # Read in Data ------------------------------------------------------------
 
@@ -286,8 +288,6 @@ beta$Variable <- factor(beta$Variable,
 # Defining Theme1 -----------------------------------------------------------------------------
 
 
-windowsFonts(my_font = windowsFont("Gandhi Sans"))
-
 my_theme1 <- theme(panel.grid.major = element_blank(),
                    panel.grid.minor = element_blank(),
                    panel.background = element_blank(), 
@@ -536,7 +536,7 @@ ggsave(beta.plotS,
          plot.title = element_text(family = "my_font",
                                    hjust = .5,
                                    vjust = 1,
-                                   size = 16,
+                                   size = 14,
                                    color = "black"),
          axis.title.x = element_blank(),
          axis.title.y = element_text(family = "my_font",

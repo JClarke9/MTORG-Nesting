@@ -10,6 +10,8 @@ library(car)
 library(emmeans)
 library(multcomp)
 
+windowsFonts(my_font = windowsFont("Tahoma"))
+
 
 # Data import -------------------------------------------------------------
 
@@ -360,8 +362,6 @@ cld.litdep <- cld.litdep |>
 # Setting theme -----------------------------------------------------------
 
 
-windowsFonts(my_font = windowsFont("Gandhi Sans"))
-
 my_theme <- theme(panel.grid.major = element_blank(),
                   panel.grid.minor = element_blank(),
                   panel.background = element_blank(), 
@@ -371,7 +371,7 @@ my_theme <- theme(panel.grid.major = element_blank(),
                   plot.title = element_text(family = "my_font",
                                             hjust = .5,
                                             vjust = 1,
-                                            size = 16,
+                                            size = 14,
                                             color = "black"),
                   axis.title.x = element_text(family = "my_font",
                                               size = 10,

@@ -12,7 +12,7 @@ library(dunn.test)
 
 nest <- read.csv("working/RMarknesting.csv")
 
-windowsFonts(my_font = windowsFont("Gandhi Sans"))
+windowsFonts(my_font = windowsFont("Tahoma"))
 
 
 # Data Wrangling ----------------------------------------------------------
@@ -854,7 +854,7 @@ sigdif <- bind_rows(sigdif_ccsp,
          plot.title = element_text(family = "my_font",
                                    hjust = .5,
                                    vjust = 1,
-                                   size = 16,
+                                   size = 14,
                                    color = "black"),
          axis.title.x = element_blank(),
          axis.title.y = element_text(family = "my_font",
