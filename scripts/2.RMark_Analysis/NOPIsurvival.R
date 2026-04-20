@@ -4,8 +4,10 @@
 library(ggplot2)
 library(vegan)
 library(tidyverse)
+library(ggcorrplot)
 library(RMark)
 library(MuMIn)
+library(cowplot)
 source("scripts/Functions/RMark_Stage_Code.R")
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
@@ -227,6 +229,8 @@ confint(NOPI4.results$S.lit, level = 0.85)
 coef(NOPI4.results$S.vor)
 confint(NOPI4.results$S.vor, level = 0.85)
 
+
+
 (NOPI.dsrLIT <- as.data.frame(NOPI4.results$S.lit$results$real))
 (NOPI.dsrVOR <- as.data.frame(NOPI4.results$S.vor$results$real))
 
@@ -238,6 +242,8 @@ NOPI5.results <- mark(NOPI.surv,
                       delete = TRUE,
                       model.parameters = list(S = list(formula = ~1 + Litter + VOR)))
 
+coef(NOPI5.results)
+confint(NOPI5.results, level = 0.85)
 
 
 # Plotting beta coefficients ----------------------------------------------

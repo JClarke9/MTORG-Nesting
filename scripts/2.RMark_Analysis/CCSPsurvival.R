@@ -4,6 +4,7 @@
 library(ggplot2)
 library(vegan)
 library(tidyverse)
+library(ggcorrplot)
 library(RMark)
 library(MuMIn)
 library(cowplot)
@@ -21,8 +22,7 @@ nest <- read.csv("working/RMarknesting.csv")
 # Subsetting data ---------------------------------------------------------
 
 
-CCSP.surv <- filter(nest, 
-                    Spec == "CCSP" & Stage != "Laying")
+CCSP.surv <- filter(nest, Spec == "CCSP" & Stage != "Laying")
 
 test <- filter(CCSP.surv,
                is.na(KBG) |
@@ -263,6 +263,7 @@ coef(CCSP5.results$S.litdep)
 confint(CCSP5.results$S.litdep, level = 0.85)
 
 
+
 CCSP6.results <- mark(CCSP.surv, 
                       nocc = max(CCSP.surv$LastChecked), 
                       model = "Nest", 
@@ -271,6 +272,9 @@ CCSP6.results <- mark(CCSP.surv,
                       adjust = FALSE,
                       delete = TRUE, 
                       model.parameters = list(S = list(formula = ~1 + Year + Nestling + LitterD + Bare)))
+
+coef(CCSP6.results)
+confint(CCSP6.results, level = 0.85)
 
 
 CCSP6.results$results$real |> 

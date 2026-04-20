@@ -4,8 +4,10 @@
 library(ggplot2)
 library(vegan)
 library(tidyverse)
+library(ggcorrplot)
 library(RMark)
 library(MuMIn)
+library(cowplot)
 source("scripts/Functions/RMark_Stage_Code.R")
 
 windowsFonts(my_font = windowsFont("Gandhi Sans"))
@@ -225,6 +227,8 @@ GADW4.results
 
 coef(GADW4.results$S.forb)
 confint(GADW4.results$S.forb, level = 0.85)
+
+
 
 GADW4.results$S.forb$results$real |>
   summarize(estimate = mean(estimate),

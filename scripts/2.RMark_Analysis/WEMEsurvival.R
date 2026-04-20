@@ -4,8 +4,10 @@
 library(ggplot2)
 library(vegan)
 library(tidyverse)
+library(ggcorrplot)
 library(RMark)
 library(MuMIn)
+library(cowplot)
 source('scripts/Functions/RMark_Stage_Code.R')
 
 windowsFonts(my_font = windowsFont('Gandhi Sans'))

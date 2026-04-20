@@ -4,6 +4,7 @@
 library(tidyverse)
 library(RMark)
 library(car)
+library(dunn.test)
 
 
 # Read in Data ------------------------------------------------------------
@@ -725,8 +726,6 @@ birdT.density <- birds.trtT |>
 # Running Kruskal-Wallace Tests ------------------------------------------------------------------------------
 
 
-library(dunn.test)
-
 kruskal.test(birds.trtT[birds.trtT$Species == "BRBL", ]$estimate, 
              birds.trtT[birds.trtT$Species == "BRBL", ]$cTreat,
              method = "bonferroni")
@@ -768,10 +767,6 @@ sigdif_rwbl <- data.frame(Species = "RWBL",
                           diff = c("A", "AB", "AB", "B"),
                           y = max(quantile(birds.trtT[birds.trtT$Species == "RWBL", ]$estimate, 0.95)))
 
-
-kruskal.test(birds.trtT[birds.trtT$Species == "YHBL", ]$estimate, 
-             birds.trtT[birds.trtT$Species == "YHBL", ]$cTreat,
-             method = "bonferroni")
 
 # significant difference between moderate and heavy and rest and moderate
 kruskal.test(birds.trtT[birds.trtT$Species == "NOPI", ]$estimate, 

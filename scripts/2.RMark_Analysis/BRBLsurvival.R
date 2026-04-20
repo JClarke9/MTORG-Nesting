@@ -22,8 +22,7 @@ nest <- read.csv("working/RMarknesting.csv")
 # Subsetting data ---------------------------------------------------------
 
 
-BRBL.surv <- filter(nest, 
-                    Spec == "BRBL" & Stage != "Laying")
+BRBL.surv <- filter(nest, Spec == "BRBL" & Stage != "Laying")
 
 test <- filter(BRBL.surv,
                is.na(KBG) |
