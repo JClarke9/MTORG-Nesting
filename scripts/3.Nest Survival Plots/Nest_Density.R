@@ -478,7 +478,7 @@ for (species in species_list) {
                                        level = c("NE", "SE", "SW", "NW"))
     
     real_dataframe <- complete(real_dataframe,
-                               nesting(Year, cTreat),
+                               Year, cTreat,
                                Replicate,
                                fill = list(estimate = 0,
                                            se = 0,
@@ -718,9 +718,11 @@ birdT.density <- birds.trtT |>
   group_by(cTreat,
            Species) |> 
   summarize(birds_ha = mean(estimate),
+            sd = sd(estimate),
             se =  mean(se),
             lcl = mean(lcl),
-            ucl = mean(ucl))
+            ucl = mean(ucl),
+            n = n())
 
 
 # Running Kruskal-Wallace Tests ------------------------------------------------------------------------------
@@ -729,6 +731,18 @@ birdT.density <- birds.trtT |>
 kruskal.test(birds.trtT[birds.trtT$Species == "BRBL", ]$estimate, 
              birds.trtT[birds.trtT$Species == "BRBL", ]$cTreat,
              method = "bonferroni")
+
+# significant difference between moderate and heavy
+dunn.test(birds.trtT[birds.trtT$Species == "BRBL", ]$estimate, 
+          birds.trtT[birds.trtT$Species == "BRBL", ]$cTreat,
+          method = "bonferroni")
+
+sigdif_brbl <- data.frame(Species = "BRBL",
+                          cTreat = c("Rest", "Moderate", "Full", "Heavy"),
+                          diff = c("AB", "A", "AB", "B"),
+                          y = max(quantile(birds.trtT[birds.trtT$Species == "BRBL", ]$estimate, 0.95)))
+
+
 
 kruskal.test(birds.trtT[birds.trtT$Species == "WEME", ]$estimate, 
              birds.trtT[birds.trtT$Species == "WEME", ]$cTreat,
@@ -753,19 +767,10 @@ kruskal.test(birds.trtT[birds.trtT$Species == "MODO", ]$estimate,
              birds.trtT[birds.trtT$Species == "MODO", ]$cTreat,
              method = "bonferroni")
 
-# significant difference between rest and heavy
+
 kruskal.test(birds.trtT[birds.trtT$Species == "RWBL", ]$estimate, 
              birds.trtT[birds.trtT$Species == "RWBL", ]$cTreat,
              method = "bonferroni")
-
-dunn.test(birds.trtT[birds.trtT$Species == "RWBL", ]$estimate, 
-          birds.trtT[birds.trtT$Species == "RWBL", ]$cTreat,
-          method = "bonferroni")
-
-sigdif_rwbl <- data.frame(Species = "RWBL",
-                          cTreat = c("Rest", "Moderate", "Full", "Heavy"),
-                          diff = c("A", "AB", "AB", "B"),
-                          y = max(quantile(birds.trtT[birds.trtT$Species == "RWBL", ]$estimate, 0.95)))
 
 
 # significant difference between moderate and heavy and rest and moderate
@@ -806,21 +811,47 @@ kruskal.test(birds.trtT[birds.trtT$Species == "MALL", ]$estimate,
              birds.trtT[birds.trtT$Species == "MALL", ]$cTreat,
              method = "bonferroni")
 
+dunn.test(birds.trtT[birds.trtT$Species == "MALL", ]$estimate, 
+          birds.trtT[birds.trtT$Species == "MALL", ]$cTreat,
+          method = "bonferroni")
+
+sigdif_mall <- data.frame(Species = "MALL",
+                          cTreat = c("Rest", "Moderate", "Full", "Heavy"),
+                          diff = c("B", "A", "AB", "AB"),
+                          y = max(quantile(birds.trtT[birds.trtT$Species == "MALL", ]$estimate, 0.95)))
+
+
 kruskal.test(birds.trtT[birds.trtT$Species == "NSHO", ]$estimate, 
              birds.trtT[birds.trtT$Species == "NSHO", ]$cTreat,
              method = "bonferroni")
 
-sigdif <- bind_rows(sigdif_ccsp,
-                    sigdif_rwbl,
+dunn.test(birds.trtT[birds.trtT$Species == "NSHO", ]$estimate, 
+          birds.trtT[birds.trtT$Species == "NSHO", ]$cTreat,
+          method = "bonferroni")
+
+sigdif_nsho <- data.frame(Species = "NSHO",
+                          cTreat = c("Rest", "Moderate", "Full", "Heavy"),
+                          diff = c("AB", "A", "AB", "B"),
+                          y = max(quantile(birds.trtT[birds.trtT$Species == "NSHO", ]$estimate, 0.95)))
+
+
+sigdif <- bind_rows(sigdif_mall,
                     sigdif_gadw,
-                    sigdif_nopi)
+                    sigdif_nopi,
+                    sigdif_nsho,
+                    sigdif_ccsp,
+                    sigdif_brbl) |> 
+  mutate(cTreat = factor(cTreat, levels = c("Rest", "Moderate", "Full", "Heavy")),
+         Species = factor(Species, levels = c("MALL", "GADW", "NOPI", "NSHO","CCSP", "BRBL")))
 
 
 # Plot densities ----------------------------------------------------------
 
 
-(density.plotT <- ggplot(birds.trtT[birds.trtT$Species %in% c("CCSP", "RWBL", "NOPI", "GADW"),] |> 
-                           mutate(cTreat = factor(cTreat, levels = c("Rest", "Moderate", "Full", "Heavy"))), 
+(density.plotT <- ggplot(birds.trtT |> 
+                           filter(Species %in% c("MALL", "GADW", "NOPI", "NSHO","CCSP", "BRBL")) |> 
+                           mutate(cTreat = factor(cTreat, levels = c("Rest", "Moderate", "Full", "Heavy")),
+                                  Species = factor(Species, levels = c("MALL", "GADW", "NOPI", "NSHO","CCSP", "BRBL"))), 
                          aes(x = cTreat, 
                              y = estimate,
                              color = cTreat)) +
@@ -841,10 +872,6 @@ sigdif <- bind_rows(sigdif_ccsp,
              size = 10,
              colour = "black") +
    scale_color_manual(values=c("#A2A4A2", "lightgoldenrod2", "#D4A634", "#717F5B")) +
-   scale_x_discrete(labels = c("CCSP" = "Clay-colored \n Sparrow", 
-                               "RWBL" = "Red-winged \n Blackbird", 
-                               "NOPI" = "Northern \n Pintail", 
-                               "GADW" = "Gadwall")) +
    theme(panel.grid.major = element_blank(),
          panel.grid.minor = element_blank(),
          panel.background = element_blank(), 
@@ -884,10 +911,12 @@ sigdif <- bind_rows(sigdif_ccsp,
    facet_wrap(~Species, 
               scales = "free_y",
               ncol = 1,
-              labeller = labeller(Species = c("CCSP" = "Spizella pallida",
-                                              "RWBL" = "Agelaius phoeniceus", 
-                                              "GADW" = "Mareca strepera",
-                                              "NOPI" = "Anas acuta"))) +
+              labeller = labeller(Species = c("MALL" = "Anas platyrhynchos", 
+                                              "GADW" = "Mareca strepera", 
+                                              "NOPI" = "Anas acuta", 
+                                              "NSHO" = "Spatula clypeata",
+                                              "CCSP" = "Spizella pallida", 
+                                              "BRBL" = "Euphagus cyanocephalus"))) +
    labs(title = NULL,
         x = NULL, 
         y = "Nests Per Ha",
@@ -898,8 +927,8 @@ ggsave(density.plotT,
        filename = "outputs/figs/AvianDensity_Treat.png",
        bg = "white",
        dpi = 600,
-       height = 4.92,
-       width = 4.92)
+       height = 7,
+       width = 6.5)
 
 write_csv(birds.trtT, "working/Birds_Treatment_Density.csv")
 
