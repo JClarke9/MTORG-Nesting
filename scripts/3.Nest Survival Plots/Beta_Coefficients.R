@@ -525,8 +525,8 @@ ggsave(beta.plotS,
                                "Forb Cover" = "Forb\nCover",
                                "Veg Height" = "Vegetation\nHeight",
                                "Veg Density" = "Vegetation\nDensity",
-                               "Smooth Brome Cover" = "Smooth\nBrome Cover",
-                               "Kentucky Bluegrass Cover" = "Kentucky\nBluegrass Cover")) +
+                               "Smooth Brome Cover" = "Bromus inermis\nCover",
+                               "Kentucky Bluegrass Cover" = "Poa pratensis\nCover")) +
    theme(panel.grid.major = element_blank(),
          panel.grid.minor = element_blank(),
          panel.background = element_blank(), 
@@ -557,14 +557,14 @@ ggsave(beta.plotS,
    facet_wrap(~Species, 
               scales = "free",
               ncol = 2,
-              labeller = labeller(Species = c("GADW" = "Gadwall",
-                                              "CCSP" = "Clay-colored Sparrow",
-                                              "BRBL" = "Brewer's Blackbird",
-                                              "MALL" = "Mallard",
-                                              "NOPI" = "Northern Pintail", 
-                                              "BWTE" = "Blue-winged Teal",
-                                              "MODO" = "Mourning Dove",
-                                              "NSHO" = "Northern Shoveler"))) +
+              labeller = labeller(Species = c("GADW" = "Mareca strepera",
+                                              "CCSP" = "Spizella pallida",
+                                              "BRBL" = "Euphagus cyanocephalus",
+                                              "MALL" = "Anas platyrhynchos",
+                                              "NOPI" = "Anas acuta", 
+                                              "BWTE" = "Spatula discors",
+                                              "MODO" = "Zenaida macroura",
+                                              "NSHO" = "Spatula clypeata"))) +
    labs(title = NULL,
         x = NULL,
         y = expression("Beta " (beta))) +
@@ -575,7 +575,7 @@ ggsave(beta_point,
        bg = "white",
        dpi = 600,
        height = 6.76,
-       width = 6.0)
+       width = 7.0)
 
 # If you want to clean up the mark*.inp, .vcv, .res and .out
 #  and .tmp files created by RMark in the working directory,
